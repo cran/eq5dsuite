@@ -23,9 +23,10 @@ Summary data frame
 Table 1.3.3: Number of observations in the LFS (Level Frequency Score) according to the EQ-5D values
 }
 \examples{
-df <- example_data[example_data$surgtype == "Knee", ]
- table_1_3_3(df = df,
-          names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
-          eq5d_version = "5L",
-          country = "USA")
+table_1_3_3(
+  example_data, 
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+  eq5d_version = "3L",
+  country = "UK"
+)
 }

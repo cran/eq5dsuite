@@ -23,5 +23,5 @@ Get EQ-5D-Y3L index values from individual responses to the five dimensions of t
 # Slovenia -Y3L value set
 eq5dy3l(x = c(11111, 12321, 33333), country = 'SI') 
 # Germany and Spain -Y3L value sets 
-eq5dy3l(make_all_EQ_states('3L'), c('Germany', 'Spain')) 
+eq5dy3l(make_all_EQ_states('3L'), c('ES', 'DE')) # Spanish and german value sets
 }

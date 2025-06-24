@@ -20,6 +20,9 @@ Summary data frame
 Table 1.3.2: Distribution of the EQ-5D states by LFS (Level Frequency Score)
 }
 \examples{
-table_1_3_2(df = example_data)
-table_1_3_2(df = example_data, eq5d_version = "3L")
+table_1_3_2(
+  example_data, 
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+  eq5d_version = "3L"
+)
 }

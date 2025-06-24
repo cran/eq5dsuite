@@ -41,6 +41,19 @@ Summary data frame
 Table 3.3 EQ-5D values: by age and groupvar
 }
 \examples{
-table_3_3(df = example_data, name_age = "age", name_groupvar = "surgtype", 
-  country = "USA")
+example_data$ageband <- factor(
+  example_data$ageband,
+  levels = c("20 to 29", "30 to 39", "40 to 49", "50 to 59", "60 to 69", "70 to 79", "80 to 89")
+)
+example_data <- example_data[example_data$gender \%in\% c("Male", "Female"),]
+table_3_3(
+  example_data,
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c('Pre-op', 'Post-op'),
+  name_groupvar = "gender",
+  name_age = "ageband",
+  eq5d_version = "3L",
+  country = "UK"
+)
 }

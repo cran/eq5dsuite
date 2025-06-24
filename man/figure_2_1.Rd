@@ -18,7 +18,7 @@ Summary plot and data used for plotting
 Figure 2.1: EQ VAS scores
 }
 \examples{
-tmp <- figure_2_1(df = example_data)
+tmp <- figure_2_1(example_data, name_vas = 'vas')
 tmp$p
 tmp$plot_data
 }

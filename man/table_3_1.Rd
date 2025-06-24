@@ -35,7 +35,12 @@ Summary data frame
 Table 3.1: EQ-5D values: by timepoints
 }
 \examples{
-table_3_1(df = example_data, country = "USA")
-table_3_1(df = example_data, eq5d_version = "3L", country = "Denmark")
-table_3_1(df = example_data, country = "Denmark")
+table_3_1(
+  example_data,
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+  name_fu = "time",
+  levels_fu = c('Pre-op', 'Post-op'),
+  eq5d_version = "3L",
+  country = "UK"
+)
 }

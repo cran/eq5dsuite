@@ -4,32 +4,18 @@
 \alias{table_3_2}
 \title{Table 3.2 EQ-5D values: by groupvar}
 \usage{
-table_3_2(
-  df,
-  names_eq5d = NULL,
-  name_fu = NULL,
-  levels_fu = NULL,
-  name_groupvar,
-  eq5d_version = NULL,
-  country
-)
+table_3_2(df, names_eq5d = NULL, name_groupvar, eq5d_version = NULL, country)
 }
 \arguments{
 \item{df}{Data frame with the EQ-5D, follow-up and grouping columns}
 
 \item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
 
-\item{name_fu}{Character string for the follow-up column}
-
-\item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
-If NULL (default value), the levels will be ordered in the order of appearance in df.}
-
 \item{name_groupvar}{Character string for the grouping column}
 
 \item{eq5d_version}{Version of the EQ-5D instrument}
 
-\item{country}{A character string representing the name of the country. 
-This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
+\item{country}{A character string representing the name of the country.}
 }
 \value{
 Summary data frame
@@ -38,5 +24,11 @@ Summary data frame
 Table 3.2 EQ-5D values: by groupvar
 }
 \examples{
-table_3_2(df = example_data, name_groupvar = "surgtype", country = "USA")
+table_3_2(
+  example_data,
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_groupvar = "procedure",
+  eq5d_version = "3L",
+  country = "UK"
+)
 }

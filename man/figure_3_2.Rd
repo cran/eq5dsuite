@@ -25,7 +25,13 @@ Summary plot and data used for plotting
 Figure 3.2: Mean EQ-5D values and 95\% confidence intervals: all vs by groupvar
 }
 \examples{
-tmp <- figure_3_2(df = example_data, name_groupvar = "surgtype", country = "USA")
+tmp <- figure_3_2(
+ example_data,
+ names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+ name_groupvar = "procedure",
+ eq5d_version = "3L",
+ country = "UK"
+)
 tmp$p
 tmp$plot_data
 }

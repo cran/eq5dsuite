@@ -5,10 +5,13 @@
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_1_1(df = example_data)
-#' table_1_1_1(df = example_data, eq5d_version = "3L")
+#' table_1_1_1(
+#'  df = example_data[example_data$time == "Pre-op",],
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'  eq5d_version = "3L"
+#' )
 #' @export
-#' 
+
 table_1_1_1<- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL) {
@@ -26,7 +29,13 @@ table_1_1_1<- function(df,
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_1_2(df = example_data, name_cat = "surgtype")
+#' table_1_1_2(
+#'  df = example_data[example_data$time == "Pre-op",],
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'  name_cat = "procedure",
+#'  levels_cat = c("Hip Replacement", "Knee Replacement"),
+#'  eq5d_version = "3L"
+#' )
 #' @export
 #' 
 table_1_1_2<- function(df, 
@@ -48,10 +57,15 @@ table_1_1_2<- function(df,
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_2_1(df = example_data)
-#' table_1_2_1(df = example_data, name_fu = "month")
+#' table_1_2_1(
+#'   df = example_data,
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op" , "Post-op"),
+#'   eq5d_version = "3L"
+#' )
 #' @export
-#' 
+
 table_1_2_1<- function(df, 
                        names_eq5d = NULL,
                        name_fu = NULL,
@@ -75,9 +89,12 @@ table_1_2_1<- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_1_3(df = example_data)
-#' table_1_1_3(df = example_data, n = 5)
-#' table_1_1_3(df = example_data, eq5d_version = "3L")
+#' table_1_1_3(
+#'   df = example_data[example_data$time == "Pre-op",],
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   eq5d_version = "3L",
+#'   n = 10
+#' )
 #' @importFrom rlang .data
 
 table_1_1_3 <- function(df, 
@@ -169,7 +186,14 @@ table_1_1_3 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_2(df = example_data, name_groupvar = "surgtype", name_id = "id")
+#' table_1_2_2(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op" , "Post-op")
+#' )
 #' @importFrom rlang .data
 
 table_1_2_2 <- function(df,
@@ -258,7 +282,14 @@ table_1_2_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_3(df = example_data, name_groupvar = "surgtype", name_id = "id")
+#' table_1_2_3(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op" , "Post-op")
+#' )
 #' @importFrom rlang .data
 
 table_1_2_3 <- function(df, 
@@ -348,7 +379,13 @@ table_1_2_3 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_4(df = example_data, name_id = "id")
+#' table_1_2_4(
+#'   df = example_data,
+#'   name_id = "id",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op" , "Post-op")
+#' )
 #' @importFrom rlang .data
 
 table_1_2_4 <- function(df, 
@@ -453,8 +490,13 @@ table_1_2_4 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_1(df = example_data, country = "USA")
-#' table_1_3_1(df = example_data, eq5d_version = "3L", country = "USA")
+#' df <- data.frame(make_all_EQ_states(version = "5L"))
+#' table_1_3_1(
+#'   df, 
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'   eq5d_version = "3L", 
+#'   country = "US"
+#' )
 #' @importFrom rlang .data
 
 table_1_3_1 <- function(df, 
@@ -519,8 +561,11 @@ table_1_3_1 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_2(df = example_data)
-#' table_1_3_2(df = example_data, eq5d_version = "3L")
+#' table_1_3_2(
+#'   example_data, 
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'   eq5d_version = "3L"
+#' )
 #' @importFrom rlang .data
 
 table_1_3_2 <- function(df, 
@@ -588,11 +633,12 @@ table_1_3_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' df <- example_data[example_data$surgtype == "Knee", ]
-#'  table_1_3_3(df = df,
-#'           names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
-#'           eq5d_version = "5L",
-#'           country = "USA")
+#' table_1_3_3(
+#'   example_data, 
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'   eq5d_version = "3L",
+#'   country = "UK"
+#' )
 #' @importFrom rlang .data
 
 table_1_3_3 <- function(df, 
@@ -656,8 +702,12 @@ table_1_3_3 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_4(df = example_data, country = "Denmark")
-#' table_1_3_4(df = example_data, eq5d_version = "3L", country = "Denmark")
+#' table_1_3_4(
+#'   example_data, 
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'   eq5d_version = "3L",
+#'   country = "UK"
+#' )
 #' @importFrom rlang .data
 
 table_1_3_4 <- function(df, 
@@ -706,6 +756,112 @@ table_1_3_4 <- function(df,
   return(retval)
 }
 
+#' Figure 1.4.1: Generate a Health State Density Curve (HSDC) for EQ-5D Data
+#'
+#' This function calculates and plots the Health State Density Curve (HSDC) for a given
+#' EQ-5D dataset. It concatenates dimension values to form health state profiles, filters
+#' out invalid states based on the specified EQ-5D version, then computes the cumulative
+#' distribution of profiles (profiles vs. observations). A diagonal reference line
+#' indicates a perfectly even distribution. The function also calculates the Health State
+#' Density Index (HSDI), representing how sharply the observed distribution deviates from
+#' the diagonal.
+#'
+#' @param df Data frame with the EQ-5D columns
+#' @param names_eq5d Character vector of column names for the EQ-5D dimensions
+#' @param eq5d_version Version of the EQ-5D instrument
+#' @return A list containing:
+#'   \item{plot_data}{A data frame with the cumulative distribution of profiles}
+#'   \item{p}{A ggplot2 object showing the Health State Density Index}
+#' @export
+#' @examples
+#' figure <- figure_1_4_1(
+#'             df = example_data, 
+#'             names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'             eq5d_version = "3L"
+#'           )
+#' figure$plot_data
+#' figure$p
+#' @importFrom rlang .data
+#' @importFrom utils head
+
+figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
+  
+  # Retrieve validated names & version from helper function
+  temp <- .get_names(names_eq5d = names_eq5d, eq5d_version = eq5d_version)
+  names_eq5d   <- temp$names_eq5d
+  eq5d_version <- temp$eq5d_version
+  
+  # Check existence of columns
+  names_all <- c(names_eq5d)
+  if (!all(names_all %in% colnames(df))) {
+    stop("Provided column names not in the data frame. Stopping.")
+  }
+  
+  # Subset to relevant columns
+  df <- df %>%
+    dplyr::select(dplyr::all_of(names_all))
+  
+  # Prepare data (adds 'state' column via .prep_eq5d)
+  df <- .prep_eq5d(
+    df            = df, 
+    names         = names_eq5d,
+    add_state     = TRUE,
+    add_lfs       = FALSE, 
+    eq5d_version  = eq5d_version
+  )
+  
+  # Check for NA in 'state', show warning and filter
+  n_na <- sum(is.na(df$state))
+  if (n_na > 0) {
+    warning(n_na, " excluded observations with invalid EQ-5D profiles.")
+    df <- dplyr::filter(df, !is.na(.data$state))
+  }
+  
+  # Calculate frequencies & cumulative proportions
+  profile_freq <- df %>%
+    dplyr::count(.data$state, name = "Frequency") %>%
+    dplyr::arrange(dplyr::desc(.data$Frequency)) %>%
+    dplyr::mutate(
+      CumPropObservations = cumsum(.data$Frequency) / sum(.data$Frequency),
+      CumPropStates = dplyr::row_number() / dplyr::n()
+    )
+  
+  # Compute the Health State Density Index (HSDI)
+  hsdi_area <- sum(
+    diff(c(0, profile_freq$CumPropObservations)) * 
+      (head(c(0, profile_freq$CumPropStates), -1) + profile_freq$CumPropStates) / 2
+  )
+  hsdi <- round(2 * hsdi_area, 3)
+  
+  # Plot Health State Density Curve
+  p <- ggplot2::ggplot(profile_freq, ggplot2::aes(
+    x = .data$CumPropObservations, 
+    y = .data$CumPropStates
+  )) +
+    ggplot2::geom_line(color = "blue", linewidth = 1.2) +
+    ggplot2::geom_abline(
+      intercept = 0, 
+      slope = 1, 
+      linetype = "solid", 
+      linewidth = 1.2, 
+      color = "orange"
+    ) +
+    ggplot2::labs(
+      title    = paste0("Health State Density Curve (HSDC)"),
+      subtitle = paste0("HSDI = ", hsdi),
+      x        = "Cumulative proportion of observations",
+      y        = "Cumulative proportion of profiles"
+    ) +
+    # Force the aspect ratio to 1:1
+    ggplot2::coord_fixed(ratio = 1) +
+    # Limit x,y range from 0 to 1
+    ggplot2::scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::theme_minimal()
+  
+  return(list(plot_data = profile_freq, p = p))
+}
+
 #' Table 2.1: EQ VAS Score by timepoints
 #' 
 #' @param df Data frame with the VAS and the follow-up columns
@@ -715,7 +871,12 @@ table_1_3_4 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_2_1(df = example_data)
+#' table_2_1(
+#'   example_data,
+#'   name_vas = 'vas', 
+#'   name_fu = 'time', 
+#'   levels_fu = c('Pre-op', 'Post-op')
+#' )
 #' @importFrom rlang .data
 
 table_2_1 <- function(df, 
@@ -759,7 +920,11 @@ table_2_1 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_2_2(df = example_data)
+#' table_2_2(
+#'   example_data,
+#'   name_vas = 'vas', 
+#'   add_na_total =  TRUE
+#'   )
 #' @importFrom rlang .data
 
 table_2_2 <- function(df, 
@@ -833,9 +998,14 @@ table_2_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_3_1(df = example_data, country = "USA")
-#' table_3_1(df = example_data, eq5d_version = "3L", country = "Denmark")
-#' table_3_1(df = example_data, country = "Denmark")
+#' table_3_1(
+#'   example_data,
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'   name_fu = "time",
+#'   levels_fu = c('Pre-op', 'Post-op'),
+#'   eq5d_version = "3L",
+#'   country = "UK"
+#' )
 #' @importFrom rlang .data
 
 table_3_1 <- function(df, 
@@ -884,23 +1054,23 @@ table_3_1 <- function(df,
 #' 
 #' @param df Data frame with the EQ-5D, follow-up and grouping columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
 #' @param name_groupvar Character string for the grouping column
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @param country A character string representing the name of the country. 
-#' This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_3_2(df = example_data, name_groupvar = "surgtype", country = "USA")
+#' table_3_2(
+#'   example_data,
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_groupvar = "procedure",
+#'   eq5d_version = "3L",
+#'   country = "UK"
+#' )
 #' @importFrom rlang .data
 
 table_3_2 <- function(df,
                       names_eq5d = NULL,
-                      name_fu = NULL,
-                      levels_fu = NULL,
                       name_groupvar,
                       eq5d_version = NULL,
                       country){
@@ -910,14 +1080,11 @@ table_3_2 <- function(df,
   # replace NULL names with defaults
   temp <- .get_names(df = df, 
                      names_eq5d = names_eq5d, 
-                     name_fu = name_fu, levels_fu = levels_fu,
                      eq5d_version = eq5d_version)
   names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
   eq5d_version <- temp$eq5d_version
   # check existence of columns 
-  names_all <- c(names_eq5d, name_fu, name_groupvar)
+  names_all <- c(names_eq5d, name_groupvar)
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
@@ -929,9 +1096,8 @@ table_3_2 <- function(df,
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
-  df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   df <- df %>%
-    select('groupvar', 'fu', 'utility')
+    select('groupvar', 'utility')
   
   ### analysis ###
   
@@ -965,8 +1131,21 @@ table_3_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_3_3(df = example_data, name_age = "age", name_groupvar = "surgtype", 
-#'   country = "USA")
+#' example_data$ageband <- factor(
+#'   example_data$ageband,
+#'   levels = c("20 to 29", "30 to 39", "40 to 49", "50 to 59", "60 to 69", "70 to 79", "80 to 89")
+#' )
+#' example_data <- example_data[example_data$gender %in% c("Male", "Female"),]
+#' table_3_3(
+#'   example_data,
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c('Pre-op', 'Post-op'),
+#'   name_groupvar = "gender",
+#'   name_age = "ageband",
+#'   eq5d_version = "3L",
+#'   country = "UK"
+#' )
 #' @importFrom rlang .data
 
 table_3_3 <- function(df,
@@ -1006,16 +1185,32 @@ table_3_3 <- function(df,
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   df <- df %>%
     select('groupvar', 'age', 'fu', 'utility')
+  
   # split age into categories
-  if (!is.numeric(df$age))
-    stop("Age column must be in a numeric format. Stopping.")
-  age_breaks <- c(0, 18, seq(from = 25, to = 75, by = 10), Inf)
-  df <- df %>%
-    mutate(age_cat = cut(.data$age, breaks = age_breaks, right = FALSE)) %>%
-    mutate(age_cat = factor(.data$age_cat,
-                            levels = c("[0,18)", "[18,25)", "[25,35)", "[35,45)", "[45,55)", "[55,65)", "[65,75)", "[75,Inf)"),
-                            labels = c("0-17", "18-24", "25-34", "35-44", "45-54","55-64", "65-74", "75+"))) %>%
-    select(-'age')
+  if (is.numeric(df$age)) {
+    # If age is numeric, convert to factor using predefined breaks
+    age_breaks <- c(0, 18, seq(from = 25, to = 75, by = 10), Inf)
+    df <- df %>%
+      dplyr::mutate(age_cat = cut(
+        .data$age, 
+        breaks = age_breaks, 
+        right  = FALSE
+      )) %>%
+      dplyr::mutate(
+        age_cat = factor(
+          .data$age_cat,
+          levels = c("[0,18)", "[18,25)", "[25,35)", "[35,45)", "[45,55)", "[55,65)", "[65,75)", "[75,Inf)"),
+          labels = c("0-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+")
+        )
+      ) %>%
+      dplyr::select(-.data$age)
+    
+  } else if (is.factor(df$age)) {
+    df <- df %>%
+      dplyr::rename(age_cat = .data$age)
+  } else {
+    stop("The 'age' column must be either numeric or factor. Stopping.")
+  }
   
   ### analysis ###
   
@@ -1043,349 +1238,779 @@ table_3_3 <- function(df,
   return(retval)
 }
 
-#' Figure 1.2.1: Paretian Classification of Health Change
-#' 
-#' @param df Data frame with the EQ-5D, follow-up and patient id columns
+
+#' Figure 1.2.1: Paretian Classification of Health Change (PCHC) by Group
+#' This function computes PCHC categories between two time points for each subject, 
+#' stratifies them by a grouping variable, and produces
+#' a single bar chart with side-by-side bars showing the distribution of PCHC categories.
+#' @param df Data frame containing EQ-5D dimensions, a grouping variable, patient ID, and follow-up columns
+#' @param name_id Character string for the patient ID column
+#' @param name_groupvar Character string for the grouping column (e.g., procedure)
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_id Character string for the patient id column
-#' @return Summary plot and data used for plotting
+#' @param levels_fu Character vector of length 2 indicating the order of follow-up time points (e.g., c("Pre-op", "Post-op"))
+#' @return A list with two elements:
+#'   \item{plot_data}{A tibble of PCHC percentages by group}
+#'   \item{p}{A ggplot2 object showing a bar chart with side-by-side bars for each PCHC category}
 #' @export
 #' @examples
-#' tmp <- figure_1_2_1(df = example_data, name_fu = "surgtype", name_id = "id")
-#' tmp$p
-#' tmp$plot_data
+#' result <- figure_1_2_1(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op", "Post-op")
+#' )
+#' result$p        # shows the plot
+#' result$plot_data  # shows the summary table
 #' @importFrom rlang .data
 
-figure_1_2_1 <- function(df, 
-                       names_eq5d = NULL,
-                       name_fu = NULL,
-                       levels_fu = NULL,
-                       name_id) {
-  
-  ### data preparation ###
-  
-  # replace NULL names with defaults
-  temp <- .get_names(df = df, names_eq5d = names_eq5d, name_fu = name_fu, levels_fu = levels_fu)
+figure_1_2_1 <- function(df,
+                         name_id,
+                         name_groupvar,
+                         names_eq5d = NULL,
+                         name_fu = NULL,
+                         levels_fu = NULL) {
+  ### 1) Data Preparation ###
+
+  # Replace NULL names with defaults (helper function that sets names_eq5d, name_fu, etc.)
+  temp <- .get_names(df = df,
+                     names_eq5d = names_eq5d,
+                     name_fu = name_fu,
+                     levels_fu = levels_fu)
   names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
-  # check existence of columns 
-  names_all <- c(name_id, names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
+  name_fu    <- temp$name_fu
+  levels_fu  <- temp$levels_fu
+
+  # Check columns exist
+  names_all <- c(name_id, name_groupvar, names_eq5d, name_fu)
+  if (!all(names_all %in% colnames(df))) {
     stop("Provided column names not in dataframe. Stopping.")
-  # all columns defined and exist; only leave relevant columns now
+  }
+
+  # Keep only relevant columns
   df <- df %>%
-    select(!!!syms(names_all))
-  
-  # further checks and data preparation
+    dplyr::select(!!!syms(names_all))
+
+  # Rename for internal use
   df <- df %>%
-    rename(id = !!quo_name(name_id))
+    dplyr::rename(
+      id       = !!quo_name(name_id),
+      groupvar = !!quo_name(name_groupvar)
+    )
+
+  # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  
-  # sort by id - time
+
+  # Sort by (id, groupvar, fu)
   df <- df %>%
-    arrange(id, .data$fu)
-  # check uniqueness of id-fu combinations
-  .check_uniqueness(df, group_by = c("id", "fu"))
-  
-  ### analysis ###
-  
-  # calculate change
+    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
+
+  # Check uniqueness: each (id, groupvar, fu) should appear at most once
+  .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
+
+  ### 2) Calculate PCHC (Paretian Classification) ###
+  # .pchc() compares the first level in levels_fu (e.g. "Pre-op") vs. the second (e.g. "Post-op")
   df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE) %>%
-    filter(!is.na(.data$state)) %>%
-    mutate(state_noprobs =
-             factor(.data$state_noprobs,
-                    levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")))
+    dplyr::filter(!is.na(.data$state)) %>%
+    # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
+    dplyr::mutate(
+      state_noprobs = factor(
+        .data$state_noprobs,
+        levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
+      )
+    )
 
-  # summarise by groupvar, & state
+  ### 3) Summarize for Single Bar Chart ###
+  # We want one bar per groupvar for each state_noprobs
   plot_data <- df %>%
-    group_by(.data$fu, .data$state_noprobs) %>%
-    summarise(n = n()) %>%
-    mutate(p = n / sum(n)) %>%
-    select(-n)
-  
-  # plot
-  p <- ggplot(plot_data, aes(x = .data$state_noprobs, y = p, fill = .data$fu)) +
-    # bar chart
-    geom_bar(stat = "identity", position = "dodge") +
-    # add percentages
-    geom_text(aes(label = scales::percent(p, accuracy = 0.1)),
-              position = position_dodge(width = 0.9),
-              vjust = -0.5) +
-    # manipuilate x-axis
-    scale_x_discrete(name = "Pareto classification") +
-    # manipulate y-axis
-    scale_y_continuous(name = "Percentage of respondents",
-                       expand = expansion(mult = c(0, 0.1)),
-                       labels = scales::percent_format()) +
-    # title
-    ggtitle("PCHC (Paretian Classification of Health Change)") +
-    # manipulate legend
-    scale_fill_brewer(palette = "Blues")
-  
-  # tidy up summary
-  plot_data <- plot_data %>%
-    pivot_wider(id_cols = 'state_noprobs', names_from = 'fu', values_from = p) %>%
-    rename(`Change category` = 'state_noprobs')
-  
-  return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
+    dplyr::group_by(.data$groupvar, .data$state_noprobs) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::mutate(p = .data$n / sum(.data$n)) %>%
+    dplyr::ungroup()
+
+  ### 4) Build the Plot ###
+  p <- ggplot2::ggplot(plot_data,
+                       ggplot2::aes(x = .data$state_noprobs,
+                                    y = .data$p,
+                                    fill = .data$groupvar)) +
+    ggplot2::geom_bar(stat = "identity", position = ggplot2::position_dodge(width = 0.9)) +
+    ggplot2::geom_text(
+      ggplot2::aes(label = scales::percent(.data$p, accuracy = 0.1)),
+      position = ggplot2::position_dodge(width = 0.9),
+      vjust = -0.5
+    ) +
+    ggplot2::scale_x_discrete(name = "Pareto classification") +
+    ggplot2::scale_y_continuous(
+      name    = "Percentage of respondents",
+      labels  = scales::percent_format(accuracy = 1),
+      expand  = ggplot2::expansion(mult = c(0, 0.1))
+    ) +
+    ggplot2::labs(fill = "Group") +
+    ggplot2::ggtitle("Paretian Classification of Health Change (PCHC) by group over time") +
+    ggplot2::scale_fill_brewer(palette = "Blues") +
+    ggplot2::theme_minimal(base_size = 14)
+
+  ### 5) Reshape Plot Data for Return ###
+  # Convert from long to wide so each group appears as a column
+  plot_data_wide <- plot_data %>%
+    tidyr::pivot_wider(
+      id_cols = "state_noprobs",
+      names_from = "groupvar",
+      values_from = "p",
+      values_fill = 0
+    ) %>%
+    dplyr::rename(`Change category` = "state_noprobs")
+
+  ### 6) Return ###
+  # Return list with summarized data & the ggplot object (with optional theme modifications)
+  return(list(
+    plot_data = plot_data_wide,
+    p = .modify_ggplot_theme(p = p)  # if .modify_ggplot_theme is available
+  ))
 }
 
-#' Figure 1.2.2: Percentage of respondents who improved overall by the dimensions (\%)
-#' 
-#' @param df Data frame with the EQ-5D, follow-up and patient id columns
-#' @param names_eq5d Character vector of column names for the EQ-5D dimensions
+#' Figure 1.2.2: Percentage of Respondents Who Improved in Each EQ-5D Dimension, by Group
+#' This function calculates how many respondents improved in each dimension between
+#' two time points and summarizes the results for each group. The, it prodcuces 
+#' a dimension-focused chart illustrating improvement percentages by dimension.
+#' @param df Data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column
+#' @param name_id Character string for the patient ID column
+#' @param name_groupvar Character string for the grouping column (e.g. procedure)
+#' @param names_eq5d Character vector of EQ-5D dimension names
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_id Character string for the patient id column
-#' @return Summary plot and data used for plotting
+#' @param levels_fu Character vector of length 2, specifying the order of the follow-up levels (e.g. c("Pre-op","Post-op"))
+#' @return A list containing:
+#'   \item{plot_data}{A data frame of improvements by group and dimension}
+#'   \item{p}{A ggplot2 object produced by `.pchc_plot_by_dim()`}
 #' @export
+#'
 #' @examples
-#' tmp <- figure_1_2_2(df = example_data, name_fu = "year_range", name_id = "id")
-#' tmp$p
-#' tmp$plot_data
+#' result <- figure_1_2_2(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op","Post-op")
+#' )
+#' result$p
+#' result$plot_data
+#'
 #' @importFrom rlang .data
-
-figure_1_2_2 <- function(df, 
-                       names_eq5d = NULL,
-                       name_fu = NULL,
-                       levels_fu = NULL,
-                       name_id) {
+figure_1_2_2 <- function(df,
+                         name_id,
+                         name_groupvar,
+                         names_eq5d = NULL,
+                         name_fu = NULL,
+                         levels_fu = NULL) {
+  ### 1) Data Preparation ###
   
-  ### data preparation ###
-  
-  # replace NULL names with defaults
-  temp <- .get_names(df = df, names_eq5d = names_eq5d, name_fu = name_fu, levels_fu = levels_fu)
+  # Replace NULL names with defaults
+  temp <- .get_names(df = df, 
+                     names_eq5d = names_eq5d, 
+                     name_fu = name_fu, 
+                     levels_fu = levels_fu)
   names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
-  # check existence of columns 
-  names_all <- c(name_id, names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
+  name_fu    <- temp$name_fu
+  levels_fu  <- temp$levels_fu
+  
+  # Check columns exist
+  names_all <- c(name_id, name_groupvar, names_eq5d, name_fu)
+  if (!all(names_all %in% colnames(df))) {
     stop("Provided column names not in dataframe. Stopping.")
-  # all columns defined and exist; only leave relevant columns now
+  }
+  
+  # Keep only relevant columns
   df <- df %>%
-    select(!!!syms(names_all)) 
-  # further checks and data preparation
+    dplyr::select(!!!syms(names_all))
+  
+  # Rename internal columns
   df <- df %>%
-    rename(id = !!quo_name(name_id))
+    dplyr::rename(
+      id       = !!quo_name(name_id),
+      groupvar = !!quo_name(name_groupvar)
+    )
+  
+  # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  # sort by id - time
+  
+  # Sort by (id, groupvar, fu)
   df <- df %>%
-    arrange(id, .data$fu)
-  # check uniqueness of id-fu combinations
-  .check_uniqueness(df, group_by = c("id", "fu"))
+    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
   
-  ### analysis ###
+  # Ensure uniqueness of (id, groupvar, fu)
+  .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
-  # calculate change
+  ### 2) Analysis ###
+  # .pchc() calculates difference columns like mo_diff, sc_diff, etc.
   df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    filter(!is.na(.data$state))
+    dplyr::filter(!is.na(.data$state))
   
-  # summarise by name_groupvar & state
-  levels_eq5d <- c("mo", "sc", "ua", "pd", "da")
+  # Focus on those whose overall 'state' == "Improve"
+  # then check dimension-specific improvements (e.g. mo_diff > 0)
+  # e.g., mo_diff, sc_diff, ua_diff, pd_diff, ad_diff
+  # (Ensure you have correct naming: "mo_diff":"ad_diff" or "da_diff" as needed)
+  dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
+  
   plot_data <- df %>%
-    filter(.data$state == "Improve") %>%
-    select('fu', 'mo_diff':'ad_diff') %>%
-    pivot_longer(cols = 'mo_diff':'ad_diff') %>%
-    group_by(.data$fu, .data$name) %>%
-    summarise(n = sum(.data$value > 0), n_total = n()) %>%
-    mutate(p = n / .data$n_total) %>%
-    mutate(name = factor(.data$name, 
-                         levels = str_c(levels_eq5d, "_diff"), 
-                         labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")))
+    dplyr::filter(.data$state == "Improve") %>%
+    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
+    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
+    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
+    dplyr::summarise(
+      n       = sum(.data$value > 0),  # number who improved in this dimension
+      n_total = dplyr::n(),            # total in "Improve" group
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(p = .data$n / .data$n_total) %>%
+    # Convert dimension code (e.g. "mo_diff") to a nice label
+    dplyr::mutate(
+      name = factor(
+        .data$name,
+        levels = dimension_names,
+        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+      )
+    )
   
-  # plot
-  p <- .pchc_plot_by_dim(plot_data = plot_data, 
-                         ylab = "Percentage of respondents who improved overall",
-                         title = "Percentage of respondents who improved overall \nby the dimensions in which they improved (%)", 
-                         cols = .gen_colours("green", length(unique(plot_data$fu))))
+  ### 3) Plot ###
+  # We assume .pchc_plot_by_dim() is a helper function that
+  # takes a data frame w/ columns: groupvar, fu, name, p
+  # and returns a ggplot object. Alternatively, you can build your own chart here.
   
-  # tidy up summary
-  plot_data <- plot_data %>%
-    pivot_wider(id_cols = 'name', names_from = 'fu', values_from = p) %>%
-    rename(Values = 'name')
+  p <- .pchc_plot_by_dim(
+    plot_data = plot_data,
+    ylab      = "Percentage of respondents who improved overall",
+    title     = "Percentage of respondents who improved overall \nby the dimensions in which they improved (%)",
+    cols      = .gen_colours("green", length(unique(plot_data$groupvar)))
+  )
   
-  return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
+  ### 4) Tidy Up & Return ###
+  # Reshape from long to wide for final table
+  # e.g. columns for each fu within each groupvar
+  # If you want separate columns by groupvar as well, you can unify them in a single pivot.
+  
+  # For demonstration, we’ll pivot only by fu
+  # to show p-values side by side. If you want groupvar in separate columns,
+  # you'll do something like pivot_wider(names_from = c("groupvar","fu")...).
+  plot_data_wide <- plot_data %>%
+    tidyr::pivot_wider(
+      id_cols     = c("groupvar", "name"),
+      names_from  = "fu",
+      values_from = "p",
+      values_fill = 0
+    ) %>%
+    dplyr::rename(
+      Group  = "groupvar",
+      Values = "name"
+    )
+  
+  return(list(
+    plot_data = plot_data_wide,
+    p         = .modify_ggplot_theme(p = p) # if you have a custom theme function
+  ))
 }
 
-#' Figure 1.2.3: Percentage of respondents who worsened overall by the dimensions (\%)
-#' 
-#' @param df Data frame with the EQ-5D, follow-up and patient id columns
-#' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_id Character string for the patient id column
-#' @return Summary plot and data used for plotting
-#' @export
-#' @examples
-#' tmp <- figure_1_2_3(df = example_data, name_fu = "year_range", name_id = "id")
-#' tmp$p
-#' tmp$plot_data
-#' @importFrom rlang .data
 
-figure_1_2_3 <- function(df, 
-                       names_eq5d = NULL,
-                       name_fu = NULL,
-                       levels_fu = NULL,
-                       name_id) {
+#' Figure 1.2.3: Percentage of Respondents Who Worsened in Each EQ-5D Dimension, by Group
+#'
+#' This function identifies respondents with a "Worsen" PCHC state (i.e., overall
+#' health state got worse between levels_fu[1] and levels_fu[2]), checks
+#' dimension-specific changes (e.g., mo_diff < 0), and summarizes by a grouping variable
+#' (e.g., procedure) and time points. It returns a data table and a ggplot object.
+#'
+#' @param df A data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column
+#' @param name_id A character string for the patient ID column
+#' @param name_groupvar A character string for the grouping column (e.g., procedure)
+#' @param names_eq5d A character vector of EQ-5D dimension names
+#' @param name_fu A character string for the follow-up column
+#' @param levels_fu A character vector of length 2, specifying the order of the follow-up levels (e.g., c("Pre-op","Post-op"))
+#'
+#' @return A list containing:
+#'   \item{plot_data}{A data frame of "Worsen" percentages by group and dimension}
+#'   \item{p}{A ggplot2 object produced by `.pchc_plot_by_dim()`}
+#' @export
+#'
+#' @examples
+#' result <- figure_1_2_3(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op","Post-op")
+#' )
+#' result$p        # shows the plot
+#' result$plot_data  # shows the summary table
+#'
+#' @importFrom rlang .data
+figure_1_2_3 <- function(df,
+                         name_id,
+                         name_groupvar,
+                         names_eq5d = NULL,
+                         name_fu = NULL,
+                         levels_fu = NULL) {
   
-  ### data preparation ###
+  ### 1) Data Preparation ###
   
-  # replace NULL names with defaults
-  temp <- .get_names(df = df, names_eq5d = names_eq5d, name_fu = name_fu, levels_fu = levels_fu)
+  # Replace NULL names with defaults (helper function that sets names_eq5d, name_fu, etc.)
+  temp <- .get_names(df = df,
+                     names_eq5d = names_eq5d,
+                     name_fu = name_fu,
+                     levels_fu = levels_fu)
+  
   names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
-  # check existence of columns 
-  names_all <- c(name_id, names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
+  name_fu    <- temp$name_fu
+  levels_fu  <- temp$levels_fu
+  
+  # Check columns exist
+  names_all <- c(name_id, name_groupvar, names_eq5d, name_fu)
+  if (!all(names_all %in% colnames(df))) {
     stop("Provided column names not in dataframe. Stopping.")
-  # all columns defined and exist; only leave relevant columns now
+  }
+  
+  # Keep only relevant columns
   df <- df %>%
-    select(!!!syms(names_all)) 
-  # further checks and data preparation
+    dplyr::select(!!!syms(names_all))
+  
+  # Rename internal columns
   df <- df %>%
-    rename(id = !!quo_name(name_id))
+    dplyr::rename(
+      id       = !!quo_name(name_id),
+      groupvar = !!quo_name(name_groupvar)
+    )
+  
+  # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  # sort by id - time
+  
+  # Sort by (id, groupvar, fu)
   df <- df %>%
-    arrange(id, .data$fu)
-  # check uniqueness of id-fu combinations
-  .check_uniqueness(df, group_by = c("id", "fu"))
+    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
   
-  ### analysis ###
+  # Ensure uniqueness of (id, groupvar, fu)
+  .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
-  # calculate change
+  ### 2) Analysis: PCHC ###
+  
+  # .pchc() calculates difference columns like mo_diff, sc_diff, etc.
+  # level_fu_1 is the 'baseline' time point.
   df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    filter(!is.na(.data$state))
+    dplyr::filter(!is.na(.data$state))
   
-  # summarise by name_groupvar & state
-  levels_eq5d <- c("mo", "sc", "ua", "pd", "ad")
+  # We focus on those whose overall state == "Worsen"
+  # then check dimension-specific changes, e.g., mo_diff < 0
+  dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
+  
   plot_data <- df %>%
-    filter(.data$state == "Worsen") %>%
-    select('fu', 'mo_diff':'ad_diff') %>%
-    pivot_longer(cols = 'mo_diff':'ad_diff') %>%
-    group_by(.data$fu, .data$name) %>%
-    summarise(n = sum(.data$value < 0), n_total = n()) %>%
-    mutate(p = n / .data$n_total) %>%
-    mutate(name = factor(.data$name, 
-                         levels = str_c(levels_eq5d, "_diff"), 
-                         labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")))
+    dplyr::filter(.data$state == "Worsen") %>%
+    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
+    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
+    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
+    dplyr::summarise(
+      n       = sum(.data$value < 0),  # # participants who got worse in that dimension
+      n_total = dplyr::n(),            # total in "Worsen" group
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(p = .data$n / .data$n_total) %>%
+    # Convert dimension code (e.g. "mo_diff") to a nice label
+    dplyr::mutate(
+      name = factor(
+        .data$name,
+        levels = dimension_names,
+        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+      )
+    )
   
-  # plot
-  p <- .pchc_plot_by_dim(plot_data = plot_data, 
-                         ylab = "Percentage of respondents who worsened overall",
-                         title = "Percentage of respondents who worsened overall \nby the dimensions in which they got worse (%)", 
-                         cols = .gen_colours("orange", length(unique(plot_data$fu))))
+  ### 3) Plot ###
   
-  # tidy up summary
-  plot_data <- plot_data %>%
-    pivot_wider(id_cols = 'name', names_from = 'fu', values_from = p) %>%
-    rename(Values = 'name')
+  # We assume .pchc_plot_by_dim() is a helper function that
+  # creates a bar chart from plot_data with columns:
+  # groupvar, fu, name, and p
+  # The color palette is "orange" for Worsen by dimension
+  p <- .pchc_plot_by_dim(
+    plot_data = plot_data,
+    ylab      = "Percentage of respondents who worsened overall",
+    title     = "Percentage of respondents who worsened overall \nby the dimensions in which they got worse (%)",
+    cols      = .gen_colours("orange", length(unique(plot_data$groupvar)))
+  )
   
-  return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
+  ### 4) Tidy Up & Return ###
+  
+  # Reshape from long to wide for final table
+  # pivot by fu. If you want separate columns for groupvar as well,
+  # do pivot_wider(names_from = c("groupvar","fu"), ...)
+  plot_data_wide <- plot_data %>%
+    tidyr::pivot_wider(
+      id_cols     = c("groupvar", "name"),
+      names_from  = "fu",
+      values_from = "p",
+      values_fill = 0
+    ) %>%
+    dplyr::rename(
+      Group  = "groupvar",
+      Values = "name"
+    )
+  
+  return(list(
+    plot_data = plot_data_wide,
+    p         = .modify_ggplot_theme(p = p) # if you have a custom theme function
+  ))
 }
 
-#' Figure 1.2.4: Percentage of respondents who had a mixed change by the dimensions in which they improved and worsened (\%)
-#' 
-#' @param df Data frame with the EQ-5D, follow-up and patient id columns
-#' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_id Character string for the patient id column
-#' @return Summary plot and data used for plotting
-#' @export
-#' @examples
-#' tmp <- figure_1_2_4(df = example_data, name_fu = "year_range", name_id = "id")
-#' tmp$p
-#' tmp$plot_data
-#' @importFrom rlang .data
 
-figure_1_2_4 <- function(df, 
-                       names_eq5d = NULL,
-                       name_fu = NULL,
-                       levels_fu = NULL,
-                       name_id) {
+#' Figure 1.2.4: Percentage of Respondents Who Had a Mixed Change Overall,
+#' by Dimension Improved or Worsened, Grouped by Procedure (or Other Grouping)
+#'
+#' This function focuses on patients classified as having "Mixed change" overall
+#' (i.e., some dimensions improved, others worsened). It then examines which dimensions
+#' improved vs. worsened for each subject. Results are summarized by a grouping variable
+#' (e.g., procedure) and time points. The final output is a table plus a ggplot object.
+#'
+#' @param df Data frame containing columns for EQ-5D dimensions, a grouping variable,
+#' a patient ID, and a follow-up variable
+#' @param name_id Character string indicating the patient ID column
+#' @param name_groupvar Character string for the grouping column (e.g. "procedure")
+#' @param names_eq5d Character vector naming the EQ-5D dimensions (e.g. c("mo","sc","ua","pd","ad"))
+#' @param name_fu Character string for the follow-up column (e.g. "time")
+#' @param levels_fu Character vector of length 2 specifying the time order (e.g. c("Pre-op","Post-op"))
+#'
+#' @return A list with two elements:
+#'   \item{plot_data}{A wide-format data frame of dimension-specific improvements/worsenings for "Mixed change"}
+#'   \item{p}{A ggplot2 object showing a dimension-level bar chart from .pchc_plot_by_dim}
+#'
+#' @export
+#'
+#' @examples
+#' result <- figure_1_2_4(
+#'   df = example_data,
+#'   name_id = "id",
+#'   name_groupvar = "procedure",
+#'   names_eq5d = c("mo","sc","ua","pd","ad"),
+#'   name_fu = "time",
+#'   levels_fu = c("Pre-op","Post-op")
+#' )
+#' result$plot_data
+#' result$p
+#'
+#' @importFrom rlang .data
+figure_1_2_4 <- function(df,
+                         name_id,
+                         name_groupvar,
+                         names_eq5d = NULL,
+                         name_fu = NULL,
+                         levels_fu = NULL) {
   
-  ### data preparation ###
+  ### 1) Data Preparation ###
   
-  # replace NULL names with defaults
-  temp <- .get_names(df = df, names_eq5d = names_eq5d, name_fu = name_fu, levels_fu = levels_fu)
+  # Replace NULL names with defaults
+  temp <- .get_names(df = df,
+                     names_eq5d = names_eq5d,
+                     name_fu = name_fu,
+                     levels_fu = levels_fu)
   names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
-  # check existence of columns 
-  names_all <- c(name_id, names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
+  name_fu    <- temp$name_fu
+  levels_fu  <- temp$levels_fu
+  
+  # Check columns exist
+  names_all <- c(name_id, name_groupvar, names_eq5d, name_fu)
+  if (!all(names_all %in% colnames(df))) {
     stop("Provided column names not in dataframe. Stopping.")
-  # all columns defined and exist; only leave relevant columns now
+  }
+  
+  # Keep only relevant columns
   df <- df %>%
-    select(!!!syms(names_all)) 
-  # further checks and data preparation
+    dplyr::select(!!!syms(names_all))
+  
+  # Rename for internal use
   df <- df %>%
-    rename(id = !!quo_name(name_id))
+    dplyr::rename(
+      id       = !!quo_name(name_id),
+      groupvar = !!quo_name(name_groupvar)
+    )
+  
+  # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  # sort by id - time
+  
+  # Sort by (id, groupvar, fu)
   df <- df %>%
-    arrange(id, .data$fu)
-  # check uniqueness of id-fu combinations
-  .check_uniqueness(df, group_by = c("id", "fu"))
+    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
   
-  ### analysis ###
+  # Check uniqueness
+  .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
-  # calculate change
+  ### 2) Analysis: Identify Mixed Change ###
+  
+  # .pchc() adds difference columns like mo_diff, sc_diff, etc.
+  # level_fu_1 is the 'baseline' time point
   df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    filter(!is.na(.data$state))
+    dplyr::filter(!is.na(.data$state))
   
-  # read fu values
+  # We'll focus on those with "Mixed change" overall
+  dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
+  
+  # We also define the fu values and directions for labeling
   n_time <- length(levels_fu)
-  # fu values interacted with direction of change
-  levels_fu_change <- c(str_c("Improve", ": ", levels_fu),
-                        str_c("Worsen", ": ", levels_fu))
+  # For example: "Improve: Pre-op", "Improve: Post-op", "Worsen: Pre-op", "Worsen: Post-op"
+  levels_fu_change <- c(
+    paste0("Improve: ", levels_fu),
+    paste0("Worsen: ", levels_fu)
+  )
   
-  levels_eq5d <- c("mo", "sc", "ua", "pd", "ad")
+  # 2a) Summarize dimension-level improvements & worsenings among "Mixed change" patients
   plot_data <- df %>%
-    ungroup() %>%
-    filter(.data$state == "Mixed change") %>%
-    select('fu', 'mo_diff':'ad_diff') %>%
-    pivot_longer(cols = 'mo_diff':'ad_diff') %>%
-    group_by(.data$fu, .data$name) %>%
-    summarise(n_improve = sum(.data$value > 0), n_worsen = sum(.data$value < 0), n_total = n()) %>%
-    mutate(Improve = .data$n_improve / .data$n_total, Worsen = .data$n_worsen / .data$n_total) %>%
-    mutate(name = factor(.data$name, 
-                         levels = str_c(levels_eq5d, "_diff"), 
-                         labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression"))) %>%
-    select(-contains("n_")) %>%
-    pivot_longer(cols = 'Improve':'Worsen', names_to = "change", values_to = "p") %>%
-    # add direction of change into the fu variable
-    mutate(fu = str_c(.data$change, ": ", .data$fu)) %>%
-    mutate(fu = factor(.data$fu, levels = levels_fu_change))
+    dplyr::filter(.data$state == "Mixed change") %>%
+    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
+    # pivot dimension columns
+    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
+    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
+    dplyr::summarise(
+      n_improve = sum(.data$value > 0),
+      n_worsen  = sum(.data$value < 0),
+      n_total   = dplyr::n(),
+      .groups   = "drop"
+    ) %>%
+    dplyr::mutate(
+      Improve = .data$n_improve / .data$n_total,
+      Worsen  = .data$n_worsen  / .data$n_total
+    ) %>%
+    # Convert e.g. "mo_diff" -> "Mobility"
+    dplyr::mutate(
+      name = factor(
+        .data$name,
+        levels = dimension_names,
+        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+      )
+    ) %>%
+    dplyr::select(-dplyr::contains("n_")) %>%
+    # pivot "Improve" & "Worsen" into a single column
+    tidyr::pivot_longer(
+      cols      = c("Improve", "Worsen"),
+      names_to  = "change",
+      values_to = "p"
+    ) %>%
+    # Build a combined factor: "Improve: Pre-op" / "Worsen: Pre-op" etc.
+    dplyr::mutate(
+      fu = paste0(.data$change, ": ", .data$fu),
+      fu = factor(.data$fu, levels = levels_fu_change)
+    )
   
-  # plot
-  p <- .pchc_plot_by_dim(plot_data = plot_data, 
-                         ylab = "Percentage of respondents who had mixed change",
-                         title = "Percentage of respondents who had a mixed change overall \nby the dimensions in which they improved and worsened (%)", 
-                         cols = c(.gen_colours("green", n_time), .gen_colours("orange", n_time)),
-                         text_rotate = TRUE)
+  ### 3) Plot ###
   
-  # tidy up summary
-  plot_data <- plot_data %>%
-    pivot_wider(id_cols = 'name', names_from = 'fu', values_from = p) %>%
-    rename(Values = 'name')
+  plot_data2 <- plot_data
+  plot_data2$groupvar <- paste(plot_data$groupvar, plot_data$fu)
   
-  return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
+  plot_data2 <- plot_data2 %>%
+    mutate(
+      name = factor(.data$name, levels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")),
+      change = factor(.data$change, levels = c("Improve", "Worsen"))
+    ) %>%
+    arrange(.data$name, .data$change)
+  
+  plot_data2$groupvar <- factor(plot_data2$groupvar, levels = unique(plot_data2$groupvar))
+  
+  p <- .pchc_plot_by_dim(
+    plot_data = plot_data2,
+    ylab      = "Percentage of respondents who had mixed change",
+    title     = "Percentage of respondents who had a mixed change overall \nby the dimensions in which they improved and worsened (%)",
+    cols      = c(
+      .gen_colours("green", n_time*2),  # for "Improve: ...",
+      .gen_colours("orange", n_time*2)  # for "Worsen: ..."
+    ),
+    text_rotate = TRUE
+  )
+  
+  ### 4) Reshape & Return ###
+  
+  # Pivot wide by the combined fu factor
+  # If you want separate columns for groupvar as well, consider pivoting with names_from = c("groupvar","fu").
+  plot_data_wide <- plot_data %>%
+    tidyr::pivot_wider(
+      id_cols     = c("groupvar", "name"),
+      names_from  = "fu",
+      values_from = "p",
+      values_fill = 0
+    ) %>%
+    dplyr::rename(
+      Group  = "groupvar",
+      Values = "name"
+    )
+  
+  return(list(
+    plot_data = plot_data_wide,
+    p         = .modify_ggplot_theme(p = p)
+  ))
 }
+
+#' Figure 1.2.5: Health Profile Grid (HPG) for Two Time Points
+#'
+#' This function creates a Health Profile Grid (HPG) for EQ-5D data, plotting each
+#' individual's change in health states (ranked from best to worst) between two time
+#' points. A diagonal reference line indicates no change; points above the line reflect
+#' improvement, and points below indicate deterioration.
+#'
+#' @param df A data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column
+#' @param names_eq5d A character vector of EQ-5D dimension names
+#' @param name_fu A character string for the follow-up column
+#' @param levels_fu A character vector of length 2, specifying the order of the follow-up levels (e.g., c("Pre-op","Post-op"))
+#' @param name_id A character string for the patient ID column
+#' @param eq5d_version Version of the EQ-5D instrument
+#' @param country A character string representing the name of the country. 
+#' @return A list with components:
+#'   \item{plot_data}{The plot data with ranks and classification.}
+#'   \item{p}{A \code{ggplot2} object displaying the HPG scatter plot.}
+#' @export
+#' @examples
+#' tmp <- figure_1_2_5(
+#'            df = example_data, 
+#'            names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'            name_fu = "time", 
+#'            levels_fu = c("Pre-op", "Post-op"), 
+#'            name_id = "id", 
+#'            eq5d_version = "3L", 
+#'            country = "UK"
+#'        )
+#' @importFrom rlang .data
+
+figure_1_2_5 <- function(df,
+                         names_eq5d,
+                         name_fu,
+                         levels_fu = NULL,
+                         name_id,
+                         eq5d_version,
+                         country) {
+  ### 1) Data Preparation ###
+  # Replace NULL names with defaults (helper function that sets names_eq5d, name_fu, etc.)
+  temp <- .get_names(df = df,
+                     names_eq5d = names_eq5d,
+                     name_fu = name_fu,
+                     levels_fu = levels_fu,
+                     eq5d_version = eq5d_version)
+  names_eq5d <- temp$names_eq5d
+  name_fu    <- temp$name_fu
+  levels_fu  <- temp$levels_fu
+  eq5d_version <- temp$eq5d_version
+  
+  # Check columns exist
+  names_all <- c(name_id,  names_eq5d, name_fu)
+  if (!all(names_all %in% colnames(df))) {
+    stop("Provided column names not in dataframe. Stopping.")
+  }
+  
+  # Keep only relevant columns
+  df <- df %>%
+    dplyr::select(!!!syms(names_all))
+  
+  # Rename for internal use
+  df <- df %>%
+    dplyr::rename(
+      id       = !!quo_name(name_id)
+    )
+  
+  # Prepare EQ-5D & Follow-up columns
+  df <- .prep_eq5d(df = df, names = names_eq5d)
+  df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
+  
+  # Sort by (id, groupvar, fu)
+  df <- df %>%
+    dplyr::arrange(.data$id, .data$fu)
+  
+  # Check uniqueness: each (id, groupvar, fu) should appear at most once
+  .check_uniqueness(df, group_by = c("id", "fu"))
+  
+  ### 2) Calculate PCHC (Paretian Classification) ###
+  # .pchc() compares the first level in levels_fu (e.g. "Pre-op") vs. the second (e.g. "Post-op")
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE) %>%
+    dplyr::filter(!is.na(.data$state)) %>%
+    # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
+    dplyr::mutate(
+      state_noprobs = factor(
+        .data$state_noprobs,
+        levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
+      )
+    )
+  
+  ### 3) Summarize for HPG ###
+  # Create value set
+  vs <- data.frame(profile = make_all_EQ_indexes(version = eq5d_version))
+  vs$utility <- eq5d(vs$profile, country = country, version = eq5d_version)
+  vs <- vs %>%
+    dplyr::arrange(dplyr::desc(.data$utility)) %>%
+    dplyr::mutate(rank = dplyr::row_number())
+  
+  # Build profiles
+  eqdims <- names_eq5d
+  for (d in eqdims) {
+    df[[paste0(d, "_t2")]] <- df[[d]]
+    df[[paste0(d, "_t1")]] <- df[[d]] + df[[paste0(d, "_diff")]]
+  }
+  df <- df %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+      # T1 profile e.g. '11211'
+      profile_t1 = as.integer(paste0(!!!syms(paste0(eqdims,"_t1")))),
+      # T2 profile
+      profile_t2 = as.integer(paste0(!!!syms(paste0(eqdims,"_t2"))))
+    ) %>%
+    dplyr::ungroup()
+  
+  # Get rank
+  df <- df %>%
+    dplyr::left_join(
+      vs %>% dplyr::select(.data$profile, rank_t1 = rank),
+      by = c("profile_t1" = "profile")
+    ) %>%
+    # T2
+    dplyr::left_join(
+      vs %>% dplyr::select(.data$profile, rank_t2 = rank),
+      by = c("profile_t2" = "profile")
+    )
+  
+  # Cteate plot
+  max_rank <- nrow(vs)
+  p <- ggplot(df, aes(x = .data$rank_t2, y = .data$rank_t1, color = .data$state, shape = .data$state)) +
+    geom_point(size = 3) +
+    geom_abline(intercept = 0, slope = 1, linetype = "solid", color = "black") +
+    scale_x_continuous(limits = c(1, max_rank), expand = c(0,0)) +
+    scale_y_continuous(limits = c(1, max_rank), expand = c(0,0)) +
+    labs(
+      title    = "Health Profile Grid (HPG)",
+      x        = paste0(levels_fu[1], " rank"),
+      y        = paste0(levels_fu[2], " rank"),
+      color    = "Classification",  # Legend title for color
+      shape    = "Classification"   # Legend title for shape
+    ) +
+    scale_shape_manual(values = c(
+      "Improve"    = 3,  
+      "No change"  = 16,  
+      "Worsen"     = 4,   
+      "Mixed change" = 17  
+    )) +
+    scale_color_manual(values = c(
+      "Improve"      = "#69AB3E",
+      "No change"    = "#FDC020",
+      "Worsen"       = "#BF2518",
+      "Mixed change" = "#5782BF"
+    )) +
+    
+    theme_minimal(base_size = 14) + 
+    theme(
+      panel.grid = element_blank(),
+      axis.line  = element_line(color = "black"),
+      legend.position  = "bottom",
+      legend.direction = "horizontal",
+      legend.box       = "horizontal"
+    ) +
+    coord_fixed(ratio = 1)
+  
+  return(list(plot_data = df, p = p))
+}
+
+
 
 #' Figure 1.3.1: EQ-5D values plotted against LSS
 #' 
@@ -1397,7 +2022,13 @@ figure_1_2_4 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_1_3_1(df = example_data, country = "USA")
+#' df <- data.frame(make_all_EQ_states(version = "5L"))
+#' tmp <- figure_1_3_1(
+#'  df, 
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  eq5d_version = "5L", 
+#'  country = "US"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1494,7 +2125,12 @@ figure_1_3_1 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_1_3_2(df = example_data, country = "USA")
+#' tmp <- figure_1_3_2(
+#'  example_data, 
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  eq5d_version = "3L",
+#'  country = "UK"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1600,7 +2236,7 @@ figure_1_3_2 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_2_1(df = example_data)
+#' tmp <- figure_2_1(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1656,7 +2292,7 @@ figure_2_1 <- function(df, name_vas = NULL){
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_2_2(df = example_data)
+#' tmp <- figure_2_2(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1702,7 +2338,14 @@ figure_2_2 <- function(df, name_vas = NULL){
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_1(df = example_data, name_fu = "month", country = "USA")
+#' tmp <- figure_3_1(
+#'  example_data,
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  name_fu = "time",
+#'  levels_fu = c('Pre-op', 'Post-op'),
+#'  eq5d_version = "3L",
+#'  country = "UK"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1775,7 +2418,13 @@ figure_3_1 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_2(df = example_data, name_groupvar = "surgtype", country = "USA")
+#' tmp <- figure_3_2(
+#'  example_data,
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  name_groupvar = "procedure",
+#'  eq5d_version = "3L",
+#'  country = "UK"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1857,8 +2506,15 @@ figure_3_2 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_3(df = example_data, name_fu = "month", 
-#'   name_groupvar = "gender", country = "USA")
+#' tmp <- figure_3_3(
+#'  example_data,
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  name_fu = "time",
+#'  levels_fu = c('Pre-op', 'Post-op'),
+#'  name_groupvar = "procedure",
+#'  eq5d_version = "3L",
+#'  country = "UK"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1935,7 +2591,12 @@ figure_3_3 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_4(df = example_data, country = "USA")
+#' tmp <- figure_3_4(
+#'  example_data,
+#'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+#'  eq5d_version = "3L",
+#'  country = "UK"
+#' )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data
@@ -1996,7 +2657,13 @@ figure_3_4 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_5(df = example_data, country = "USA")
+#' tmp <- figure_3_5(
+#'    example_data,
+#'    names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+#'    name_vas = "vas",
+#'    eq5d_version = "3L",
+#'    country = "UK"
+#'  )
 #' tmp$p
 #' tmp$plot_data
 #' @importFrom rlang .data

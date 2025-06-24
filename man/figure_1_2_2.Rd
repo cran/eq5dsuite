@@ -2,30 +2,54 @@
 % Please edit documentation in R/eq5d_devlin.R
 \name{figure_1_2_2}
 \alias{figure_1_2_2}
-\title{Figure 1.2.2: Percentage of respondents who improved overall by the dimensions (\%)}
+\title{Figure 1.2.2: Percentage of Respondents Who Improved in Each EQ-5D Dimension, by Group
+This function calculates how many respondents improved in each dimension between
+two time points and summarizes the results for each group. The, it prodcuces 
+a dimension-focused chart illustrating improvement percentages by dimension.}
 \usage{
-figure_1_2_2(df, names_eq5d = NULL, name_fu = NULL, levels_fu = NULL, name_id)
+figure_1_2_2(
+  df,
+  name_id,
+  name_groupvar,
+  names_eq5d = NULL,
+  name_fu = NULL,
+  levels_fu = NULL
+)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D, follow-up and patient id columns}
+\item{df}{Data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_id}{Character string for the patient ID column}
+
+\item{name_groupvar}{Character string for the grouping column (e.g. procedure)}
+
+\item{names_eq5d}{Character vector of EQ-5D dimension names}
 
 \item{name_fu}{Character string for the follow-up column}
 
-\item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
-If NULL (default value), the levels will be ordered in the order of appearance in df.}
-
-\item{name_id}{Character string for the patient id column}
+\item{levels_fu}{Character vector of length 2, specifying the order of the follow-up levels (e.g. c("Pre-op","Post-op"))}
 }
 \value{
-Summary plot and data used for plotting
+A list containing:
+  \item{plot_data}{A data frame of improvements by group and dimension}
+  \item{p}{A ggplot2 object produced by `.pchc_plot_by_dim()`}
 }
 \description{
-Figure 1.2.2: Percentage of respondents who improved overall by the dimensions (\%)
+Figure 1.2.2: Percentage of Respondents Who Improved in Each EQ-5D Dimension, by Group
+This function calculates how many respondents improved in each dimension between
+two time points and summarizes the results for each group. The, it prodcuces 
+a dimension-focused chart illustrating improvement percentages by dimension.
 }
 \examples{
-tmp <- figure_1_2_2(df = example_data, name_fu = "year_range", name_id = "id")
-tmp$p
-tmp$plot_data
+result <- figure_1_2_2(
+  df = example_data,
+  name_id = "id",
+  name_groupvar = "procedure",
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op","Post-op")
+)
+result$p
+result$plot_data
+
 }

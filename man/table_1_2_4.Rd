@@ -25,5 +25,11 @@ Summary data frame
 Table 1.2.4: Changes in levels in each dimension, percentages of total and of type of change
 }
 \examples{
-table_1_2_4(df = example_data, name_id = "id")
+table_1_2_4(
+  df = example_data,
+  name_id = "id",
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op" , "Post-op")
+)
 }

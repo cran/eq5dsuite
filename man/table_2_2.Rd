@@ -20,5 +20,9 @@ Summary data frame
 Table 2.2: EQ VAS Scores frequency of mid-points
 }
 \examples{
-table_2_2(df = example_data)
+table_2_2(
+  example_data,
+  name_vas = 'vas', 
+  add_na_total =  TRUE
+  )
 }

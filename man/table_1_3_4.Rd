@@ -23,6 +23,10 @@ Summary data frame
 Table 1.3.4: Summary statistics of EQ-5D values by LFS (Level Frequency Score)
 }
 \examples{
-table_1_3_4(df = example_data, country = "Denmark")
-table_1_3_4(df = example_data, eq5d_version = "3L", country = "Denmark")
+table_1_3_4(
+  example_data, 
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+  eq5d_version = "3L",
+  country = "UK"
+)
 }

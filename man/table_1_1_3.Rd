@@ -22,7 +22,10 @@ Summary data frame
 Table 1.1.3: Prevalence of the 10 most frequently observed self-reported health states
 }
 \examples{
-table_1_1_3(df = example_data)
-table_1_1_3(df = example_data, n = 5)
-table_1_1_3(df = example_data, eq5d_version = "3L")
+table_1_1_3(
+  df = example_data[example_data$time == "Pre-op",],
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  eq5d_version = "3L",
+  n = 10
+)
 }

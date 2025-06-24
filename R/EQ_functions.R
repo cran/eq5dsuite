@@ -94,7 +94,9 @@ make_all_EQ_states <- function(version = "5L", dim.names = c("mo", "sc", "ua", "
 #' @export
 make_all_EQ_indexes <- function(version = "5L", dim.names = c("mo", "sc", "ua", "pd", "ad")) {
   if(!length(dim.names) == 5) stop("Argument dim.names not of length 5.")
-  toEQ5Dindex(do.call(make_all_EQ_states, as.list(match.call()[-1])))
+  states <- do.call(make_all_EQ_states, list(version = version, dim.names = dim.names))
+  toEQ5Dindex(states, dim.names = dim.names)
+  #toEQ5Dindex(do.call(make_all_EQ_states, as.list(match.call()[-1])))
 }
 
 #' @title EQ_dummies
@@ -156,22 +158,29 @@ make_dummies <- function(df, version = "5L", dim.names = c("mo", "sc", "ua", "pd
 #' @param df A data.frame or file name pointing to csv file. The contents of the data.frame or csv file should be exactly two columns: state, containing a list of all 3125 (for 5L) or 243 (for 3L) EQ-5D health state vectors, and a column of corresponding utility values, with a suitable name.
 #' @param version Version of the EQ-5D instrument. Can take values 5L (default) or 3L.
 #' @param country Optional string. If not NULL, will be used as a country description for the user-defined value set.
+#' @param countryCode Optional string. If not NULL, will be used as the two-digit code for the value set. Must be different from any existing national value set code.
+#' @param VSCode Optional string. If not NULL, will be used as the three-digit code for the value set. Must be different from any existing national value set code.
+#' @param description Optional string. If not NULL, will be used as a descriptive text for the user-defined value set. 
 #' @param saveOption Integer indicating how the cache data should be saved. 1: Do not save (default), 2: Save in package folder, 3: Save in another path.
 #' @param savePath A path where the cache data should be saved when `saveOption` is 3. Please use `eqvs_load` to load it in your next session.
-#' @param description Optional string. If not NULL, will be used as a descriptive text for the user-defined value set. 
-#' @param description Optional string. If not NULL, will be used as a descriptive text for the user-defined value set. 
-#' @param code2L Optional string. If not NULL, will be used as the two-digit code for the value set. Must be different from any existing national value set code.
-#' @param code3L Optional string. If not NULL, will be used as the three-digit code for the value set. Must be different from any existing national value set code.
 #' @return True/False, indicating success or error.
 #' @examples 
 #' # make nonsense value set
 #' new_df <- data.frame(state = make_all_EQ_indexes(), TEST = runif(3125))
 #' # Add as value set for Fantasia
-#' eqvs_add(new_df, version = "5L", country = 'Fantasia', saveOption = 1)
+#' eqvs_add(
+#'    new_df,
+#'    version = "5L",
+#'    country = 'Fantasia',
+#'    countryCode = "MyCountry",
+#'    VSCode = "FAN",
+#'    saveOption = 1
+#' )
+#' eq5d5l(55555,country = "FAN")
 #' @importFrom utils read.csv
 #' @export
 
-eqvs_add <- function(df, version = "5L", country = NULL, saveOption = 1, savePath = NULL, description = NULL, code2L = NULL, code3L = NULL) {
+eqvs_add <- function(df, version = "5L", country = NULL, countryCode = NULL, VSCode = NULL, description = NULL, saveOption = 1, savePath = NULL) {
   # Ensure saveOption is either 1, 2, or 3
   if (!saveOption %in% c(1, 2, 3)) {
     stop("Invalid 'saveOption'. It must be 1, 2, or 3.")
@@ -211,7 +220,7 @@ eqvs_add <- function(df, version = "5L", country = NULL, saveOption = 1, savePat
       description <- description[1]
     }
   }
-  thisName <- colnames(df)[2]
+  thisName <- ifelse(is.null(VSCode), colnames(df)[2], VSCode)
   if(thisName %in% colnames(pkgenv[[uservsets_str]])) {
     warning(paste0("New country name already in user-defined ", eq5d_str, " value set list."))
     return(0)
@@ -224,10 +233,12 @@ eqvs_add <- function(df, version = "5L", country = NULL, saveOption = 1, savePat
   tmp[, thisName] <- df[, 2]
   assign(x = uservsets_str, value = tmp, envir = pkgenv)
   
-  tmp <- data.frame(Name = ifelse(is.null(description), NA, description), 
+  tmp <- data.frame(Version = version,
+                    Name = ifelse(is.null(country), NA, country), 
                     Name_short = ifelse(is.null(country), NA, country), 
-                    ISO3166Alpha2 = colnames(df)[2], 
-                    ISO3166Alpha3 = NA)
+                    Country_code = ifelse(is.null(countryCode), colnames(df)[2], countryCode), 
+                    VS_code = ifelse(is.null(VSCode), colnames(df)[2], VSCode),
+                    doi = ifelse(is.null(description), NA, description))
   
   if(user_defined_str %in% names(pkgenv)) tmp <- rbind(pkgenv[[user_defined_str]], tmp)
   
@@ -260,7 +271,7 @@ eqvs_add <- function(df, version = "5L", country = NULL, saveOption = 1, savePat
     message(paste0('Cache data saved to ', file.path(path, 'cache.Rdta.')))
   }
 
-  return(TRUE)
+  message(paste("The value set", country, "was added."))
 }
 
 #' @title eqvs_load
@@ -295,100 +306,125 @@ eqvs_load <- function(loadPath) {
 #'   # make nonsense value set
 #'   new_df <- data.frame(state = make_all_EQ_indexes(), TEST = runif(3125))
 #'   # Add as value set for Fantasia
-#'   eqvs_add(new_df, version = "5L", country = 'Fantasia', saveOption = 1)
+#'   eqvs_add(
+#'    new_df,
+#'    version = "5L",
+#'    country = 'Fantasia',
+#'    countryCode = "MyCountry",
+#'    VSCode = "FAN",
+#'    saveOption = 1
+#'   )
+#'   # Test the new value set
+#'   eq5d5l(55555,country = "FAN")
 #'   # Drop value set for Fantasia
-#'   eqvs_drop('Fantasia', saveOption = 1)
+#'   eqvs_drop(country = 'FAN', saveOption = 1)
 #' }
 #' @export
 eqvs_drop <- function(country = NULL, version = "5L", saveOption = 1, savePath = NULL) {
   
-  # Ensure saveOption is either 1, 2, or 3
+  # Ensure saveOption is valid
   if (!saveOption %in% c(1, 2, 3)) {
     stop("Invalid 'saveOption'. It must be 1, 2, or 3.")
   }
   
   pkgenv <- getOption("eq.env")
-  if(length(country)>1) {
-    message('Length of country argument larger than 1, only the first element will be used.')
-    country <- country[[1]]
-  }
-  
-  # read off version-dependent parameters
   version <- toupper(version)
+  
   user_defined_str <- paste0("user_defined_", version)
   uservsets_str <- paste0("uservsets", version)
   
-  states_str <- paste0("states_", version)
-  eq5d_str <- paste0("EQ-5D-", version)
-  
-  if(!user_defined_str %in% names(pkgenv)) {
-    message(paste0("No user-defined value sets exist among the ", version, " datasets. Exiting."))
+  if (!user_defined_str %in% names(pkgenv)) {
+    message(paste0("No user-defined value sets exist for ", version, ". Exiting."))
     return(FALSE)
-  } else {
-    udc <- pkgenv[[user_defined_str]]
-    if(!is.null(country)) {
-      tmp <- which(toupper(as.matrix(udc)) == toupper(country), arr.ind = T)
-      
-      if(nrow(tmp)) {
-        country <- udc$ISO3166Alpha2[tmp[1,1]]
-        yesno = readline(prompt = paste0('Are you sure you want to delete user-defined country "', country,'" from the ', version, 'value sets? ([Y]es/[N]o) : '))
-        if(tolower(yesno) %in% c("yes", "y")) {
-          message('Removing ', country, ' from user-defined value sets.')
-          udc <- udc[-tmp[1,1],]
-          if(NROW(udc)) {
-            assign(x = user_defined_str, value = udc, envir = pkgenv)
-          } else {
-            rm(list = user_defined_str, envir = pkgenv)
-          }
-          tmp <- pkgenv[[uservsets_str]]
-          tmp[, which(colnames(tmp) == country)] <- NULL
-          assign(x = uservsets_str, value = tmp, envir = pkgenv)
-          # Handle save options
-          if (saveOption == 2) {
-            path <- pkgenv$cache_path
-            if (!dir.exists(path)) {
-              dir.create(path, recursive = TRUE)
-            }
-          } else if (saveOption == 3) {
-            if (is.null(savePath) || !nzchar(savePath)) {
-              stop("Option 3 requires a valid 'savePath'.")
-            } else {
-              if (!dir.exists(savePath)) {
-                stop("The specified 'savePath' does not exist.")
-              } else {
-                path <- savePath
-              }
-            }
-          }
-          if(saveOption == 1){
-            .fixPkgEnv(saveCache = FALSE)
-          }
-          if (saveOption == 2 || saveOption == 3) {
-            filePath <- file.path(path, 'cache.Rdta.')
-            .fixPkgEnv(saveCache = TRUE, filePath = filePath)
-            message(paste0('Cache data saved to ', file.path(path, 'cache.Rdta.')))
-          }
-          return(TRUE)
-        } else {
-          message("OK. Exiting.")
-          return(FALSE)
-        }
-      } else {
-        message('User-defined value set identified as ', country, ' not found among the ', version, ' value sets.')
-      }
-    }
   }
   
-  udc <- udc[, 3:1]
-  colnames(udc) <- c('Code', 'Name', 'Description')
-  message('Please enter which value set you wish to drop, or enter any other value to exit.')
-  .prettyPrint(udc)
-  yesno = trimws(toupper(readline(prompt = paste0('Please enter value set name, description, or code: '))))
-  tmp <- which(toupper(as.matrix(udc)) == yesno, arr.ind = T)
-  if(NROW(tmp)) return(eqvs_drop(tmp), version)
-  message('Exiting.')
-  return(FALSE)
+  udc <- pkgenv[[user_defined_str]]
+  
+  # Ensure `udc` exists and is not empty
+  if (is.null(udc) || nrow(udc) == 0) {
+    message("No user-defined value sets found. Exiting.")
+    return(FALSE)
+  }
+  
+  # Handle case where multiple value sets exist for the same country
+  matched_rows <- which(toupper(udc$Country_code) == toupper(country) | toupper(udc$VS_code) == toupper(country))
+  
+  if (length(matched_rows) == 0) {
+    message("No matching user-defined value set found for country: ", country, ". Exiting.")
+    return(FALSE)
+  }
+  
+  if (length(matched_rows) > 1) {
+    message(paste0("There are ", length(matched_rows), " value sets available for country code '", country, "'."))
+    options_table <- udc[matched_rows, c("Version", "Name", "Country_code", "VS_code", "doi")]
+    print(options_table)
+    
+    # Ask user which value set to delete
+    repeat {
+      user_input <- readline(prompt = "Please enter the VS_code you want to delete: ")
+      if (user_input %in% udc$VS_code[matched_rows]) {
+        country <- user_input
+        break
+      } else {
+        message("Invalid VS_code. Please enter one from the table above.")
+      }
+    }
+  } else {
+    country <- udc$VS_code[matched_rows]  # If only one match, proceed
+  }
+  
+  # Ask for confirmation
+  yesno <- readline(prompt = paste0('Are you sure you want to delete value set "', country, '" for ', version, '? ([Y]es/[N]o) : '))
+  if (tolower(yesno) %in% c("yes", "y")) {
+    
+    message('Removing ', country, ' from user-defined value sets.')
+    
+    # Remove from user-defined dataset
+    udc <- udc[udc$VS_code != country, ]
+    if (nrow(udc) > 0) {
+      assign(x = user_defined_str, value = udc, envir = pkgenv)
+    } else {
+      rm(list = user_defined_str, envir = pkgenv)
+    }
+    
+    # Remove from value set matrix
+    tmp <- pkgenv[[uservsets_str]]
+    if (country %in% colnames(tmp)) {
+      tmp <- tmp[, !colnames(tmp) %in% country, drop = FALSE]
+      assign(x = uservsets_str, value = tmp, envir = pkgenv)
+    }
+    
+    # Handle save options
+    if (saveOption == 2) {
+      path <- pkgenv$cache_path
+      if (!dir.exists(path)) {
+        dir.create(path, recursive = TRUE)
+      }
+    } else if (saveOption == 3) {
+      if (is.null(savePath) || !nzchar(savePath)) {
+        stop("Option 3 requires a valid 'savePath'.")
+      } else if (!dir.exists(savePath)) {
+        stop("The specified 'savePath' does not exist.")
+      } else {
+        path <- savePath
+      }
+    }
+    
+    if (saveOption == 1) {
+      .fixPkgEnv(saveCache = FALSE)
+    }
+    
+    if (saveOption == 2 || saveOption == 3) {
+      filePath <- file.path(path, 'cache.Rdta.')
+      .fixPkgEnv(saveCache = TRUE, filePath = filePath)
+      message(paste0('Cache data saved to ', filePath))
+    }
+    message(paste("The value set", country, "was deleted."))
+  } else {
+    message("OK. Exiting without deletion.")
+  }
 }
+
 
 #' @title eqvs_display
 #' @description Display available value sets, which can also be used as (reverse) crosswalks.
@@ -438,71 +474,74 @@ eqvs_display <- function(version = "5L", return_df = FALSE) {
 eq5d <- function(x, country = NULL, version = '5L', dim.names = c("mo", "sc", "ua", "pd", "ad")) {
   pkgenv <- getOption("eq.env")
   version <- toupper(version)
-  if(!version %in% c('3L', '5L', 'Y3L', 'XW', 'RXW', 'XWR', 'CW', 'CWR', 'RCW')) stop("No valid argument for eq-5d version.")
-  version <- c('3L', '5L', 'Y3L', 'XW', 'XWR', 'XWR', 'XW', 'XWR', 'XWR')[match(version, c('3L', '5L', 'Y3L', 'XW', 'RXW', 'XWR', 'CW', 'CWR', 'RCW'))]
+
+  valid_versions <- c('3L', '5L', 'Y3L', 'XW', 'RXW', 'XWR', 'CW', 'CWR', 'RCW')
+  if (!version %in% valid_versions) stop("No valid argument for EQ-5D version.")
   
-  vers <- c('3L', '5L', 'Y3L', '3L', '5L')[match(x = version, table = c('3L', '5L', 'Y3L', 'XW', 'XWR'))]
+  # Normalize version mapping
+  version <- c('3L', '5L', 'Y3L', 'XW', 'XWR', 'XWR', 'XW', 'XWR', 'XWR')[match(version, valid_versions)]
+  vers <- c('3L', '5L', 'Y3L', '3L', '5L')[match(version, c('3L', '5L', 'Y3L', 'XW', 'XWR'))]
   
-  if(!length(dim.names) == 5) stop("Argument dim.names not of length 5.")
-  if(length(dim(x)) == 2) {
-    # colnames(x) <- tolower(colnames(x))
-    if(is.null(colnames(x))) {
-      message("No column names")
-      if(NCOL(x) == 5) {
-        message("Given 5 columns, will assume dimensions in conventional order: MO, SC, UA, PD, AD.")
+  if (length(dim.names) != 5) stop("Argument dim.names must be of length 5.")
+  
+  if (is.matrix(x) || is.data.frame(x)) {
+    if (is.null(colnames(x))) {
+      message("No column names detected.")
+      if (NCOL(x) == 5) {
+        message("Assuming dimensions in order: MO, SC, UA, PD, AD.")
         colnames(x) <- dim.names
-      } 
+      }
     }
-    if(!all(dim.names %in% colnames(x))) stop("Provided dimension names not available in matrix/data.frame.")
+    if (!all(dim.names %in% colnames(x))) stop("Provided dimension names not found in input matrix/data.frame.")
     x <- toEQ5Dindex(x = x, dim.names = dim.names)
   }
   
   country <- .fixCountries(country, EQvariant = vers)
-  if(any(is.na(country))) {
-    isnas <- which(is.na(country))
-    for(i in isnas)  warning('Country ', names(country)[i], ' not found. Dropped.')
+  
+  # Handle cases where the country input is invalid
+  if (any(is.na(country))) {
+    invalid_countries <- names(country)[is.na(country)]
+    warning("The following countries were not found and will be ignored: ", paste(invalid_countries, collapse = ", "))
     country <- country[!is.na(country)]
   }
   
-  if(length(country)==0) {
-    message('No valid countries listed. These value sets are currently available.')
+  if (length(country) == 0) {
+    message("No valid countries listed. Available value sets are:")
     eqvs_display(version = vers)
-    stop('No valid countries listed.')
+    stop("No valid countries listed.")
   }
-
   
-  if(length(country)>1) {
+  # If multiple countries, apply the function iteratively
+  if (length(country) > 1) {
     names(country) <- country
     return(do.call(cbind, lapply(country, function(count) eq5d(x, count, version, dim.names))))
   }
   
+  # Validate and match states
   xorig <- x
   x <- as.integer(x)
-  if(version %in% c('3L', 'Y3L', 'XWR')) {
-    x[!regexpr("^[1-3]{5}$", x)==1] <- NA
-  } else {
-    x[!regexpr("^[1-5]{5}$", x)==1] <- NA
-  } 
+  pattern <- if (version %in% c('3L', 'Y3L', 'XWR')) "^[1-3]{5}$" else "^[1-5]{5}$"
+  x[!grepl(pattern, x)] <- NA
   
-  vset <- switch(EXPR = version,
+  # Select the appropriate value set and state mapping
+  vset <- switch(version,
                  '3L' = pkgenv$vsets3L_combined,
                  '5L' = pkgenv$vsets5L_combined,
                  'XW' = pkgenv$xwsets,
                  'XWR' = pkgenv$xwrsets,
                  'Y3L' = pkgenv$vsetsY3L_combined)
-  svec <- switch(EXPR = version,
+  svec <- switch(version,
                  '3L' = pkgenv$states_3L,
                  '5L' = pkgenv$states_5L,
                  'XW' = pkgenv$states_5L,
                  'XWR' = pkgenv$states_3L,
                  'Y3L' = pkgenv$states_3L)
   
+  # Compute EQ-5D index values
   xout <- rep(NA, length(x))
-  
   xout[!is.na(x)] <- vset[match(x[!is.na(x)], svec$state), country]
   names(xout) <- xorig
   xout
-  
 }
 
 #' @title eq5d3l
@@ -512,7 +551,7 @@ eq5d <- function(x, country = NULL, version = '5L', dim.names = c("mo", "sc", "u
 #' @param dim.names A character vector specifying the names of the EQ-5D-3L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad"). 
 #' @return A vector of EQ-5D-3L values or data.frame with one column for each value set requested.
 #' @examples 
-#' eq5d3l(c(11111, 12321, 32123, 33333), 'US') # US -3L value set
+#' eq5d3l(c(11111, 12321, 32123, 33333), country = "US")
 #' eq5d3l(make_all_EQ_states('3L'), c('DK', 'CA')) # Danish and Canada -3L value sets 
 #' @export
 eq5d3l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
@@ -529,7 +568,7 @@ eq5d3l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad"
 #' @return A vector of EQ-5D-5L values or data.frame with one column for each value set requested.
 #' @examples 
 #' eq5d5l(c(11111, 12321, 32423, 55555), 'IT') # Italy -5L value set
-#' eq5d5l(make_all_EQ_states('5L'), c('Japan', 'China')) # Japon and China -5L value sets 
+#' eq5d5l(make_all_EQ_states('5L'), c('ES', 'DE')) # Spanish and german value sets
 #' @export
 eq5d5l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
   argl <- as.list(match.call(expand.dots = TRUE))[-1]
@@ -547,7 +586,7 @@ eq5d5l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad"
 #' # Slovenia -Y3L value set
 #' eq5dy3l(x = c(11111, 12321, 33333), country = 'SI') 
 #' # Germany and Spain -Y3L value sets 
-#' eq5dy3l(make_all_EQ_states('3L'), c('Germany', 'Spain')) 
+#' eq5dy3l(make_all_EQ_states('3L'), c('ES', 'DE')) # Spanish and german value sets
 #' @export
 eq5dy3l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
   argl <- as.list(match.call(expand.dots = TRUE))[-1]

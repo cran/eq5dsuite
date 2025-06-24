@@ -15,16 +15,50 @@ dir.create2 <- function(path, ...) {
   }
 }
 
+# .fixCountries <- function(countries, EQvariant = '5L') {
+#   pkgenv <- getOption("eq.env")
+#   cntrs <- rbind(pkgenv$country_codes[[EQvariant]], pkgenv[[paste0("user_defined_", EQvariant)]])
+#   
+#   sapply(countries, function(country) {
+#     tmp <- which(toupper(as.matrix(cntrs)) == toupper(country), arr.ind = T)
+#     if(nrow(tmp))  return(cntrs$ISO3166Alpha2[tmp[1,1]])
+#     NA
+#   })
+# }
+
 .fixCountries <- function(countries, EQvariant = '5L') {
   pkgenv <- getOption("eq.env")
   cntrs <- rbind(pkgenv$country_codes[[EQvariant]], pkgenv[[paste0("user_defined_", EQvariant)]])
   
-  sapply(countries, function(country) {
-    tmp <- which(toupper(as.matrix(cntrs)) == toupper(country), arr.ind = T)
-    if(nrow(tmp))  return(cntrs$ISO3166Alpha2[tmp[1,1]])
-    NA
-  })
+  result <- sapply(countries, function(country) {
+    matched_rows <- which(toupper(cntrs$Country_code) == toupper(country) | 
+                            toupper(cntrs$VS_code) == toupper(country), arr.ind = TRUE)
+    
+    if (length(matched_rows) == 0) {
+      return(NA)
+    } else if (length(matched_rows) == 1) {
+      return(cntrs$VS_code[matched_rows])
+    } else {
+      # If multiple value sets exist for the country, ask the user to specify
+      message(paste0("There are ", length(matched_rows), " value sets available for country code '", country, "'."))
+      options_table <- cntrs[matched_rows, c("Version", "Name", "Country_code", "VS_code", "doi")]
+      print(options_table)
+      
+      # Ask user to input the VS_code
+      repeat {
+        user_input <- readline(prompt = "Please enter the VS_code you would like to use: ")
+        if (user_input %in% cntrs$VS_code[matched_rows]) {
+          return(user_input)
+        } else {
+          message("Invalid VS_code. Please enter one from the table above.")
+        }
+      }
+    }
+  }, USE.NAMES = TRUE)
+  
+  return(result)
 }
+
 
 find_cache_dir <- function(pkg) {
   # In R 4.0 and above, CRAN wants us to use the new tools::R_user_dir().

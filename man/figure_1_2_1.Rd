@@ -2,30 +2,53 @@
 % Please edit documentation in R/eq5d_devlin.R
 \name{figure_1_2_1}
 \alias{figure_1_2_1}
-\title{Figure 1.2.1: Paretian Classification of Health Change}
+\title{Figure 1.2.1: Paretian Classification of Health Change (PCHC) by Group
+This function computes PCHC categories between two time points for each subject, 
+stratifies them by a grouping variable, and produces
+a single bar chart with side-by-side bars showing the distribution of PCHC categories.}
 \usage{
-figure_1_2_1(df, names_eq5d = NULL, name_fu = NULL, levels_fu = NULL, name_id)
+figure_1_2_1(
+  df,
+  name_id,
+  name_groupvar,
+  names_eq5d = NULL,
+  name_fu = NULL,
+  levels_fu = NULL
+)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D, follow-up and patient id columns}
+\item{df}{Data frame containing EQ-5D dimensions, a grouping variable, patient ID, and follow-up columns}
+
+\item{name_id}{Character string for the patient ID column}
+
+\item{name_groupvar}{Character string for the grouping column (e.g., procedure)}
 
 \item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
 
 \item{name_fu}{Character string for the follow-up column}
 
-\item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
-If NULL (default value), the levels will be ordered in the order of appearance in df.}
-
-\item{name_id}{Character string for the patient id column}
+\item{levels_fu}{Character vector of length 2 indicating the order of follow-up time points (e.g., c("Pre-op", "Post-op"))}
 }
 \value{
-Summary plot and data used for plotting
+A list with two elements:
+  \item{plot_data}{A tibble of PCHC percentages by group}
+  \item{p}{A ggplot2 object showing a bar chart with side-by-side bars for each PCHC category}
 }
 \description{
-Figure 1.2.1: Paretian Classification of Health Change
+Figure 1.2.1: Paretian Classification of Health Change (PCHC) by Group
+This function computes PCHC categories between two time points for each subject, 
+stratifies them by a grouping variable, and produces
+a single bar chart with side-by-side bars showing the distribution of PCHC categories.
 }
 \examples{
-tmp <- figure_1_2_1(df = example_data, name_fu = "surgtype", name_id = "id")
-tmp$p
-tmp$plot_data
+result <- figure_1_2_1(
+  df = example_data,
+  name_id = "id",
+  name_groupvar = "procedure",
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op", "Post-op")
+)
+result$p        # shows the plot
+result$plot_data  # shows the summary table
 }

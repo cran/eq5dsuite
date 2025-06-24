@@ -34,5 +34,12 @@ Summary data frame
 Table 1.2.2: Changes in health according to the PCHC (Paretian Classification of Health Change)
 }
 \examples{
-table_1_2_2(df = example_data, name_groupvar = "surgtype", name_id = "id")
+table_1_2_2(
+  df = example_data,
+  name_id = "id",
+  name_groupvar = "procedure",
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op" , "Post-op")
+)
 }

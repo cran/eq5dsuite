@@ -8,11 +8,11 @@ eqvs_add(
   df,
   version = "5L",
   country = NULL,
-  saveOption = 1,
-  savePath = NULL,
+  countryCode = NULL,
+  VSCode = NULL,
   description = NULL,
-  code2L = NULL,
-  code3L = NULL
+  saveOption = 1,
+  savePath = NULL
 )
 }
 \arguments{
@@ -22,15 +22,15 @@ eqvs_add(
 
 \item{country}{Optional string. If not NULL, will be used as a country description for the user-defined value set.}
 
-\item{saveOption}{Integer indicating how the cache data should be saved. 1: Do not save (default), 2: Save in package folder, 3: Save in another path.}
+\item{countryCode}{Optional string. If not NULL, will be used as the two-digit code for the value set. Must be different from any existing national value set code.}
 
-\item{savePath}{A path where the cache data should be saved when `saveOption` is 3. Please use `eqvs_load` to load it in your next session.}
+\item{VSCode}{Optional string. If not NULL, will be used as the three-digit code for the value set. Must be different from any existing national value set code.}
 
 \item{description}{Optional string. If not NULL, will be used as a descriptive text for the user-defined value set.}
 
-\item{code2L}{Optional string. If not NULL, will be used as the two-digit code for the value set. Must be different from any existing national value set code.}
+\item{saveOption}{Integer indicating how the cache data should be saved. 1: Do not save (default), 2: Save in package folder, 3: Save in another path.}
 
-\item{code3L}{Optional string. If not NULL, will be used as the three-digit code for the value set. Must be different from any existing national value set code.}
+\item{savePath}{A path where the cache data should be saved when `saveOption` is 3. Please use `eqvs_load` to load it in your next session.}
 }
 \value{
 True/False, indicating success or error.
@@ -42,5 +42,13 @@ Add user-defined EQ-5D value set and corresponding crosswalk option.
 # make nonsense value set
 new_df <- data.frame(state = make_all_EQ_indexes(), TEST = runif(3125))
 # Add as value set for Fantasia
-eqvs_add(new_df, version = "5L", country = 'Fantasia', saveOption = 1)
+eqvs_add(
+   new_df,
+   version = "5L",
+   country = 'Fantasia',
+   countryCode = "MyCountry",
+   VSCode = "FAN",
+   saveOption = 1
+)
+eq5d5l(55555,country = "FAN")
 }

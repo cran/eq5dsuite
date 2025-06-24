@@ -8,7 +8,6 @@
 #' @examples
 #' .get_names(names_eq5d = c("mo", "sc", "ua", "pd", "ad"))
 #' .get_names(names_eq5d = NULL, eq5d_version = NULL, name_vas = NULL)
-#' .get_names(df = example_data, name_fu = NULL, levels_fu = NULL)
 #' @export
 #' 
 .get_names <- function(df = NULL, ...) {
@@ -149,7 +148,7 @@
 #'   add_state = TRUE, add_lss = TRUE)
 #' .prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"),
 #'   add_state = TRUE, add_lss = TRUE, add_lfs = TRUE, add_utility = TRUE,
-#'   eq5d_version = "5L", country = "Denmark")
+#'   eq5d_version = "5L", country = "ES")
 #' @export
 #' @importFrom rlang .data
 
@@ -529,7 +528,12 @@
 #' @param add_noprobs if set to TRUE, level corresponding to "no problems" will be added to the table
 #' @return Summary data frame
 #' @examples
-#' .pchctab(df = example_data, name_groupvar = "surgtype", name_id = "id")
+#' .pchctab(df = example_data, 
+#'   name_id = "id", 
+#'   name_groupvar = "procedure", 
+#'   name_fu = "time", 
+#'   levels_fu = c('Pre-op', 'Post-op')
+#' )
 #' @export
 #' @importFrom rlang .data
 
@@ -935,16 +939,18 @@ return(p)
 #' @param text_rotate A logical indicating whether to rotate the text labels for the bars.
 #' @return A ggplot object containing the PCHC plot.
 #' @examples
-#' plot_data <- data.frame(name = c("Dimension 1", "Dimension 2"),
-#' p = c(0.5, 0.5),
-#' fu = c("Covariate A", "Covariate B"))
-#' cols <- c("#99FF99", "#006600", "#FFCC99", "#663300")
-#' .pchc_plot_by_dim(plot_data, "Proportion", "Example PCHC Plot", cols)
+#' df <- data.frame(
+#'   name = rep(c("Dim1", "Dim2"), each = 2),
+#'   p = c(0.6, 0.4, 0.7, 0.3),
+#'   groupvar = rep(c("Group A", "Group B"), 2)
+#' )
+#' colors <- c("Group A" = "#1b9e77", "Group B" = "#d95f02")
+#' .pchc_plot_by_dim(df, ylab = "Proportion", title = "Example Plot", cols = colors)
 #' @export
-#' 
+
 .pchc_plot_by_dim <- function(plot_data, ylab, title, cols, text_rotate = FALSE) {
   
-  p <- ggplot(plot_data, aes(x = .data$name, y = p, fill = .data$fu)) + 
+  p <- ggplot(plot_data, aes(x = .data$name, y = p, fill = .data$groupvar)) + 
     # bar chart
     geom_bar(stat = "identity", position = "dodge") + 
     # manipuilate x-axis
@@ -962,10 +968,11 @@ return(p)
   if (text_rotate) { 
     p <- p + geom_text(aes(label = scales::percent(p, accuracy = 0.1)), 
                        position = position_dodge(width = 0.9),
-                       hjust = -0.1, angle = 90)} else {
-                         p <- p + geom_text(aes(label = scales::percent(p, accuracy = 0.1)), 
-                                            position = position_dodge(width = 0.9),
-                                            vjust = -0.5)
-                       }
+                       hjust = -0.1, angle = 90)
+  } else {
+   p <- p + geom_text(aes(label = scales::percent(p, accuracy = 0.1)), 
+                      position = position_dodge(width = 0.9),
+                      vjust = -0.5)
+  }
   return(p)
 }

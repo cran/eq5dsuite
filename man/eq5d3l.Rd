@@ -20,6 +20,6 @@ A vector of EQ-5D-3L values or data.frame with one column for each value set req
 Get EQ-5D-3L index values from individual responses to the five dimensions of the EQ-5D-3L.
 }
 \examples{
-eq5d3l(c(11111, 12321, 32123, 33333), 'US') # US -3L value set
+eq5d3l(c(11111, 12321, 32123, 33333), country = "US")
 eq5d3l(make_all_EQ_states('3L'), c('DK', 'CA')) # Danish and Canada -3L value sets 
 }

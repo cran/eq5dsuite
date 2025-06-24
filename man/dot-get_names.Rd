@@ -20,5 +20,4 @@ This function takes in a list of parameters, which would be column names of the 
 \examples{
 .get_names(names_eq5d = c("mo", "sc", "ua", "pd", "ad"))
 .get_names(names_eq5d = NULL, eq5d_version = NULL, name_vas = NULL)
-.get_names(df = example_data, name_fu = NULL, levels_fu = NULL)
 }

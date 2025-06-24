@@ -67,11 +67,16 @@
   # variables used for crosswalk
   if (!'probs5t3' %in% names(pkgenv)) assign(x = "probs5t3", value = .pstate5t3(.EQxwprob), envir = pkgenv)
   if('probs5t3' %in% names(pkgenv)) assign(x = 'xwsets', value = pkgenv$probs5t3 %*% cbind(as.matrix(.vsets3L[, -1, drop = F]), if("uservsets3L" %in% names(pkgenv)) as.matrix(pkgenv$uservsets3L[,-1, drop = F]) else NULL), envir = pkgenv)
-
+  
+  # variables used for NICE crosswalk
+  if (!'.crosswalk_NICE' %in% names(pkgenv)) {
+    assign(x = "crosswalk_NICE", value = .crosswalk_NICE, envir = pkgenv)
+  }  
+  
   EQvariants <- c('5L' = '5L', '3L' = '3L', "Y3L" = "Y3L")
   assign(x = 'country_codes', envir = pkgenv, value = lapply(EQvariants, function(EQvariant) {
-    # message(EQvariant)
-    tmp <- .cntrcodes[.cntrcodes$ISO3166Alpha2 %in% colnames(get(paste0('.vsets', EQvariant)))[-1],]
+    tmp <- .cntrcodes[.cntrcodes$Version == EQvariant & 
+                      .cntrcodes$VS_code %in% colnames(get(paste0('.vsets', EQvariant)))[-1],]
     rownames(tmp) <- NULL
     tmp
   }))

@@ -2,30 +2,53 @@
 % Please edit documentation in R/eq5d_devlin.R
 \name{figure_1_2_4}
 \alias{figure_1_2_4}
-\title{Figure 1.2.4: Percentage of respondents who had a mixed change by the dimensions in which they improved and worsened (\%)}
+\title{Figure 1.2.4: Percentage of Respondents Who Had a Mixed Change Overall,
+by Dimension Improved or Worsened, Grouped by Procedure (or Other Grouping)}
 \usage{
-figure_1_2_4(df, names_eq5d = NULL, name_fu = NULL, levels_fu = NULL, name_id)
+figure_1_2_4(
+  df,
+  name_id,
+  name_groupvar,
+  names_eq5d = NULL,
+  name_fu = NULL,
+  levels_fu = NULL
+)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D, follow-up and patient id columns}
+\item{df}{Data frame containing columns for EQ-5D dimensions, a grouping variable,
+a patient ID, and a follow-up variable}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_id}{Character string indicating the patient ID column}
 
-\item{name_fu}{Character string for the follow-up column}
+\item{name_groupvar}{Character string for the grouping column (e.g. "procedure")}
 
-\item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
-If NULL (default value), the levels will be ordered in the order of appearance in df.}
+\item{names_eq5d}{Character vector naming the EQ-5D dimensions (e.g. c("mo","sc","ua","pd","ad"))}
 
-\item{name_id}{Character string for the patient id column}
+\item{name_fu}{Character string for the follow-up column (e.g. "time")}
+
+\item{levels_fu}{Character vector of length 2 specifying the time order (e.g. c("Pre-op","Post-op"))}
 }
 \value{
-Summary plot and data used for plotting
+A list with two elements:
+  \item{plot_data}{A wide-format data frame of dimension-specific improvements/worsenings for "Mixed change"}
+  \item{p}{A ggplot2 object showing a dimension-level bar chart from .pchc_plot_by_dim}
 }
 \description{
-Figure 1.2.4: Percentage of respondents who had a mixed change by the dimensions in which they improved and worsened (\%)
+This function focuses on patients classified as having "Mixed change" overall
+(i.e., some dimensions improved, others worsened). It then examines which dimensions
+improved vs. worsened for each subject. Results are summarized by a grouping variable
+(e.g., procedure) and time points. The final output is a table plus a ggplot object.
 }
 \examples{
-tmp <- figure_1_2_4(df = example_data, name_fu = "year_range", name_id = "id")
-tmp$p
-tmp$plot_data
+result <- figure_1_2_4(
+  df = example_data,
+  name_id = "id",
+  name_groupvar = "procedure",
+  names_eq5d = c("mo","sc","ua","pd","ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op","Post-op")
+)
+result$plot_data
+result$p
+
 }

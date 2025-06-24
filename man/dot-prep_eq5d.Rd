@@ -46,5 +46,5 @@ df <- data.frame(mo = sample(1:5, 3), sc = sample(1:5, 3),
   add_state = TRUE, add_lss = TRUE)
 .prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"),
   add_state = TRUE, add_lss = TRUE, add_lfs = TRUE, add_utility = TRUE,
-  eq5d_version = "5L", country = "Denmark")
+  eq5d_version = "5L", country = "ES")
 }

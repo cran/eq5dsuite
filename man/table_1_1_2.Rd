@@ -31,5 +31,11 @@ Summary data frame.
 Table 1.1.2: Frequency of levels by dimensions, separated by category
 }
 \examples{
-table_1_1_2(df = example_data, name_cat = "surgtype")
+table_1_1_2(
+ df = example_data[example_data$time == "Pre-op",],
+ names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+ name_cat = "procedure",
+ levels_cat = c("Hip Replacement", "Knee Replacement"),
+ eq5d_version = "3L"
+)
 }

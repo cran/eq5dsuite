@@ -27,9 +27,11 @@ the proportion of the total data that falls into each dimension, stacked by cova
 The wrapper is used in Figures 2.2-2.4.
 }
 \examples{
-plot_data <- data.frame(name = c("Dimension 1", "Dimension 2"),
-p = c(0.5, 0.5),
-fu = c("Covariate A", "Covariate B"))
-cols <- c("#99FF99", "#006600", "#FFCC99", "#663300")
-.pchc_plot_by_dim(plot_data, "Proportion", "Example PCHC Plot", cols)
+df <- data.frame(
+  name = rep(c("Dim1", "Dim2"), each = 2),
+  p = c(0.6, 0.4, 0.7, 0.3),
+  groupvar = rep(c("Group A", "Group B"), 2)
+)
+colors <- c("Group A" = "#1b9e77", "Group B" = "#d95f02")
+.pchc_plot_by_dim(df, ylab = "Proportion", title = "Example Plot", cols = colors)
 }

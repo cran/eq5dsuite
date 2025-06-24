@@ -31,6 +31,11 @@ Summary data frame.
 Table 1.2.1: Frequency of levels by dimensions, by follow-up
 }
 \examples{
-table_1_2_1(df = example_data)
-table_1_2_1(df = example_data, name_fu = "month")
+table_1_2_1(
+  df = example_data,
+  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_fu = "time",
+  levels_fu = c("Pre-op" , "Post-op"),
+  eq5d_version = "3L"
+)
 }

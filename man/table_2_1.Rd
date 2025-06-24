@@ -22,5 +22,10 @@ Summary data frame
 Table 2.1: EQ VAS Score by timepoints
 }
 \examples{
-table_2_1(df = example_data)
+table_2_1(
+  example_data,
+  name_vas = 'vas', 
+  name_fu = 'time', 
+  levels_fu = c('Pre-op', 'Post-op')
+)
 }

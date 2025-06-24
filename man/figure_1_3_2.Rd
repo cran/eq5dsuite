@@ -23,7 +23,12 @@ Summary plot and data used for plotting
 Figure 1.3.2: EQ-5D values plotted against LFS
 }
 \examples{
-tmp <- figure_1_3_2(df = example_data, country = "USA")
+tmp <- figure_1_3_2(
+ example_data, 
+ names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+ eq5d_version = "3L",
+ country = "UK"
+)
 tmp$p
 tmp$plot_data
 }

@@ -37,5 +37,10 @@ Summary data frame
 .pchctab: Changes in health according to the PCHC (Paretian Classification of Health Change)
 }
 \examples{
-.pchctab(df = example_data, name_groupvar = "surgtype", name_id = "id")
+.pchctab(df = example_data, 
+  name_id = "id", 
+  name_groupvar = "procedure", 
+  name_fu = "time", 
+  levels_fu = c('Pre-op', 'Post-op')
+)
 }

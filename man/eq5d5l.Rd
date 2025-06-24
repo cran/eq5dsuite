@@ -21,5 +21,5 @@ Get EQ-5D-5L index values from individual responses to the five dimensions of th
 }
 \examples{
 eq5d5l(c(11111, 12321, 32423, 55555), 'IT') # Italy -5L value set
-eq5d5l(make_all_EQ_states('5L'), c('Japan', 'China')) # Japon and China -5L value sets 
+eq5d5l(make_all_EQ_states('5L'), c('ES', 'DE')) # Spanish and german value sets
 }

@@ -31,7 +31,13 @@ Summary plot and data used for plotting
 Figure 3.5: EQ-5D values: smoothed lines and confidence intervals by groupvar
 }
 \examples{
-tmp <- figure_3_5(df = example_data, country = "USA")
+tmp <- figure_3_5(
+   example_data,
+   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+   name_vas = "vas",
+   eq5d_version = "3L",
+   country = "UK"
+ )
 tmp$p
 tmp$plot_data
 }
