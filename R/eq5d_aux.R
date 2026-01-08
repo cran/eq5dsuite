@@ -580,7 +580,7 @@
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - groupvar - time
   df <- df %>%
-    arrange(id, .data$groupvar, .data$fu)
+    arrange(.data$id, .data$groupvar, .data$fu)
   # check uniqueness of id-groupvar-fu combinations
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
