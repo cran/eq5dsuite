@@ -23,7 +23,7 @@
 #' eqxw(make_all_EQ_states('5L'), c('DK', 'US'))
 #' @export
 eqxw <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")) {
-  do.call(eq5d, c(as.list(match.call())[-1],version = "xw"))
+  eq5d(x = x, country = country, version = "xw", dim.names = dim.names)
 }
 
 #' @title eqxw_UK

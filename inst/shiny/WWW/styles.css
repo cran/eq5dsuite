@@ -1,0 +1,279 @@
+/* =============================================================================
+   eq5dsuite Shiny App — Company theme
+   Maths in Health visual identity
+   ============================================================================= */
+
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+
+.navbar {
+  background-color: #142036 !important;
+  border-bottom: 2px solid #142036;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.navbar-brand {
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Nav links */
+.navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.82) !important;
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-nav .nav-link.active {
+  color: #ffffff !important;
+  background-color: #4f6f9f !important;
+  border-radius: 4px;
+}
+
+/* Right-side nav items (package link etc.) */
+.navbar-nav.ms-auto .nav-item a,
+.navbar-nav.ms-auto .nav-item small {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.78rem;
+}
+
+/* ── MiH brand text logo ─────────────────────────────────────────────────── */
+
+.mih-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mih-brand-logo .mih-badge {
+  background-color: #142036;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.38rem;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+}
+
+.mih-brand-logo .mih-label {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ── Page body / main content area ──────────────────────────────────────── */
+
+body {
+  background-color: #f5f6f8;
+  padding-bottom: 42px; /* room for fixed footer */
+}
+
+.tab-content {
+  background-color: #f5f6f8;
+  min-height: calc(100vh - 100px);
+  padding: 1.1rem 1.25rem 1rem;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+
+.card {
+  border: 1px solid #dde3ec;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+  background-color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background-color: #5fa3c7;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.85rem;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+}
+
+.card-body {
+  padding: 0.85rem 0.9rem;
+}
+
+/* Green header variant for secondary sections */
+.card-header-green,
+.card > .card-header.green {
+  background-color: #5c8f6f !important;
+}
+
+/* Muted / neutral header for utility/download cards */
+.card-header-muted {
+  background-color: #6c757d !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn-primary {
+  background-color: #4f6f9f;
+  border-color: #4f6f9f;
+}
+.btn-primary:hover {
+  background-color: #3d5880;
+  border-color: #3d5880;
+}
+
+.btn-success {
+  background-color: #5c8f6f;
+  border-color: #5c8f6f;
+}
+.btn-success:hover {
+  background-color: #4a7459;
+  border-color: #4a7459;
+}
+
+/* ── Alerts ──────────────────────────────────────────────────────────────── */
+
+.alert {
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+
+/* ── Typography ──────────────────────────────────────────────────────────── */
+
+h4, h5 {
+  color: #1f2a44;
+  font-weight: 700;
+}
+
+h6, .fw-semibold {
+  color: #344055;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+/* ── Workflow steps (Home page) ──────────────────────────────────────────── */
+
+.workflow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.workflow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  background: #f0f4fa;
+  border: 1px solid #dce3ef;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  flex: 1 1 calc(50% - 0.5rem);
+  min-width: 160px;
+}
+
+.workflow-step-num {
+  background-color: #4f6f9f;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.workflow-step-body strong {
+  display: block;
+  font-size: 0.83rem;
+  color: #1f2a44;
+}
+
+.workflow-step-body span {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* Quick start bullets */
+.qs-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.83rem;
+  color: #344055;
+  margin-bottom: 0.3rem;
+}
+
+.qs-dot {
+  color: #5fa3c7;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+/* ── Utility status message ──────────────────────────────────────────────── */
+
+.utility-status-banner {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 5px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.83rem;
+  color: #6d4c00;
+  margin-bottom: 0.75rem;
+}
+
+/* ── DT tables ───────────────────────────────────────────────────────────── */
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  font-size: 0.8rem;
+}
+
+/* ── Global footer ───────────────────────────────────────────────────────── */
+
+.mih-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #142036;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  padding: 5px 16px;
+  font-size: 0.72rem;
+  z-index: 1040;
+  border-top: 1px solid #142036;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.mih-footer a {
+  color: rgba(255, 255, 255, 0.70);
+  text-decoration: none;
+}
+
+.mih-footer a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.mih-footer .mih-footer-sep {
+  opacity: 0.3;
+}

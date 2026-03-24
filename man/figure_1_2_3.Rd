@@ -2,7 +2,10 @@
 % Please edit documentation in R/eq5d_devlin.R
 \name{figure_1_2_3}
 \alias{figure_1_2_3}
-\title{Figure 1.2.3: Percentage of Respondents Who Worsened in Each EQ-5D Dimension, by Group}
+\title{This function identifies respondents with a "Worsen" PCHC state (i.e., overall
+health state got worse between levels_fu[1] and levels_fu[2]), checks
+dimension-specific changes (e.g., mo_diff < 0), and summarizes by a grouping variable
+(e.g., procedure) and time points. It returns a data table and a ggplot object.}
 \usage{
 figure_1_2_3(
   df,

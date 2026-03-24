@@ -2,30 +2,39 @@
 % Please edit documentation in R/EQ_functions.R
 \name{toEQ5Dindex}
 \alias{toEQ5Dindex}
-\title{toEQ5DIndex}
+\title{Convert EQ-5D dimension scores to a five-digit profile index}
 \usage{
-toEQ5Dindex(x, dim.names = c("mo", "sc", "ua", "pd", "ad"))
+toEQ5Dindex(
+  x,
+  dim.names = c("mo", "sc", "ua", "pd", "ad"),
+  na.rm = FALSE,
+  quiet = FALSE
+)
 }
 \arguments{
-\item{x}{A data.frame, matrix, or vector containing dimension levels. Should have column names corresponding to the dim.names argument.}
+\item{x}{A data.frame, matrix, or named numeric vector of EQ-5D dimension
+scores. Each dimension must contain integer values (typically 1–3 or 1–5).}
 
-\item{dim.names}{A vector of dimension names in data.frame/matrix/vector x}
+\item{dim.names}{Character vector of length 5 giving the dimension names, in
+the conventional MO, SC, UA, PD, AD order.}
+
+\item{na.rm}{Logical. If \code{FALSE} (default), any \code{NA} in a row
+produces \code{NA} in the output. If \code{TRUE}, \code{NA} dimensions are
+treated as 0 — use with care, as this silently changes the index value.}
+
+\item{quiet}{Logical. Suppress informational messages about assumed column /
+name order. Default \code{FALSE} so existing scripts see the same messages;
+set \code{TRUE} inside pipelines.}
 }
 \value{
-A vector of 5-digit EQ-5D health state indexes.
+An integer vector with one element per row (data.frame/matrix input)
+  or a single integer (vector input).  Works inside \code{dplyr::mutate()}
+  without \code{rowwise()}.
 }
 \description{
-Generate EQ-5D state vector from data.frame/matrix or named vector with dimensions.
+Convert EQ-5D dimension scores to a five-digit profile index
 }
 \examples{
-toEQ5Dindex(c(1,2,3,4,5))
-
-example_data <- as.data.frame(matrix(data = c(1, 2, 3, 4, 5, 
-                                              5, 4, 3, 2, 1, 
-                                              3, 2, 1, 2, 3), 
-                                     ncol = 5, 
-                                     byrow = TRUE, 
-                                     dimnames = list(NULL, c("mo", "sc", "ua", "pd", "ad"))))
-example_data$irrelevant <- c(6,5,3)
-toEQ5Dindex(example_data)
+# Named vector — scalar usage unchanged
+toEQ5Dindex(c(mo=1, sc=2, ua=3, pd=1, ad=2))
 }

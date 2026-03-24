@@ -7,21 +7,54 @@
 eq5dy3l(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad"))
 }
 \arguments{
-\item{x}{A vector of 5-digit EQ-5D-Y3L state indexes or a matrix / data frame with columns for each dimension.}
+\item{x}{A vector of 5-digit EQ-5D-Y-3L state indexes, or a matrix/data.frame
+with columns corresponding to the EQ-5D-Y-3L dimensions.}
 
-\item{country}{String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.}
+\item{country}{String vector indicating country names or ISO3166 Alpha 2 / 3
+country codes.}
 
-\item{dim.names}{A character vector specifying the names of the EQ-5D-Y3L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad").}
+\item{dim.names}{A character vector specifying the names of the EQ-5D-Y-3L
+dimensions. Default is `c("mo", "sc", "ua", "pd", "ad")`.}
 }
 \value{
-A vector of EQ-5D-Y3L values or data.frame with one column for each value set requested.
+A numeric vector of EQ-5D-Y-3L values, or a data.frame with one
+  column for each requested value set.
 }
 \description{
-Get EQ-5D-Y3L index values from individual responses to the five dimensions of the EQ-5D-Y3L.
+Get EQ-5D-Y-3L index values from individual responses to the five
+dimensions of the EQ-5D-Y-3L.
 }
 \examples{
-# Slovenia -Y3L value set
-eq5dy3l(x = c(11111, 12321, 33333), country = 'SI') 
-# Germany and Spain -Y3L value sets 
-eq5dy3l(make_all_EQ_states('3L'), c('ES', 'DE')) # Spanish and german value sets
+# Example 1: utility values from EQ-5D-Y-3L profile codes
+eq5dy3l(x = c(11111, 12321, 33333), country = "SI")
+
+# Example 2: request multiple value sets
+eq5dy3l(make_all_EQ_states("3L"), country = c("ES", "DE"))
+
+# Example 3: use a data.frame with dimension columns
+dfy3l <- data.frame(
+  mo = c(1, 2, 3),
+  sc = c(1, 1, 2),
+  ua = c(1, 2, 3),
+  pd = c(2, 2, 3),
+  ad = c(1, 3, 2)
+)
+eq5dy3l(dfy3l, country = "SI")
+
+# Example 4: use custom dimension column names
+dfy3l_named <- data.frame(
+  mobility = c(1, 2, 3),
+  self_care = c(1, 1, 2),
+  usual_activities = c(1, 2, 3),
+  pain_discomfort = c(2, 2, 3),
+  anxiety_depression = c(1, 3, 2)
+)
+eq5dy3l(
+  dfy3l_named,
+  country = "SI",
+  dim.names = c(
+    "mobility", "self_care", "usual_activities",
+    "pain_discomfort", "anxiety_depression"
+  )
+)
 }

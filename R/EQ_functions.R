@@ -1,47 +1,113 @@
-#' @title toEQ5DIndex
-#' @description Generate EQ-5D state vector from data.frame/matrix or named vector with dimensions.
-#' @param x A data.frame, matrix, or vector containing dimension levels. Should have column names corresponding to the dim.names argument.
-#' @param dim.names A vector of dimension names in data.frame/matrix/vector x
-#' @return A vector of 5-digit EQ-5D health state indexes.
-#' @examples 
-#' toEQ5Dindex(c(1,2,3,4,5))
-#' 
-#' example_data <- as.data.frame(matrix(data = c(1, 2, 3, 4, 5, 
-#'                                               5, 4, 3, 2, 1, 
-#'                                               3, 2, 1, 2, 3), 
-#'                                      ncol = 5, 
-#'                                      byrow = TRUE, 
-#'                                      dimnames = list(NULL, c("mo", "sc", "ua", "pd", "ad"))))
-#' example_data$irrelevant <- c(6,5,3)
-#' toEQ5Dindex(example_data)
+#' Convert EQ-5D dimension scores to a five-digit profile index
+#' @param x A data.frame, matrix, or named numeric vector of EQ-5D dimension
+#'   scores. Each dimension must contain integer values (typically 1–3 or 1–5).
+#' @param dim.names Character vector of length 5 giving the dimension names, in
+#'   the conventional MO, SC, UA, PD, AD order.
+#' @param na.rm Logical. If \code{FALSE} (default), any \code{NA} in a row
+#'   produces \code{NA} in the output. If \code{TRUE}, \code{NA} dimensions are
+#'   treated as 0 — use with care, as this silently changes the index value.
+#' @param quiet Logical. Suppress informational messages about assumed column /
+#'   name order. Default \code{FALSE} so existing scripts see the same messages;
+#'   set \code{TRUE} inside pipelines.
+#' @return An integer vector with one element per row (data.frame/matrix input)
+#'   or a single integer (vector input).  Works inside \code{dplyr::mutate()}
+#'   without \code{rowwise()}.
+#' @examples
+#' # Named vector — scalar usage unchanged
+#' toEQ5Dindex(c(mo=1, sc=2, ua=3, pd=1, ad=2))
 #' @export
-toEQ5Dindex <- function(x, dim.names = c("mo", "sc", "ua", "pd", "ad")) {
-  # Matrix or data.frame
-  if(!length(dim.names) == 5) stop("Argument dim.names not of length 5.")
-  if(length(dim(x)) == 2) {
-    # colnames(x) <- tolower(colnames(x))
-    if(is.null(colnames(x))) {
-      message("No column names")
-      if(NCOL(x) == 5) {
-        message("Given 5 columns, will assume dimensions in conventional order: MO, SC, UA, PD, AD.")
+
+toEQ5Dindex <- function(
+    x,
+    dim.names = c("mo", "sc", "ua", "pd", "ad"),
+    na.rm     = FALSE,
+    quiet     = FALSE
+) {
+  
+  # ── 1. Validate dim.names ─────────────────────────────────────────────────
+  if (length(dim.names) != 5L)
+    stop("'dim.names' must be a character vector of exactly 5 names.")
+  if (anyDuplicated(dim.names))
+    stop("'dim.names' contains duplicate entries: ",
+         paste(dim.names[duplicated(dim.names)], collapse = ", "), ".")
+  
+  msg <- function(...) if (!quiet) message(...)
+  
+  # ── 2. Weights: 10^4, 10^3, 10^2, 10^1, 10^0 ────────────────────────────
+  weights <- 10L ^ (4L:0L)
+  
+  # ── 3. Matrix / data.frame branch (vectorised) ───────────────────────────
+  if (length(dim(x)) == 2L) {
+    
+    # Normalise column names to lower-case
+    if (!is.null(colnames(x))) colnames(x) <- tolower(colnames(x))
+    
+    # Assign default names if none present
+    if (is.null(colnames(x))) {
+      if (ncol(x) == 5L) {
+        msg("No column names found; assuming conventional order: ",
+            paste(toupper(dim.names), collapse = ", "), ".")
         colnames(x) <- dim.names
-      } 
+      } else {
+        stop("'x' has no column names and ", ncol(x),
+             " columns (expected 5). ",
+             "Provide a named data.frame/matrix or set 'dim.names'.")
+      }
     }
-    if(!all(dim.names %in% colnames(x))) stop("Provided dimension names not available in matrix/data.frame.")
-    return(as.integer(as.matrix(x[, dim.names]) %*% (10^(4:0))))
+    
+    missing_cols <- setdiff(dim.names, colnames(x))
+    if (length(missing_cols))
+      stop("Required dimension column(s) not found in 'x': ",
+           paste(missing_cols, collapse = ", "), ".")
+    
+    m <- as.matrix(x[, dim.names, drop = FALSE])
+    mode(m) <- "integer"
+    
+    # NA handling
+    if (!na.rm && anyNA(m)) {
+      # Propagate NA row-wise without changing non-NA rows
+      row_has_na <- rowSums(is.na(m)) > 0L
+      result <- integer(nrow(m))
+      result[!row_has_na] <- as.integer(
+        m[!row_has_na, , drop = FALSE] %*% weights
+      )
+      result[row_has_na] <- NA_integer_
+      return(result)
+    }
+    
+    if (na.rm) m[is.na(m)] <- 0L
+    return(as.integer(m %*% weights))
   }
-  if(length(x)<5) stop("Too short vector provided. Stopping")
-  if(is.null(names(x))) {
-    message("No names provided in vector.")
-    if(length(x) == 5) {
-      message("Vector of 5 provided, assuming dimensions in conventional order: MO, SC, UA, PD, AD.")
+  
+  # ── 4. Named-vector branch (scalar, backward-compatible) ─────────────────
+  if (length(x) < 5L)
+    stop("'x' has ", length(x), " element(s); at least 5 required.")
+  
+  if (is.null(names(x))) {
+    if (length(x) == 5L) {
+      msg("No names found in vector; assuming conventional order: ",
+          paste(toupper(dim.names), collapse = ", "), ".")
       names(x) <- dim.names
+    } else {
+      stop("'x' has no names and length != 5. ",
+           "Provide a named vector or a data.frame/matrix.")
     }
   } else {
     names(x) <- tolower(names(x))
   }
-  if(!all(dim.names %in% names(x))) stop("Provided dimension names not in vector names. Stopping.")
-  as.integer(x[dim.names] %*% (10^(4:0)))
+  
+  missing_names <- setdiff(dim.names, names(x))
+  if (length(missing_names))
+    stop("Required dimension name(s) not found in 'x': ",
+         paste(missing_names, collapse = ", "), ".")
+  
+  vals <- x[dim.names]
+  
+  if (!na.rm && anyNA(vals))
+    return(NA_integer_)
+  
+  if (na.rm) vals[is.na(vals)] <- 0L
+  as.integer(vals %*% weights)
 }
 
 #' @title toEQ5Ddims
@@ -442,7 +508,7 @@ eqvs_display <- function(version = "5L", return_df = FALSE) {
   version <- toupper(version)
   user_defined_str <- paste0("user_defined_", version)
   
-  message(str_c("Available national value sets for ", version, " version:"))
+  message(paste0("Available national value sets for ", version, " version:"))
   .prettyPrint(pkgenv$country_codes[[version]], 'l')
   if(NROW(pkgenv[[user_defined_str]])) {
     message('User-defined value sets:')    
@@ -545,51 +611,155 @@ eq5d <- function(x, country = NULL, version = '5L', dim.names = c("mo", "sc", "u
 }
 
 #' @title eq5d3l
-#' @description Get EQ-5D-3L index values from individual responses to the five dimensions of the EQ-5D-3L. 
-#' @param x A vector of 5-digit EQ-5D-3L state indexes or a matrix/data.frame with columns corresponding to EQ-5D-3L state dimensions.
-#' @param country String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.
-#' @param dim.names A character vector specifying the names of the EQ-5D-3L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad"). 
-#' @return A vector of EQ-5D-3L values or data.frame with one column for each value set requested.
-#' @examples 
+#' @description
+#' Get EQ-5D-3L index values from individual responses to the five
+#' dimensions of the EQ-5D-3L.
+#' @param x A vector of 5-digit EQ-5D-3L state indexes, or a matrix/data.frame
+#'   with columns corresponding to the EQ-5D-3L dimensions.
+#' @param country String vector indicating country names or ISO3166 Alpha 2 / 3
+#'   country codes.
+#' @param dim.names A character vector specifying the names of the EQ-5D-3L
+#'   dimensions. Default is `c("mo", "sc", "ua", "pd", "ad")`.
+#' @return A numeric vector of EQ-5D-3L values, or a data.frame with one column
+#'   for each requested value set.
+#' @examples
+#' # Example 1: utility values from EQ-5D-3L profile codes
 #' eq5d3l(c(11111, 12321, 32123, 33333), country = "US")
-#' eq5d3l(make_all_EQ_states('3L'), c('DK', 'CA')) # Danish and Canada -3L value sets 
+#'
+#' # Example 2: request multiple value sets
+#' eq5d3l(make_all_EQ_states("3L"), country = c("DK", "CA"))
+#'
+#' # Example 3: use a data.frame with dimension columns
+#' df3l <- data.frame(
+#'   mo = c(1, 2, 3),
+#'   sc = c(1, 2, 2),
+#'   ua = c(1, 3, 1),
+#'   pd = c(2, 2, 3),
+#'   ad = c(1, 1, 2)
+#' )
+#' eq5d3l(df3l, country = "US")
+#'
+#' # Example 4: use custom dimension column names
+#' df3l_named <- data.frame(
+#'   mobility = c(1, 2, 3),
+#'   self_care = c(1, 2, 2),
+#'   usual_activities = c(1, 3, 1),
+#'   pain_discomfort = c(2, 2, 3),
+#'   anxiety_depression = c(1, 1, 2)
+#' )
+#' eq5d3l(
+#'   df3l_named,
+#'   country = "US",
+#'   dim.names = c(
+#'     "mobility", "self_care", "usual_activities",
+#'     "pain_discomfort", "anxiety_depression"
+#'   )
+#' )
 #' @export
 eq5d3l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
-  argl <- as.list(match.call(expand.dots = TRUE))[-1]
-  argl[['version']] <- "3L"
-  do.call(eq5d, argl)
+  eq5d(x = x, country = country, version = "3L", dim.names = dim.names)
 }
 
 #' @title eq5d5l
-#' @description Get EQ-5D-5L index values from individual responses to the five dimensions of the EQ-5D-5L. 
-#' @param x A vector of 5-digit EQ-5D-5L state indexes or a matrix/data.frame with columns corresponding to EQ-5D-5L state dimensions.
-#' @param country String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.
-#' @param dim.names A character vector specifying the names of the EQ-5D-5L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad"). 
-#' @return A vector of EQ-5D-5L values or data.frame with one column for each value set requested.
-#' @examples 
-#' eq5d5l(c(11111, 12321, 32423, 55555), 'IT') # Italy -5L value set
-#' eq5d5l(make_all_EQ_states('5L'), c('ES', 'DE')) # Spanish and german value sets
+#' @description
+#' Get EQ-5D-5L index values from individual responses to the five
+#' dimensions of the EQ-5D-5L.
+#'
+#' @param x A vector of 5-digit EQ-5D-5L state indexes, or a matrix/data.frame
+#'   with columns corresponding to the EQ-5D-5L dimensions.
+#' @param country String vector indicating country names or ISO3166 Alpha 2 / 3
+#'   country codes.
+#' @param dim.names A character vector specifying the names of the EQ-5D-5L
+#'   dimensions. Default is `c("mo", "sc", "ua", "pd", "ad")`.
+#'
+#' @return A numeric vector of EQ-5D-5L values, or a data.frame with one column
+#'   for each requested value set.
+#'
+#' @examples
+#' # Example 1: utility values from EQ-5D-5L profile codes
+#' eq5d5l(c(11111, 12321, 32423, 55555), country = "IT")
+#'
+#' # Example 2: request multiple value sets
+#' eq5d5l(make_all_EQ_states("5L"), country = c("ES", "DE"))
+#'
+#' # Example 3: use a data.frame with dimension columns
+#' df5l <- data.frame(
+#'   mo = c(1, 2, 5),
+#'   sc = c(1, 2, 4),
+#'   ua = c(1, 3, 3),
+#'   pd = c(2, 4, 2),
+#'   ad = c(1, 5, 1)
+#' )
+#' eq5d5l(df5l, country = "ES")
+#'
+#' # Example 4: use custom dimension column names from a real-world style dataset
+#' df5l_named <- data.frame(
+#'   mobility = c(1, 5, 3),
+#'   self_care = c(2, 4, 2),
+#'   usual_activities = c(3, 3, 1),
+#'   pain_discomfort = c(4, 2, 2),
+#'   anxiety_depression = c(5, 1, 3)
+#' )
+#' eq5d5l(
+#'   df5l_named,
+#'   country = "ES",
+#'   dim.names = c(
+#'     "mobility", "self_care", "usual_activities",
+#'     "pain_discomfort", "anxiety_depression"
+#'   )
+#' )
+#'
 #' @export
 eq5d5l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
-  argl <- as.list(match.call(expand.dots = TRUE))[-1]
-  argl[['version']] <- "5L"
-  do.call(eq5d, argl)
+  eq5d(x = x, country = country, version = "5L", dim.names = dim.names)
 }
 
 #' @title eq5dy3l
-#' @description Get EQ-5D-Y3L index values from individual responses to the five dimensions of the EQ-5D-Y3L. 
-#' @param x A vector of 5-digit EQ-5D-Y3L state indexes or a matrix / data frame with columns for each dimension.
-#' @param country String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.
-#' @param dim.names A character vector specifying the names of the EQ-5D-Y3L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad"). 
-#' @return A vector of EQ-5D-Y3L values or data.frame with one column for each value set requested.
-#' @examples 
-#' # Slovenia -Y3L value set
-#' eq5dy3l(x = c(11111, 12321, 33333), country = 'SI') 
-#' # Germany and Spain -Y3L value sets 
-#' eq5dy3l(make_all_EQ_states('3L'), c('ES', 'DE')) # Spanish and german value sets
+#' @description
+#' Get EQ-5D-Y-3L index values from individual responses to the five
+#' dimensions of the EQ-5D-Y-3L.
+#' @param x A vector of 5-digit EQ-5D-Y-3L state indexes, or a matrix/data.frame
+#'   with columns corresponding to the EQ-5D-Y-3L dimensions.
+#' @param country String vector indicating country names or ISO3166 Alpha 2 / 3
+#'   country codes.
+#' @param dim.names A character vector specifying the names of the EQ-5D-Y-3L
+#'   dimensions. Default is `c("mo", "sc", "ua", "pd", "ad")`.
+#' @return A numeric vector of EQ-5D-Y-3L values, or a data.frame with one
+#'   column for each requested value set.
+#' @examples
+#' # Example 1: utility values from EQ-5D-Y-3L profile codes
+#' eq5dy3l(x = c(11111, 12321, 33333), country = "SI")
+#' 
+#' # Example 2: request multiple value sets
+#' eq5dy3l(make_all_EQ_states("3L"), country = c("ES", "DE"))
+#'
+#' # Example 3: use a data.frame with dimension columns
+#' dfy3l <- data.frame(
+#'   mo = c(1, 2, 3),
+#'   sc = c(1, 1, 2),
+#'   ua = c(1, 2, 3),
+#'   pd = c(2, 2, 3),
+#'   ad = c(1, 3, 2)
+#' )
+#' eq5dy3l(dfy3l, country = "SI")
+#'
+#' # Example 4: use custom dimension column names
+#' dfy3l_named <- data.frame(
+#'   mobility = c(1, 2, 3),
+#'   self_care = c(1, 1, 2),
+#'   usual_activities = c(1, 2, 3),
+#'   pain_discomfort = c(2, 2, 3),
+#'   anxiety_depression = c(1, 3, 2)
+#' )
+#' eq5dy3l(
+#'   dfy3l_named,
+#'   country = "SI",
+#'   dim.names = c(
+#'     "mobility", "self_care", "usual_activities",
+#'     "pain_discomfort", "anxiety_depression"
+#'   )
+#' )
 #' @export
 eq5dy3l <- function(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad")){
-  argl <- as.list(match.call(expand.dots = TRUE))[-1]
-  argl[['version']] <- "Y3L"
-  do.call(eq5d, argl)
+  eq5d(x = x, country = country, version = "Y3L", dim.names = dim.names)
 }

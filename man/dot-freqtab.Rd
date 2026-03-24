@@ -9,7 +9,8 @@
   names_eq5d = NULL,
   name_fu = NULL,
   levels_fu = NULL,
-  eq5d_version = NULL
+  eq5d_version = NULL,
+  add_summary_problems_change = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@
 If NULL (default value), the levels will be ordered in the order of appearance in df.}
 
 \item{eq5d_version}{Version of the EQ-5D instrument}
+
+\item{add_summary_problems_change}{If set to false, the resulting dataframe does not include a row on problems change.}
 }
 \value{
 Summary data frame.

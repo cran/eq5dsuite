@@ -1,9 +1,7 @@
-#' @import dplyr
 #' @import ggplot2
 #' @import moments
 #' @import RColorBrewer
-#' @import rlang
+#' @importFrom rlang .data
 #' @import scales
-#' @import stringr
-#' @import tidyr
+#' @importFrom stats aggregate setNames
 NULL

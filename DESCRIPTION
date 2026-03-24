@@ -1,13 +1,17 @@
 Package: eq5dsuite
 Type: Package
 Title: Handling and Analysing EQ-5d Data
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: 
   c(person(given = "Kim",
            family = "Rand",
            role = c("aut", "cre"),
            email = "krand@mathsinhealth.com",
            comment = c(ORCID = "0000-0001-7692-4099")),
+    person(given = "Oliver",
+           family = "Rivero-Arias",
+           role = "aut",
+           comment = c(ORCID = "0000-0003-2233-6544")),
     person(given = "Iryna",
            family = "Schlackow",
            role = "aut",
@@ -34,13 +38,17 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Depends: R (>= 3.5)
-Imports: dplyr, ggplot2, moments, RColorBrewer, rlang, scales, stringr,
-        tidyr, rappdirs
+Imports: ggplot2, moments, RColorBrewer, rlang, scales, rappdirs
+Suggests: shiny, DT, bslib, readxl, spelling, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Language: en-US
 NeedsCompilation: no
-Packaged: 2025-06-23 13:38:52 UTC; aeste
+Packaged: 2026-03-24 12:00:08 UTC; aeste
 Author: Kim Rand [aut, cre] (ORCID: <https://orcid.org/0000-0001-7692-4099>),
+  Oliver Rivero-Arias [aut] (ORCID:
+    <https://orcid.org/0000-0003-2233-6544>),
   Iryna Schlackow [aut] (ORCID: <https://orcid.org/0000-0002-4154-1431>),
   Anabel Estévez-Carrillo [aut] (ORCID:
     <https://orcid.org/0000-0001-8778-5055>)
 Repository: CRAN
-Date/Publication: 2025-06-24 13:30:18 UTC
+Date/Publication: 2026-03-24 12:50:11 UTC

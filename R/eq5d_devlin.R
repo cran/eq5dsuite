@@ -15,7 +15,12 @@
 table_1_1_1<- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL) {
-  do.call(.freqtab, as.list(match.call()[-1]))
+  do.call(.freqtab, list(
+    df = df,
+    names_eq5d = names_eq5d,
+    eq5d_version = eq5d_version,
+    add_summary_problems_change = FALSE
+  ))
 }
 
 
@@ -95,7 +100,6 @@ table_1_2_1<- function(df,
 #'   eq5d_version = "3L",
 #'   n = 10
 #' )
-#' @importFrom rlang .data
 
 table_1_1_3 <- function(df, 
                       names_eq5d = NULL,
@@ -114,62 +118,54 @@ table_1_1_3 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, eq5d_version = eq5d_version, add_state = TRUE) %>%
-    select('state')
-  
+  df <- .prep_eq5d(df = df, names = names_eq5d, eq5d_version = eq5d_version, add_state = TRUE)
+  df <- df[, "state", drop = FALSE]
+
   ### analysis ####
-  
-  # all states
-  states_all <- df %>%
-    # non-NA values
-    filter(!is.na(.data$state)) %>%
-    # group by state
-    group_by(.data$state) %>%
-    # add count
-    summarise(n = n()) %>%
-    # add percentage
-    mutate(p = n / sum(n)) %>%
-    arrange(-n) %>%
-    # cumulative percentage
-    mutate(cum_p = cumsum(.data$p))
-  
+
+  # all states (non-NA only), aggregated and sorted
+  df_cc <- df[!is.na(df$state), , drop = FALSE]
+  states_agg <- aggregate(rep(1L, nrow(df_cc)), by = list(state = df_cc$state), FUN = sum)
+  names(states_agg)[2] <- "n"
+  states_agg <- states_agg[order(-states_agg$n), , drop = FALSE]
+  states_agg$p <- states_agg$n / sum(states_agg$n)
+  states_agg$cum_p <- cumsum(states_agg$p)
+  rownames(states_agg) <- NULL
+
   # most frequent n non-NA states
-  states_top <- states_all %>%
-    filter(!is.na(.data$state)) %>%
-    slice_head(n = n)
-  
+  states_top <- states_agg[seq_len(min(n, nrow(states_agg))), , drop = FALSE]
+
   # worst state
-  
   state_worst <- if (eq5d_version == "5L") "55555" else "33333"
-  
-  if(!state_worst %in% states_top[,1]) {
-    states_worst <- states_all %>%
-      filter(.data$state == state_worst) %>%
-      mutate(cum_p = 1)  
-    states_worst <- states_worst[c(1,1),]
-    states_worst[1,] <- NA
-    states_worst[1,1] <- '...'
+
+  if (!state_worst %in% states_top[, 1]) {
+    idx <- match(state_worst, states_agg$state)
+    if (!is.na(idx)) {
+      states_worst <- states_agg[idx, , drop = FALSE]
+      states_worst$cum_p <- 1
+    } else {
+      states_worst <- states_agg[0, , drop = FALSE]
+    }
+    states_worst <- states_worst[c(1, 1), , drop = FALSE]
+    states_worst[1, ] <- NA
+    states_worst[1, 1] <- '...'
   } else {
-    states_worst <- .data$all_states[0,]
+    states_worst <- states_agg[0, , drop = FALSE]
   }
-  
-  
-  
+
   # missing data
-  state_na <- df %>%
-    summarise(n = sum(is.na(.data$state)), p = sum(is.na(.data$state)) / n()) %>%
-    mutate(state = "Missing")
-  
+  n_miss <- sum(is.na(df$state))
+  state_na <- data.frame(state = "Missing", n = n_miss,
+                         p = n_miss / nrow(df), cum_p = NA_real_,
+                         stringsAsFactors = FALSE)
+
   # combine and tidy up
-  retval <- bind_rows(states_top, states_worst, state_na) %>%
-    rename(`Health state` = 'state',
-           Frequency = 'n',
-           Percentage = 'p',
-           `Cumulative percentage` = 'cum_p')
-  
+  retval <- rbind(states_top, states_worst, state_na)
+  names(retval) <- c("Health state", "Frequency", "Percentage", "Cumulative percentage")
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -194,7 +190,6 @@ table_1_1_3 <- function(df,
 #'   name_fu = "time",
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
-#' @importFrom rlang .data
 
 table_1_2_2 <- function(df,
                       name_id,
@@ -217,55 +212,59 @@ table_1_2_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(id = !!quo_name(name_id),
-           groupvar = !!quo_name(name_groupvar))
+  names(df)[names(df) == name_id] <- "id"
+
+  names(df)[names(df) == name_groupvar] <- "groupvar"
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - groupvar - time
-  df <- df %>%
-    arrange(.data$id, .data$groupvar, .data$fu)
+
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
   # check uniqueness of id-groupvar-fu combinations
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
   ### analysis ###
   
   # calculate change
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    filter(!is.na(.data$state)) %>%
-    mutate(state = 
-             factor(.data$state,
-                    # levels = c("Improve", "Mixed change", "No change", "Worsen")))
-                    levels = c("No change", "Improve", "Worsen", "Mixed change")))
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1])
+  df <- df[!is.na(df$state), , drop = FALSE]
+  df$state <- factor(df$state, levels = c("No change", "Improve", "Worsen", "Mixed change"))
+
   # summarise by groupvar, fu & state
-  summary_dim <- df %>%
-    group_by(.data$groupvar, .data$fu, .data$state) %>%
-    summarise(n = n()) %>%
-    mutate(p = n / sum(n)) %>%
-    ungroup()
-  
+  summary_dim <- aggregate(rep(1L, nrow(df)),
+                           by = list(groupvar = df$groupvar, fu = df$fu, state = df$state),
+                           FUN = sum)
+  names(summary_dim)[names(summary_dim) == "x"] <- "n"
+  key_gf <- paste(summary_dim$groupvar, summary_dim$fu, sep = "\001")
+  summary_dim$p <- summary_dim$n / tapply(summary_dim$n, key_gf, sum)[key_gf]
+
   # summarise totals
-  summary_total <- summary_dim %>%
-    group_by(.data$groupvar, .data$fu) %>%
-    summarise(n = sum(n), p = sum(.data$p), .groups = "drop") %>%
-    # add label
-    mutate(state = "Grand Total") 
-  
-  # combine & tidy up
-  retval <- bind_rows(summary_dim, summary_total) %>%
-    # reshape into a long format to subsequently impose order on columns in pivot_wider
-    pivot_longer(cols = 'n':'p') %>%
-    # finally reshape wider
-    pivot_wider(id_cols = 'state', 
-                names_from = c('groupvar', 'fu', 'name'), 
-                values_from = 'value',
-                # fill NAs with 0
-                values_fill = list('value' = 0))
-  
+  agg_tot <- aggregate(cbind(n = summary_dim$n, p = summary_dim$p),
+                       by = list(groupvar = summary_dim$groupvar, fu = summary_dim$fu),
+                       FUN = sum)
+  agg_tot$state <- "Grand Total"
+  summary_total <- agg_tot
+
+  # combine & tidy up: pivot n/p to wide columns {groupvar}_{fu}_n / {groupvar}_{fu}_p
+  combined <- rbind(summary_dim, summary_total)
+  state_order <- c(levels(df$state), "Grand Total")
+  all_states <- state_order[state_order %in% unique(as.character(combined$state))]
+  retval <- data.frame(state = all_states, stringsAsFactors = FALSE)
+  grp_vals <- unique(as.character(combined$groupvar))
+  fu_vals  <- as.character(levels_fu[-1])
+  for (gv in grp_vals) {
+    for (f in fu_vals) {
+      sub <- combined[combined$groupvar == gv & as.character(combined$fu) == f, , drop = FALSE]
+      vals_n <- setNames(sub$n, as.character(sub$state))
+      vals_p <- setNames(sub$p, as.character(sub$state))
+      retval[[paste(gv, f, "n", sep = "_")]] <- ifelse(is.na(vals_n[retval$state]), 0, vals_n[retval$state])
+      retval[[paste(gv, f, "p", sep = "_")]] <- ifelse(is.na(vals_p[retval$state]), 0, vals_p[retval$state])
+    }
+  }
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -290,7 +289,6 @@ table_1_2_2 <- function(df,
 #'   name_fu = "time",
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
-#' @importFrom rlang .data
 
 table_1_2_3 <- function(df, 
                       name_id,
@@ -313,57 +311,68 @@ table_1_2_3 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(id = !!quo_name(name_id),
-           groupvar = !!quo_name(name_groupvar))
+  names(df)[names(df) == name_id] <- "id"
+
+  names(df)[names(df) == name_groupvar] <- "groupvar"
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - groupvar - time
-  df <- df %>%
-    arrange('id', 'groupvar', 'fu')
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
   # check uniqueness of id-groupvar-fu combinations
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
   
   ### analysis ###
   
   # calculate change
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE) %>%
-    filter(!is.na(.data$state))
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE)
+  df <- df[!is.na(df$state), , drop = FALSE]
+
   # separate out those with problems & calculate percentages
-  summary_by_probs_status <- df %>%
-    mutate(state_noprobs = case_when((.data$state_noprobs == "No problems") ~ "No problems",
-                                       TRUE ~ "Total with problems")) %>%
-    group_by(.data$groupvar, .data$fu, .data$state_noprobs) %>%
-    summarise(n = n()) %>%
-    mutate(p = n / sum(n))
-  
+  df_status <- df
+  df_status$state_noprobs <- ifelse(df_status$state_noprobs == "No problems",
+                                    "No problems", "Total with problems")
+  summary_by_probs_status <- aggregate(rep(1L, nrow(df_status)),
+    by = list(groupvar = df_status$groupvar, fu = df_status$fu,
+              state_noprobs = df_status$state_noprobs), FUN = sum)
+  names(summary_by_probs_status)[names(summary_by_probs_status) == "x"] <- "n"
+  key_bp <- paste(summary_by_probs_status$groupvar, summary_by_probs_status$fu, sep = "\001")
+  summary_by_probs_status$p <- summary_by_probs_status$n /
+    tapply(summary_by_probs_status$n, key_bp, sum)[key_bp]
+
   # summarise classes within those with problems
-  summary_with_probs <- df %>%
-    filter(.data$state_noprobs != "No problems") %>%
-    group_by(.data$groupvar, .data$fu, .data$state_noprobs) %>%
-    summarise(n = n()) %>%
-    mutate(p = n / sum(n))
-  
+  df_probs <- df[df$state_noprobs != "No problems", , drop = FALSE]
+  summary_with_probs <- aggregate(rep(1L, nrow(df_probs)),
+    by = list(groupvar = df_probs$groupvar, fu = df_probs$fu,
+              state_noprobs = df_probs$state_noprobs), FUN = sum)
+  names(summary_with_probs)[names(summary_with_probs) == "x"] <- "n"
+  key_wp <- paste(summary_with_probs$groupvar, summary_with_probs$fu, sep = "\001")
+  summary_with_probs$p <- summary_with_probs$n /
+    tapply(summary_with_probs$n, key_wp, sum)[key_wp]
+
   # combine & tidy up
-  retval <- bind_rows(summary_with_probs, summary_by_probs_status) %>%
-    # impose order
-    mutate(state_noprobs = factor(.data$state_noprobs, 
-                                    levels = c("No change", "Improve", "Worsen", "Mixed change",
-                                               "Total with problems", "No problems"))) %>%
-    # reshape into a long format to subsequently impose order on columns in pivot_wider
-    pivot_longer(cols = 'n':'p') %>%
-    # finally reshape into a wide format
-    pivot_wider(id_cols = 'state_noprobs', 
-                names_from = c('groupvar', 'fu', 'name'), 
-                values_from = 'value',
-                # fill NAs with 0
-                values_fill = list('value' = 0)) %>%
-    arrange(.data$state_noprobs)
-  
+  combined <- rbind(summary_with_probs, summary_by_probs_status)
+  state_order <- c("No change", "Improve", "Worsen", "Mixed change",
+                   "Total with problems", "No problems")
+  combined$state_noprobs <- factor(combined$state_noprobs, levels = state_order)
+  combined <- combined[order(combined$state_noprobs), , drop = FALSE]
+  all_states <- levels(combined$state_noprobs)[levels(combined$state_noprobs) %in%
+                                                unique(as.character(combined$state_noprobs))]
+  retval <- data.frame(state_noprobs = all_states, stringsAsFactors = FALSE)
+  grp_vals <- unique(as.character(combined$groupvar))
+  fu_vals  <- as.character(levels_fu[-1])
+  for (gv in grp_vals) {
+    for (f in fu_vals) {
+      sub <- combined[combined$groupvar == gv & as.character(combined$fu) == f, , drop = FALSE]
+      vals_n <- setNames(sub$n, as.character(sub$state_noprobs))
+      vals_p <- setNames(sub$p, as.character(sub$state_noprobs))
+      retval[[paste(gv, f, "n", sep = "_")]] <- ifelse(is.na(vals_n[retval$state_noprobs]), 0, vals_n[retval$state_noprobs])
+      retval[[paste(gv, f, "p", sep = "_")]] <- ifelse(is.na(vals_p[retval$state_noprobs]), 0, vals_p[retval$state_noprobs])
+    }
+  }
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -386,7 +395,6 @@ table_1_2_3 <- function(df,
 #'   name_fu = "time",
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
-#' @importFrom rlang .data
 
 table_1_2_4 <- function(df, 
                       name_id,
@@ -408,16 +416,14 @@ table_1_2_4 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(id = !!quo_name(name_id))
+  names(df)[names(df) == name_id] <- "id"
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - time
-  df <- df %>%
-    arrange(id, 'fu')
+
+  df <- df[order(df$id, df$fu), , drop = FALSE]
   # check uniqueness of id-fu combinations
   .check_uniqueness(df, group_by = c("id", "fu"))
   
@@ -426,56 +432,72 @@ table_1_2_4 <- function(df,
   # calculate change
   levels_eq5d <- c("mo", "sc", "ua", "pd", "ad")
   level_fu_1 <- levels_fu[1]
-  
-  df_diff <- df %>%
-    # reshape into a long format
-    pivot_longer(cols = 'mo':'ad', names_to = "domain") %>%
-    select('domain', 'id', 'fu', 'value') %>%
-    arrange(.data$domain, .data$id, .data$fu) %>%
-    # calculate lagged difference
-    mutate(diff = lag(.data$value) - .data$value,
-           level_change = str_c(lag(.data$value), "-", .data$value)) %>%
-    # replace entry from 1st follow-up with NA
-    mutate(diff = case_when(.data$fu == level_fu_1 ~ NA_real_,
-                            TRUE ~ diff)) %>%
-    # remove NAs
-    filter(!is.na(.data$diff)) %>%
-    # classify the difference
-    mutate(diff = case_when(.data$diff > 0 ~ "Better",
-                            .data$diff < 0 ~ "Worse",
-                            .data$diff == 0 ~ "No change")) %>%
-    # order domain column
-    mutate(domain = factor(.data$domain, levels = levels_eq5d)) %>%
-    arrange(.data$domain)
-  
-  # % total
-  p_total <- df_diff %>%
-    group_by(.data$domain, .data$diff, .data$level_change) %>%
-    summarise(n = n()) %>%
-    group_by(.data$domain) %>%
-    mutate(p = n / sum(n)) %>%
-    mutate(type = "% Total")
-  
-  # % type
-  p_type <- df_diff %>%
-    group_by(.data$domain, .data$diff, .data$level_change) %>%
-    summarise(n = n()) %>%
-    mutate(p = n / sum(n)) %>%
-    mutate(type = "% Type")
-  
-  # combine and tidy up
-  retval <- rbind(p_total, p_type) %>%
-    select('domain', 'type', 'diff', 'level_change', 'p') %>%
-    pivot_wider(id_cols = c('diff', 'level_change'), names_from = c('domain', 'type'), values_from = 'p',
-                values_fill = list('p' = 0)) %>%
-    # arrange rows
-    mutate(diff = factor(.data$diff, levels = c("No change", "Better", "Worse"))) %>%
-    arrange(.data$diff, .data$level_change) %>%
-    # arrange rows
-    select('diff', 'level_change', 
-           !!!syms(apply(expand_grid(levels_eq5d, c("% Total", "% Type")), 
-                         1, paste, collapse = "_")))
-  
+
+  # reshape to long format
+  df_long <- do.call(rbind, lapply(levels_eq5d, function(d) {
+    data.frame(domain = d, id = df$id, fu = df$fu, value = df[[d]],
+               stringsAsFactors = FALSE)
+  }))
+  # sort by domain, id, fu
+  df_long <- df_long[order(df_long$domain, df_long$id, df_long$fu), , drop = FALSE]
+  rownames(df_long) <- NULL
+
+  # compute lagged difference (dplyr::lag equivalent)
+  prev_val <- c(NA_real_, head(df_long$value, -1))
+  df_long$diff <- prev_val - df_long$value
+  df_long$level_change <- ifelse(is.na(prev_val), NA_character_,
+                                 paste0(prev_val, "-", df_long$value))
+  # set baseline to NA
+  df_long$diff[as.character(df_long$fu) == as.character(level_fu_1)] <- NA_real_
+  df_long$level_change[as.character(df_long$fu) == as.character(level_fu_1)] <- NA_character_
+
+  # remove NAs (baseline rows) and classify difference
+  df_diff <- df_long[!is.na(df_long$diff), , drop = FALSE]
+  df_diff$diff <- ifelse(df_diff$diff > 0, "Better",
+                   ifelse(df_diff$diff < 0, "Worse", "No change"))
+  df_diff$domain <- factor(df_diff$domain, levels = levels_eq5d)
+  df_diff <- df_diff[order(df_diff$domain), , drop = FALSE]
+
+  # % total: n per (domain, diff, level_change), p = n / sum(n) within domain
+  p_agg <- aggregate(rep(1L, nrow(df_diff)),
+                     by = list(domain = df_diff$domain, diff = df_diff$diff,
+                                level_change = df_diff$level_change), FUN = sum)
+  names(p_agg)[names(p_agg) == "x"] <- "n"
+  p_total <- p_agg
+  p_total$p <- p_total$n / tapply(p_total$n, p_total$domain, sum)[p_total$domain]
+  p_total$type <- "% Total"
+
+  # % type: p = n / sum(n) within (domain, diff)
+  p_type <- p_agg
+  key_dt <- paste(p_type$domain, p_type$diff, sep = "\001")
+  p_type$p <- p_type$n / tapply(p_type$n, key_dt, sum)[key_dt]
+  p_type$type <- "% Type"
+
+  # combine and build wide output
+  combined_p <- rbind(p_total[, c("domain", "type", "diff", "level_change", "p")],
+                      p_type[,  c("domain", "type", "diff", "level_change", "p")])
+
+  # ordered (diff, level_change) row keys
+  all_rows <- unique(combined_p[, c("diff", "level_change")])
+  all_rows$diff <- factor(all_rows$diff, levels = c("No change", "Better", "Worse"))
+  all_rows <- all_rows[order(all_rows$diff, all_rows$level_change), , drop = FALSE]
+  rownames(all_rows) <- NULL
+  retval <- all_rows
+
+  # column order: {domain}_{type} as produced by expand_grid(levels_eq5d, c("% Total","% Type"))
+  col_names <- as.vector(outer(levels_eq5d, c("% Total", "% Type"), paste, sep = "_"))
+  for (cn in col_names) {
+    sep_idx <- regexpr("_% ", cn)
+    dom  <- substr(cn, 1, sep_idx - 1)
+    type <- substr(cn, sep_idx + 1, nchar(cn))
+    sub  <- combined_p[as.character(combined_p$domain) == dom & combined_p$type == type, , drop = FALSE]
+    vals <- setNames(sub$p, paste(sub$diff, sub$level_change, sep = "\001"))
+    row_key <- paste(as.character(retval$diff), retval$level_change, sep = "\001")
+    retval[[cn]] <- ifelse(is.na(vals[row_key]), 0, vals[row_key])
+  }
+  retval <- retval[, c("diff", "level_change", col_names), drop = FALSE]
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -497,7 +519,6 @@ table_1_2_4 <- function(df,
 #'   eq5d_version = "3L", 
 #'   country = "US"
 #' )
-#' @importFrom rlang .data
 
 table_1_3_1 <- function(df, 
                       names_eq5d = NULL,
@@ -515,40 +536,42 @@ table_1_3_1 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
-                   add_state = TRUE, 
+  df <- .prep_eq5d(df = df, names = names_eq5d,
+                   add_state = TRUE,
                    add_lss = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    # leave relevant columns only
-    select('lss', 'utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, c("lss", "utility"), drop = FALSE]
+
   ### analysis ###
-  
+
   # summarise non-NA values
-  summary <- df %>%
-    filter(!is.na(.data$lss)) %>%
-    group_by(.data$lss) %>%
-    summarise(Number = n(),
-              Mean = mean(.data$utility),
-              `Standard Deviation` = sd(.data$utility),
-              Median = median(.data$utility),
-              Minimum = min(.data$utility),
-              Maximum = max(.data$utility),
-              Range = max(.data$utility) - min(.data$utility),
-              .groups = "drop")
-  
+  df_cc <- df[!is.na(df$lss), , drop = FALSE]
+  grp_key <- df_cc$lss
+  parts <- split(df_cc$utility, grp_key)
+  summary_list <- lapply(sort(unique(grp_key)), function(k) {
+    u <- parts[[as.character(k)]]
+    data.frame(lss = k, Number = length(u), Mean = mean(u),
+               `Standard Deviation` = sd(u), Median = median(u),
+               Minimum = min(u), Maximum = max(u), Range = max(u) - min(u),
+               check.names = FALSE, stringsAsFactors = FALSE)
+  })
+  summary <- do.call(rbind, summary_list)
+
   # missing data
-  summary_na <- df %>%
-    summarise(Number = sum(is.na(.data$lss))) %>%
-    mutate(lss = "Missing")
-  
+  summary_na <- data.frame(lss = "Missing", Number = sum(is.na(df$lss)),
+                            Mean = NA_real_, `Standard Deviation` = NA_real_,
+                            Median = NA_real_, Minimum = NA_real_,
+                            Maximum = NA_real_, Range = NA_real_,
+                            check.names = FALSE, stringsAsFactors = FALSE)
+
   # combine and tidy up
-  retval <- bind_rows(summary %>% mutate(lss = as.character(.data$lss)), summary_na) %>%
-    rename(LSS = 'lss')
-  
+  summary$lss <- as.character(summary$lss)
+  retval <- rbind(summary, summary_na)
+  names(retval)[names(retval) == "lss"] <- "LSS"
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -566,7 +589,6 @@ table_1_3_1 <- function(df,
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   eq5d_version = "3L"
 #' )
-#' @importFrom rlang .data
 
 table_1_3_2 <- function(df, 
                       names_eq5d = NULL, 
@@ -583,42 +605,33 @@ table_1_3_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
-                   add_state = TRUE, 
-                   add_lfs = TRUE, eq5d_version = eq5d_version) %>%
-    # leave relevant columns only
-    select('lfs')
-  
+  df <- .prep_eq5d(df = df, names = names_eq5d,
+                   add_state = TRUE,
+                   add_lfs = TRUE, eq5d_version = eq5d_version)
+  df <- df[, "lfs", drop = FALSE]
+
   ### analysis ###
-  
+
   # summarise non-NA values
-  summary <- df %>%
-    filter(!is.na(.data$lfs)) %>%
-    # summary by each utility-lfs combination
-    group_by(.data$lfs) %>%
-    summarise(n = n()) %>%
-    # add percentage
-    mutate(p = n / sum(.data$n)) %>%
-    arrange(-n) %>%
-    # cumulative percentage
-    mutate(cum_p = cumsum(.data$p)) %>%
-    # tidy up
-    rename(LFS = 'lfs',
-           Frequency = 'n',
-           `%` = 'p',
-           `Cum (%)` = 'cum_p')
-  
+  df_cc <- df[!is.na(df$lfs), , drop = FALSE]
+  counts <- aggregate(rep(1L, nrow(df_cc)), by = list(lfs = df_cc$lfs), FUN = sum)
+  names(counts)[2] <- "n"
+  counts <- counts[order(-counts$n), , drop = FALSE]
+  counts$p <- counts$n / sum(counts$n)
+  counts$cum_p <- cumsum(counts$p)
+  names(counts) <- c("LFS", "Frequency", "%", "Cum (%)")
+
   # missing data
-  summary_na <- df %>%
-    summarise(Frequency = sum(is.na(.data$lfs))) %>%
-    mutate(LFS = "Missing")
-  
+  summary_na <- data.frame(LFS = "Missing", Frequency = sum(is.na(df$lfs)),
+                            `%` = NA_real_, `Cum (%)` = NA_real_,
+                            check.names = FALSE, stringsAsFactors = FALSE)
+
   # combine
-  retval <- bind_rows(summary, summary_na)
-  
+  retval <- rbind(counts, summary_na)
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -639,7 +652,6 @@ table_1_3_2 <- function(df,
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
-#' @importFrom rlang .data
 
 table_1_3_3 <- function(df, 
                       names_eq5d = NULL,
@@ -657,37 +669,40 @@ table_1_3_3 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
-                   add_state = TRUE, 
-                   add_lfs = TRUE, eq5d_version = eq5d_version, 
-                   add_utility = TRUE, country = country) %>%
-    # leave relevant columns only
-    select('lfs', 'utility')
-  
+  df <- .prep_eq5d(df = df, names = names_eq5d,
+                   add_state = TRUE,
+                   add_lfs = TRUE, eq5d_version = eq5d_version,
+                   add_utility = TRUE, country = country)
+  df <- df[, c("lfs", "utility"), drop = FALSE]
+
   ### analysis ###
-  
-  # summarise for each utility-LFS combination
-  retval <- df %>%
-    # exclude NAs
-    filter(!is.na(.data$lfs)) %>%
-    # summary by each utility-LFS combination
-    group_by(.data$utility) %>%
-    count(lfs = factor(.data$lfs), .drop = FALSE) %>%
-    # arrange by LFS to preserve order when reshaping
-    arrange(.data$lfs) %>%
-    # reshape into wide format
-    pivot_wider(id_cols = 'utility', names_from = 'lfs', values_from = 'n',
-                values_fill = list('n' = 0)) %>%
-    # order rows
-    arrange(.data$utility) %>%
-    # add row totals
-    mutate(Total = sum(c_across(everything()))) %>%
-    # tidy up
-    rename(`EQ-5D Value` = 'utility')
-  
+
+  # exclude NAs and count per (utility, lfs) combination
+  df_cc <- df[!is.na(df$lfs), , drop = FALSE]
+  counts <- aggregate(rep(1L, nrow(df_cc)),
+                      by = list(utility = df_cc$utility, lfs = df_cc$lfs), FUN = sum)
+  names(counts)[3] <- "n"
+
+  # all lfs levels (sorted)
+  all_lfs <- sort(unique(as.character(df_cc$lfs)))
+  all_utils <- sort(unique(df_cc$utility))
+
+  # build wide matrix: rows = utility, cols = lfs
+  retval <- data.frame(utility = all_utils, stringsAsFactors = FALSE)
+  for (lf in all_lfs) {
+    sub <- counts[as.character(counts$lfs) == lf, , drop = FALSE]
+    vals <- setNames(sub$n, sub$utility)
+    retval[[lf]] <- ifelse(is.na(vals[as.character(retval$utility)]), 0L,
+                           vals[as.character(retval$utility)])
+  }
+  # add row totals
+  retval$Total <- rowSums(retval[, all_lfs, drop = FALSE])
+  # tidy up
+  names(retval)[names(retval) == "utility"] <- "EQ-5D Value"
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -708,7 +723,6 @@ table_1_3_3 <- function(df,
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
-#' @importFrom rlang .data
 
 table_1_3_4 <- function(df, 
                        names_eq5d = NULL,
@@ -726,8 +740,7 @@ table_1_3_4 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_eq5d(df = df, names = names_eq5d, 
                    add_state = TRUE, 
@@ -737,21 +750,17 @@ table_1_3_4 <- function(df,
   ### analysis ###
   
   # summarise non-NA values
-  retval <- df %>%
-    # remove missing data
-    filter(!is.na(.data$utility)) %>%
-    group_by(.data$lfs) %>%
-    summarise(Frequency = length(.data$utility),
-              Mean = mean(.data$utility), 
-              SD = sd(.data$utility),
-              Median = median(.data$utility),
-              Minimum = min(.data$utility),
-              Maximum = max(.data$utility),
-              Range = max(.data$utility)-min(.data$utility)) %>%
-    # tidy up
-    arrange(.data$lfs) %>%
-    rename(LFS = 'lfs')
-  
+  df_cc <- df[!is.na(df$utility), , drop = FALSE]
+  parts <- split(df_cc$utility, df_cc$lfs)
+  result_list <- lapply(sort(names(parts)), function(k) {
+    u <- parts[[k]]
+    data.frame(LFS = k, Frequency = length(u), Mean = mean(u), SD = sd(u),
+               Median = median(u), Minimum = min(u), Maximum = max(u),
+               Range = max(u) - min(u), stringsAsFactors = FALSE)
+  })
+  retval <- do.call(rbind, result_list)
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -781,7 +790,6 @@ table_1_3_4 <- function(df,
 #'           )
 #' figure$plot_data
 #' figure$p
-#' @importFrom rlang .data
 #' @importFrom utils head
 
 figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
@@ -798,33 +806,32 @@ figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
   }
   
   # Subset to relevant columns
-  df <- df %>%
-    dplyr::select(dplyr::all_of(names_all))
-  
+  df <- df[, names_all, drop = FALSE]
+
   # Prepare data (adds 'state' column via .prep_eq5d)
   df <- .prep_eq5d(
-    df            = df, 
-    names         = names_eq5d,
-    add_state     = TRUE,
-    add_lfs       = FALSE, 
-    eq5d_version  = eq5d_version
+    df           = df,
+    names        = names_eq5d,
+    add_state    = TRUE,
+    add_lfs      = FALSE,
+    eq5d_version = eq5d_version
   )
-  
+
   # Check for NA in 'state', show warning and filter
   n_na <- sum(is.na(df$state))
   if (n_na > 0) {
     warning(n_na, " excluded observations with invalid EQ-5D profiles.")
-    df <- dplyr::filter(df, !is.na(.data$state))
+    df <- df[!is.na(df$state), , drop = FALSE]
   }
-  
+
   # Calculate frequencies & cumulative proportions
-  profile_freq <- df %>%
-    dplyr::count(.data$state, name = "Frequency") %>%
-    dplyr::arrange(dplyr::desc(.data$Frequency)) %>%
-    dplyr::mutate(
-      CumPropObservations = cumsum(.data$Frequency) / sum(.data$Frequency),
-      CumPropStates = dplyr::row_number() / dplyr::n()
-    )
+  freq_agg <- aggregate(rep(1L, nrow(df)), by = list(state = df$state), FUN = sum)
+  names(freq_agg)[2] <- "Frequency"
+  freq_agg <- freq_agg[order(-freq_agg$Frequency), , drop = FALSE]
+  rownames(freq_agg) <- NULL
+  freq_agg$CumPropObservations <- cumsum(freq_agg$Frequency) / sum(freq_agg$Frequency)
+  freq_agg$CumPropStates       <- seq_len(nrow(freq_agg)) / nrow(freq_agg)
+  profile_freq <- freq_agg
   
   # Compute the Health State Density Index (HSDI)
   hsdi_area <- sum(
@@ -877,7 +884,6 @@ figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
 #'   name_fu = 'time', 
 #'   levels_fu = c('Pre-op', 'Post-op')
 #' )
-#' @importFrom rlang .data
 
 table_2_1 <- function(df, 
                       name_vas = NULL,
@@ -897,8 +903,7 @@ table_2_1 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_vas(df = df, name = name_vas)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
@@ -925,7 +930,6 @@ table_2_1 <- function(df,
 #'   name_vas = 'vas', 
 #'   add_na_total =  TRUE
 #'   )
-#' @importFrom rlang .data
 
 table_2_2 <- function(df, 
                       name_vas = NULL, 
@@ -941,44 +945,36 @@ table_2_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_vas(df = df, name = name_vas)
   
   ### analysis ###
   
   # define ranges and midpoints
-  retval <- data.frame(
-    l = c(0:2, seq(from = 3, to = 93, by = 5), 98:100),
-    u = c(0:2, seq(from = 7, to = 97, by = 5), 98:100),
-    Midpoint = c(0:2, seq(from = 5, to = 95, by = 5), 98:100)) %>%
-    mutate(Frequency = NA)
-  
+  l_vals <- c(0:2, seq(from = 3, to = 93, by = 5), 98:100)
+  u_vals <- c(0:2, seq(from = 7, to = 97, by = 5), 98:100)
+  mid_vals <- c(0:2, seq(from = 5, to = 95, by = 5), 98:100)
+  retval <- data.frame(l = l_vals, u = u_vals, Midpoint = mid_vals, Frequency = NA_integer_)
+
   # populate the table
-  # entries for each row
-  for (i in 1:nrow(retval)) {
-    retval_temp <- retval[i, ]
-    # number of entries in df within a given range
-    retval[i, "Frequency"] <- nrow(df %>% filter(.data$vas >= retval_temp$l & .data$vas <= retval_temp$u))
+  for (i in seq_len(nrow(retval))) {
+    retval[i, "Frequency"] <- sum(!is.na(df$vas) & df$vas >= retval$l[i] & df$vas <= retval$u[i])
   }
-  
-  # add range column
-  retval <- retval %>%
-    mutate(Range = case_when(.data$l == u ~ as.character(l),
-                             TRUE ~ str_c(l, u, sep = "-"))) %>%
-    select(-'l', -'u') %>%
-    select('Range', 'Midpoint', 'Frequency')
-  
+
+  # add range column and tidy up
+  retval$Range <- ifelse(retval$l == retval$u, as.character(retval$l),
+                         paste(retval$l, retval$u, sep = "-"))
+  retval <- retval[, c("Range", "Midpoint", "Frequency")]
+
   # add totals & missing data if needed
   if (add_na_total) {
     n_total <- nrow(df)
-    n_na <- nrow(df %>% filter(is.na(.data$vas)))
-    retval <- bind_rows(retval,
-                        data.frame(
-                          Range = c("Total observed", "Missing", "Total sample"),
-                          Midpoint = rep(NA, 3),
-                          Frequency = c(n_total - n_na, n_na, n_total)))
+    n_na    <- sum(is.na(df$vas))
+    retval  <- rbind(retval,
+                     data.frame(Range = c("Total observed", "Missing", "Total sample"),
+                                Midpoint = rep(NA_real_, 3),
+                                Frequency = c(n_total - n_na, n_na, n_total)))
   }
   
   # return value
@@ -1006,7 +1002,6 @@ table_2_2 <- function(df,
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
-#' @importFrom rlang .data
 
 table_3_1 <- function(df, 
                       names_eq5d = NULL,
@@ -1031,18 +1026,16 @@ table_3_1 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  df <- df %>%
-    select('fu', 'utility')
-  
+  df <- df[, c("fu", "utility"), drop = FALSE]
+
   ### analysis ###
-  
+
   # summarise
   retval <- .summary_cts_by_fu(df = df, name_v = "utility")
   
@@ -1067,7 +1060,6 @@ table_3_1 <- function(df,
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
-#' @importFrom rlang .data
 
 table_3_2 <- function(df,
                       names_eq5d = NULL,
@@ -1088,30 +1080,43 @@ table_3_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(groupvar = !!quo_name(name_groupvar))
+  names(df)[names(df) == name_groupvar] <- "groupvar"
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
-  df <- df %>%
-    select('groupvar', 'utility')
-  
+  df <- df[, c("groupvar", "utility"), drop = FALSE]
+
   ### analysis ###
-  
+
   # summary by category
   summary_by <- .summary_table_4_3(df = df, group_by = "groupvar")
-  # summary_total
-  summary_total <- .summary_table_4_3(df = df, group_by = NULL) %>%
-    mutate(groupvar = "All groups")
-  
-  # combine
-  retval <- bind_rows(summary_by, summary_total) %>%
-    pivot_longer(-'groupvar') %>%
-    pivot_wider(id_cols = 'name', names_from = 'groupvar', values_from = 'value')
-  
+  # summary_total (all groups combined)
+  u_all <- df$utility
+  summary_total <- data.frame(
+    groupvar = "All groups",
+    Mean = mean(u_all, na.rm = TRUE),
+    `Standard error` = sd(u_all, na.rm = TRUE) / sqrt(sum(!is.na(u_all))),
+    Median = median(u_all, na.rm = TRUE),
+    `25th` = quantile(u_all, probs = 0.25, na.rm = TRUE, names = FALSE),
+    `75th` = quantile(u_all, probs = 0.75, na.rm = TRUE, names = FALSE),
+    N = sum(!is.na(u_all)),
+    Missing = sum(is.na(u_all)),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+
+  # combine: pivot longer then wider (rows = stat names, cols = groups)
+  combined <- rbind(summary_by, summary_total)
+  stat_cols <- setdiff(names(combined), "groupvar")
+  grp_vals  <- unique(combined$groupvar)
+  retval <- data.frame(name = stat_cols, stringsAsFactors = FALSE)
+  for (gv in grp_vals) {
+    sub <- combined[combined$groupvar == gv, stat_cols, drop = FALSE]
+    retval[[gv]] <- as.numeric(sub[1, ])
+  }
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -1146,7 +1151,6 @@ table_3_2 <- function(df,
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
-#' @importFrom rlang .data
 
 table_3_3 <- function(df,
                       names_eq5d = NULL,
@@ -1173,67 +1177,84 @@ table_3_3 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(groupvar = !!quo_name(name_groupvar),
-           age = !!quo_name(name_age))
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+  names(df)[names(df) == name_age]      <- "age"
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  df <- df %>%
-    select('groupvar', 'age', 'fu', 'utility')
-  
+  df <- df[, c("groupvar", "age", "fu", "utility"), drop = FALSE]
+
   # split age into categories
   if (is.numeric(df$age)) {
-    # If age is numeric, convert to factor using predefined breaks
     age_breaks <- c(0, 18, seq(from = 25, to = 75, by = 10), Inf)
-    df <- df %>%
-      dplyr::mutate(age_cat = cut(
-        .data$age, 
-        breaks = age_breaks, 
-        right  = FALSE
-      )) %>%
-      dplyr::mutate(
-        age_cat = factor(
-          .data$age_cat,
-          levels = c("[0,18)", "[18,25)", "[25,35)", "[35,45)", "[45,55)", "[55,65)", "[65,75)", "[75,Inf)"),
-          labels = c("0-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+")
-        )
-      ) %>%
-      dplyr::select(-.data$age)
-    
+    df$age_cat <- cut(df$age, breaks = age_breaks, right = FALSE)
+    df$age_cat <- factor(df$age_cat,
+      levels = c("[0,18)", "[18,25)", "[25,35)", "[35,45)", "[45,55)", "[55,65)", "[65,75)", "[75,Inf)"),
+      labels = c("0-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"))
+    df$age <- NULL
   } else if (is.factor(df$age)) {
-    df <- df %>%
-      dplyr::rename(age_cat = .data$age)
+    names(df)[names(df) == "age"] <- "age_cat"
   } else {
     stop("The 'age' column must be either numeric or factor. Stopping.")
   }
-  
+
   ### analysis ###
-  
+
+  # helper for overall summary without grouping
+  .total_summary_4_4 <- function(u) {
+    data.frame(
+      Mean = mean(u, na.rm = TRUE),
+      `Standard error` = sd(u, na.rm = TRUE) / sqrt(sum(!is.na(u))),
+      `25th Percentile` = quantile(u, probs = 0.25, na.rm = TRUE, names = FALSE),
+      `50th Percentile (median)` = median(u, na.rm = TRUE),
+      `75th Percentile` = quantile(u, probs = 0.75, na.rm = TRUE, names = FALSE),
+      n = sum(!is.na(u)),
+      Missing = sum(is.na(u)),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }
+
   # summary by category
   summary_by <- .summary_table_4_4(df = df, group_by = c("groupvar", "age_cat"))
-  
-  # summary of totals by age
-  summary_total_age <- .summary_table_4_4(df = df, group_by = c("groupvar")) %>%
-    mutate(age_cat = "Total") 
-  
-  # summary of totals by groupvar
-  summary_total_by <- .summary_table_4_4(df = df, group_by = c("age_cat")) %>%
-    mutate(groupvar = "Total") 
-  
-  # summary of totals by groupvar and age
-  summary_total_by_age <- .summary_table_4_4(df = df, group_by = NULL) %>%
-    mutate(groupvar = "Total", age_cat = "Total")
-  
-  # combine and tidy up
-  retval <- bind_rows(summary_by, summary_total_age, summary_total_by, summary_total_by_age) %>%
-    pivot_longer(-('groupvar':'age_cat')) %>%
-    pivot_wider(id_cols = c('groupvar', 'name'), names_from = 'age_cat', values_from = 'value')
-  
+  # summary of totals by groupvar (age_cat = "Total")
+  summary_total_age <- .summary_table_4_4(df = df, group_by = "groupvar")
+  summary_total_age$age_cat <- "Total"
+  # summary of totals by age_cat (groupvar = "Total")
+  summary_total_by <- .summary_table_4_4(df = df, group_by = "age_cat")
+  summary_total_by$groupvar <- "Total"
+  # overall total
+  st <- .total_summary_4_4(df$utility)
+  st$groupvar <- "Total"
+  st$age_cat  <- "Total"
+  summary_total_by_age <- st
+
+  # combine all
+  combined <- rbind(summary_by, summary_total_age, summary_total_by, summary_total_by_age)
+
+  # pivot: rows = (groupvar, stat_name), cols = age_cat values
+  stat_cols <- setdiff(names(combined), c("groupvar", "age_cat"))
+  all_gc <- unique(combined[, c("groupvar", "age_cat"), drop = FALSE])
+  grp_vals <- unique(combined$groupvar)
+  age_vals <- unique(combined$age_cat)
+
+  # build result: for each (groupvar, stat), create row; cols = age_cat
+  result_list <- lapply(grp_vals, function(gv) {
+    sub <- combined[combined$groupvar == gv, , drop = FALSE]
+    do.call(rbind, lapply(stat_cols, function(sc) {
+      row <- data.frame(groupvar = gv, name = sc, stringsAsFactors = FALSE)
+      for (ac in age_vals) {
+        s2 <- sub[sub$age_cat == ac, sc, drop = TRUE]
+        row[[ac]] <- if (length(s2) == 1) s2 else NA_real_
+      }
+      row
+    }))
+  })
+  retval <- do.call(rbind, result_list)
+  rownames(retval) <- NULL
+
   # return value
   return(retval)
 }
@@ -1264,7 +1285,6 @@ table_3_3 <- function(df,
 #' )
 #' result$p        # shows the plot
 #' result$plot_data  # shows the summary table
-#' @importFrom rlang .data
 
 figure_1_2_1 <- function(df,
                          name_id,
@@ -1290,46 +1310,40 @@ figure_1_2_1 <- function(df,
   }
 
   # Keep only relevant columns
-  df <- df %>%
-    dplyr::select(!!!syms(names_all))
+  df <- df[, names_all, drop = FALSE]
 
   # Rename for internal use
-  df <- df %>%
-    dplyr::rename(
-      id       = !!quo_name(name_id),
-      groupvar = !!quo_name(name_groupvar)
-    )
+  names(df)[names(df) == name_id]       <- "id"
+  names(df)[names(df) == name_groupvar] <- "groupvar"
 
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
 
   # Sort by (id, groupvar, fu)
-  df <- df %>%
-    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
 
   # Check uniqueness: each (id, groupvar, fu) should appear at most once
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
 
   ### 2) Calculate PCHC (Paretian Classification) ###
   # .pchc() compares the first level in levels_fu (e.g. "Pre-op") vs. the second (e.g. "Post-op")
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE) %>%
-    dplyr::filter(!is.na(.data$state)) %>%
-    # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
-    dplyr::mutate(
-      state_noprobs = factor(
-        .data$state_noprobs,
-        levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
-      )
-    )
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE)
+  df <- df[!is.na(df$state), , drop = FALSE]
+  # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
+  df$state_noprobs <- factor(
+    df$state_noprobs,
+    levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
+  )
 
   ### 3) Summarize for Single Bar Chart ###
   # We want one bar per groupvar for each state_noprobs
-  plot_data <- df %>%
-    dplyr::group_by(.data$groupvar, .data$state_noprobs) %>%
-    dplyr::summarise(n = dplyr::n()) %>%
-    dplyr::mutate(p = .data$n / sum(.data$n)) %>%
-    dplyr::ungroup()
+  plot_data <- aggregate(rep(1L, nrow(df)),
+                         by = list(groupvar = df$groupvar, state_noprobs = df$state_noprobs),
+                         FUN = sum)
+  names(plot_data)[names(plot_data) == "x"] <- "n"
+  key_gv <- plot_data$groupvar
+  plot_data$p <- plot_data$n / tapply(plot_data$n, key_gv, sum)[key_gv]
 
   ### 4) Build the Plot ###
   p <- ggplot2::ggplot(plot_data,
@@ -1355,14 +1369,15 @@ figure_1_2_1 <- function(df,
 
   ### 5) Reshape Plot Data for Return ###
   # Convert from long to wide so each group appears as a column
-  plot_data_wide <- plot_data %>%
-    tidyr::pivot_wider(
-      id_cols = "state_noprobs",
-      names_from = "groupvar",
-      values_from = "p",
-      values_fill = 0
-    ) %>%
-    dplyr::rename(`Change category` = "state_noprobs")
+  plot_data_wide <- stats::reshape(
+    plot_data[, c("state_noprobs", "groupvar", "p")],
+    idvar     = "state_noprobs",
+    timevar   = "groupvar",
+    direction = "wide"
+  )
+  names(plot_data_wide) <- sub("^p\\.", "", names(plot_data_wide))
+  plot_data_wide[is.na(plot_data_wide)] <- 0
+  names(plot_data_wide)[names(plot_data_wide) == "state_noprobs"] <- "Change category"
 
   ### 6) Return ###
   # Return list with summarized data & the ggplot object (with optional theme modifications)
@@ -1399,7 +1414,6 @@ figure_1_2_1 <- function(df,
 #' result$p
 #' result$plot_data
 #'
-#' @importFrom rlang .data
 figure_1_2_2 <- function(df,
                          name_id,
                          name_groupvar,
@@ -1424,57 +1438,60 @@ figure_1_2_2 <- function(df,
   }
   
   # Keep only relevant columns
-  df <- df %>%
-    dplyr::select(!!!syms(names_all))
-  
+  df <- df[, names_all, drop = FALSE]
+
   # Rename internal columns
-  df <- df %>%
-    dplyr::rename(
-      id       = !!quo_name(name_id),
-      groupvar = !!quo_name(name_groupvar)
-    )
-  
+  names(df)[names(df) == name_id]       <- "id"
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  
+
   # Sort by (id, groupvar, fu)
-  df <- df %>%
-    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
-  
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
+
   # Ensure uniqueness of (id, groupvar, fu)
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
+
   ### 2) Analysis ###
   # .pchc() calculates difference columns like mo_diff, sc_diff, etc.
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    dplyr::filter(!is.na(.data$state))
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1])
+  df <- df[!is.na(df$state), , drop = FALSE]
+
   # Focus on those whose overall 'state' == "Improve"
   # then check dimension-specific improvements (e.g. mo_diff > 0)
-  # e.g., mo_diff, sc_diff, ua_diff, pd_diff, ad_diff
-  # (Ensure you have correct naming: "mo_diff":"ad_diff" or "da_diff" as needed)
   dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
-  
-  plot_data <- df %>%
-    dplyr::filter(.data$state == "Improve") %>%
-    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
-    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
-    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
-    dplyr::summarise(
-      n       = sum(.data$value > 0),  # number who improved in this dimension
-      n_total = dplyr::n(),            # total in "Improve" group
-      .groups = "drop"
-    ) %>%
-    dplyr::mutate(p = .data$n / .data$n_total) %>%
-    # Convert dimension code (e.g. "mo_diff") to a nice label
-    dplyr::mutate(
-      name = factor(
-        .data$name,
-        levels = dimension_names,
-        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
-      )
-    )
+
+  df_imp <- df[df$state == "Improve", c("groupvar", "fu", dimension_names), drop = FALSE]
+  # pivot longer manually
+  df_long <- do.call(rbind, lapply(dimension_names, function(dn) {
+    data.frame(groupvar = df_imp$groupvar,
+               fu       = df_imp$fu,
+               name     = dn,
+               value    = df_imp[[dn]],
+               stringsAsFactors = FALSE)
+  }))
+  # group_by(groupvar, fu, name) summarise
+  plot_data <- do.call(rbind, lapply(
+    split(df_long, list(df_long$groupvar, df_long$fu, df_long$name), drop = TRUE),
+    function(sub) {
+      data.frame(groupvar = sub$groupvar[1],
+                 fu       = sub$fu[1],
+                 name     = sub$name[1],
+                 n        = sum(sub$value > 0),
+                 n_total  = nrow(sub),
+                 stringsAsFactors = FALSE)
+    }
+  ))
+  rownames(plot_data) <- NULL
+  plot_data$p <- plot_data$n / plot_data$n_total
+  # Convert dimension code to a nice label
+  plot_data$name <- factor(
+    plot_data$name,
+    levels = dimension_names,
+    labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+  )
   
   ### 3) Plot ###
   # We assume .pchc_plot_by_dim() is a helper function that
@@ -1493,21 +1510,18 @@ figure_1_2_2 <- function(df,
   # e.g. columns for each fu within each groupvar
   # If you want separate columns by groupvar as well, you can unify them in a single pivot.
   
-  # For demonstration, we’ll pivot only by fu
-  # to show p-values side by side. If you want groupvar in separate columns,
-  # you'll do something like pivot_wider(names_from = c("groupvar","fu")...).
-  plot_data_wide <- plot_data %>%
-    tidyr::pivot_wider(
-      id_cols     = c("groupvar", "name"),
-      names_from  = "fu",
-      values_from = "p",
-      values_fill = 0
-    ) %>%
-    dplyr::rename(
-      Group  = "groupvar",
-      Values = "name"
-    )
-  
+  # Pivot only by fu, keeping groupvar as id col
+  plot_data_wide <- stats::reshape(
+    plot_data[, c("groupvar", "name", "fu", "p")],
+    idvar     = c("groupvar", "name"),
+    timevar   = "fu",
+    direction = "wide"
+  )
+  names(plot_data_wide) <- sub("^p\\.", "", names(plot_data_wide))
+  plot_data_wide[is.na(plot_data_wide)] <- 0
+  names(plot_data_wide)[names(plot_data_wide) == "groupvar"] <- "Group"
+  names(plot_data_wide)[names(plot_data_wide) == "name"]     <- "Values"
+
   return(list(
     plot_data = plot_data_wide,
     p         = .modify_ggplot_theme(p = p) # if you have a custom theme function
@@ -1515,7 +1529,7 @@ figure_1_2_2 <- function(df,
 }
 
 
-#' Figure 1.2.3: Percentage of Respondents Who Worsened in Each EQ-5D Dimension, by Group
+#’ Figure 1.2.3: Percentage of Respondents Who Worsened in Each EQ-5D Dimension, by Group
 #'
 #' This function identifies respondents with a "Worsen" PCHC state (i.e., overall
 #' health state got worse between levels_fu[1] and levels_fu[2]), checks
@@ -1546,7 +1560,6 @@ figure_1_2_2 <- function(df,
 #' result$p        # shows the plot
 #' result$plot_data  # shows the summary table
 #'
-#' @importFrom rlang .data
 figure_1_2_3 <- function(df,
                          name_id,
                          name_groupvar,
@@ -1573,57 +1586,62 @@ figure_1_2_3 <- function(df,
   }
   
   # Keep only relevant columns
-  df <- df %>%
-    dplyr::select(!!!syms(names_all))
-  
+  df <- df[, names_all, drop = FALSE]
+
   # Rename internal columns
-  df <- df %>%
-    dplyr::rename(
-      id       = !!quo_name(name_id),
-      groupvar = !!quo_name(name_groupvar)
-    )
-  
+  names(df)[names(df) == name_id]       <- "id"
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  
+
   # Sort by (id, groupvar, fu)
-  df <- df %>%
-    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
-  
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
+
   # Ensure uniqueness of (id, groupvar, fu)
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
+
   ### 2) Analysis: PCHC ###
-  
+
   # .pchc() calculates difference columns like mo_diff, sc_diff, etc.
   # level_fu_1 is the 'baseline' time point.
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    dplyr::filter(!is.na(.data$state))
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1])
+  df <- df[!is.na(df$state), , drop = FALSE]
+
   # We focus on those whose overall state == "Worsen"
   # then check dimension-specific changes, e.g., mo_diff < 0
   dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
-  
-  plot_data <- df %>%
-    dplyr::filter(.data$state == "Worsen") %>%
-    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
-    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
-    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
-    dplyr::summarise(
-      n       = sum(.data$value < 0),  # # participants who got worse in that dimension
-      n_total = dplyr::n(),            # total in "Worsen" group
-      .groups = "drop"
-    ) %>%
-    dplyr::mutate(p = .data$n / .data$n_total) %>%
-    # Convert dimension code (e.g. "mo_diff") to a nice label
-    dplyr::mutate(
-      name = factor(
-        .data$name,
-        levels = dimension_names,
-        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
-      )
-    )
+
+  df_wor <- df[df$state == "Worsen", c("groupvar", "fu", dimension_names), drop = FALSE]
+  # pivot longer manually
+  df_long <- do.call(rbind, lapply(dimension_names, function(dn) {
+    data.frame(groupvar = df_wor$groupvar,
+               fu       = df_wor$fu,
+               name     = dn,
+               value    = df_wor[[dn]],
+               stringsAsFactors = FALSE)
+  }))
+  # group_by(groupvar, fu, name) summarise
+  plot_data <- do.call(rbind, lapply(
+    split(df_long, list(df_long$groupvar, df_long$fu, df_long$name), drop = TRUE),
+    function(sub) {
+      data.frame(groupvar = sub$groupvar[1],
+                 fu       = sub$fu[1],
+                 name     = sub$name[1],
+                 n        = sum(sub$value < 0),
+                 n_total  = nrow(sub),
+                 stringsAsFactors = FALSE)
+    }
+  ))
+  rownames(plot_data) <- NULL
+  plot_data$p <- plot_data$n / plot_data$n_total
+  # Convert dimension code to a nice label
+  plot_data$name <- factor(
+    plot_data$name,
+    levels = dimension_names,
+    labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+  )
   
   ### 3) Plot ###
   
@@ -1639,22 +1657,19 @@ figure_1_2_3 <- function(df,
   )
   
   ### 4) Tidy Up & Return ###
-  
+
   # Reshape from long to wide for final table
-  # pivot by fu. If you want separate columns for groupvar as well,
-  # do pivot_wider(names_from = c("groupvar","fu"), ...)
-  plot_data_wide <- plot_data %>%
-    tidyr::pivot_wider(
-      id_cols     = c("groupvar", "name"),
-      names_from  = "fu",
-      values_from = "p",
-      values_fill = 0
-    ) %>%
-    dplyr::rename(
-      Group  = "groupvar",
-      Values = "name"
-    )
-  
+  plot_data_wide <- stats::reshape(
+    plot_data[, c("groupvar", "name", "fu", "p")],
+    idvar     = c("groupvar", "name"),
+    timevar   = "fu",
+    direction = "wide"
+  )
+  names(plot_data_wide) <- sub("^p\\.", "", names(plot_data_wide))
+  plot_data_wide[is.na(plot_data_wide)] <- 0
+  names(plot_data_wide)[names(plot_data_wide) == "groupvar"] <- "Group"
+  names(plot_data_wide)[names(plot_data_wide) == "name"]     <- "Values"
+
   return(list(
     plot_data = plot_data_wide,
     p         = .modify_ggplot_theme(p = p) # if you have a custom theme function
@@ -1696,7 +1711,6 @@ figure_1_2_3 <- function(df,
 #' result$plot_data
 #' result$p
 #'
-#' @importFrom rlang .data
 figure_1_2_4 <- function(df,
                          name_id,
                          name_groupvar,
@@ -1722,37 +1736,32 @@ figure_1_2_4 <- function(df,
   }
   
   # Keep only relevant columns
-  df <- df %>%
-    dplyr::select(!!!syms(names_all))
-  
+  df <- df[, names_all, drop = FALSE]
+
   # Rename for internal use
-  df <- df %>%
-    dplyr::rename(
-      id       = !!quo_name(name_id),
-      groupvar = !!quo_name(name_groupvar)
-    )
-  
+  names(df)[names(df) == name_id]       <- "id"
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  
+
   # Sort by (id, groupvar, fu)
-  df <- df %>%
-    dplyr::arrange(.data$id, .data$groupvar, .data$fu)
-  
+  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
+
   # Check uniqueness
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
+
   ### 2) Analysis: Identify Mixed Change ###
-  
+
   # .pchc() adds difference columns like mo_diff, sc_diff, etc.
   # level_fu_1 is the 'baseline' time point
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1]) %>%
-    dplyr::filter(!is.na(.data$state))
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1])
+  df <- df[!is.na(df$state), , drop = FALSE]
+
   # We'll focus on those with "Mixed change" overall
   dimension_names <- c("mo_diff", "sc_diff", "ua_diff", "pd_diff", "ad_diff")
-  
+
   # We also define the fu values and directions for labeling
   n_time <- length(levels_fu)
   # For example: "Improve: Pre-op", "Improve: Post-op", "Worsen: Pre-op", "Worsen: Post-op"
@@ -1760,56 +1769,56 @@ figure_1_2_4 <- function(df,
     paste0("Improve: ", levels_fu),
     paste0("Worsen: ", levels_fu)
   )
-  
+
   # 2a) Summarize dimension-level improvements & worsenings among "Mixed change" patients
-  plot_data <- df %>%
-    dplyr::filter(.data$state == "Mixed change") %>%
-    dplyr::select("groupvar", "fu", all_of(dimension_names)) %>%
-    # pivot dimension columns
-    tidyr::pivot_longer(cols = all_of(dimension_names)) %>%
-    dplyr::group_by(.data$groupvar, .data$fu, .data$name) %>%
-    dplyr::summarise(
-      n_improve = sum(.data$value > 0),
-      n_worsen  = sum(.data$value < 0),
-      n_total   = dplyr::n(),
-      .groups   = "drop"
-    ) %>%
-    dplyr::mutate(
-      Improve = .data$n_improve / .data$n_total,
-      Worsen  = .data$n_worsen  / .data$n_total
-    ) %>%
-    # Convert e.g. "mo_diff" -> "Mobility"
-    dplyr::mutate(
-      name = factor(
-        .data$name,
-        levels = dimension_names,
-        labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
-      )
-    ) %>%
-    dplyr::select(-dplyr::contains("n_")) %>%
-    # pivot "Improve" & "Worsen" into a single column
-    tidyr::pivot_longer(
-      cols      = c("Improve", "Worsen"),
-      names_to  = "change",
-      values_to = "p"
-    ) %>%
-    # Build a combined factor: "Improve: Pre-op" / "Worsen: Pre-op" etc.
-    dplyr::mutate(
-      fu = paste0(.data$change, ": ", .data$fu),
-      fu = factor(.data$fu, levels = levels_fu_change)
-    )
+  df_mix <- df[df$state == "Mixed change", c("groupvar", "fu", dimension_names), drop = FALSE]
+  # pivot longer manually
+  df_long <- do.call(rbind, lapply(dimension_names, function(dn) {
+    data.frame(groupvar = df_mix$groupvar,
+               fu       = df_mix$fu,
+               name     = dn,
+               value    = df_mix[[dn]],
+               stringsAsFactors = FALSE)
+  }))
+  # group_by(groupvar, fu, name) summarise
+  agg <- do.call(rbind, lapply(
+    split(df_long, list(df_long$groupvar, df_long$fu, df_long$name), drop = TRUE),
+    function(sub) {
+      data.frame(groupvar  = sub$groupvar[1],
+                 fu        = as.character(sub$fu[1]),
+                 name      = sub$name[1],
+                 n_improve = sum(sub$value > 0),
+                 n_worsen  = sum(sub$value < 0),
+                 n_total   = nrow(sub),
+                 stringsAsFactors = FALSE)
+    }
+  ))
+  rownames(agg) <- NULL
+  agg$Improve <- agg$n_improve / agg$n_total
+  agg$Worsen  <- agg$n_worsen  / agg$n_total
+  # Convert e.g. "mo_diff" -> "Mobility"
+  agg$name <- factor(
+    agg$name,
+    levels = dimension_names,
+    labels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")
+  )
+  # pivot Improve & Worsen into single column
+  plot_data_imp <- data.frame(groupvar = agg$groupvar, fu = agg$fu, name = agg$name,
+                               change = "Improve", p = agg$Improve, stringsAsFactors = FALSE)
+  plot_data_wor <- data.frame(groupvar = agg$groupvar, fu = agg$fu, name = agg$name,
+                               change = "Worsen",  p = agg$Worsen,  stringsAsFactors = FALSE)
+  plot_data <- rbind(plot_data_imp, plot_data_wor)
+  # Build combined factor "Improve: Pre-op" / "Worsen: Pre-op" etc.
+  plot_data$fu <- factor(paste0(plot_data$change, ": ", plot_data$fu), levels = levels_fu_change)
   
   ### 3) Plot ###
   
   plot_data2 <- plot_data
   plot_data2$groupvar <- paste(plot_data$groupvar, plot_data$fu)
   
-  plot_data2 <- plot_data2 %>%
-    mutate(
-      name = factor(.data$name, levels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression")),
-      change = factor(.data$change, levels = c("Improve", "Worsen"))
-    ) %>%
-    arrange(.data$name, .data$change)
+  plot_data2$name   <- factor(plot_data2$name,   levels = c("Mobility", "Self-care", "Usual activities", "Pain & Discomfort", "Anxiety & Depression"))
+  plot_data2$change <- factor(plot_data2$change, levels = c("Improve", "Worsen"))
+  plot_data2 <- plot_data2[order(plot_data2$name, plot_data2$change), , drop = FALSE]
   
   plot_data2$groupvar <- factor(plot_data2$groupvar, levels = unique(plot_data2$groupvar))
   
@@ -1825,21 +1834,19 @@ figure_1_2_4 <- function(df,
   )
   
   ### 4) Reshape & Return ###
-  
+
   # Pivot wide by the combined fu factor
-  # If you want separate columns for groupvar as well, consider pivoting with names_from = c("groupvar","fu").
-  plot_data_wide <- plot_data %>%
-    tidyr::pivot_wider(
-      id_cols     = c("groupvar", "name"),
-      names_from  = "fu",
-      values_from = "p",
-      values_fill = 0
-    ) %>%
-    dplyr::rename(
-      Group  = "groupvar",
-      Values = "name"
-    )
-  
+  plot_data_wide <- stats::reshape(
+    plot_data[, c("groupvar", "name", "fu", "p")],
+    idvar     = c("groupvar", "name"),
+    timevar   = "fu",
+    direction = "wide"
+  )
+  names(plot_data_wide) <- sub("^p\\.", "", names(plot_data_wide))
+  plot_data_wide[is.na(plot_data_wide)] <- 0
+  names(plot_data_wide)[names(plot_data_wide) == "groupvar"] <- "Group"
+  names(plot_data_wide)[names(plot_data_wide) == "name"]     <- "Values"
+
   return(list(
     plot_data = plot_data_wide,
     p         = .modify_ggplot_theme(p = p)
@@ -1874,7 +1881,6 @@ figure_1_2_4 <- function(df,
 #'            eq5d_version = "3L", 
 #'            country = "UK"
 #'        )
-#' @importFrom rlang .data
 
 figure_1_2_5 <- function(df,
                          names_eq5d,
@@ -1902,45 +1908,37 @@ figure_1_2_5 <- function(df,
   }
   
   # Keep only relevant columns
-  df <- df %>%
-    dplyr::select(!!!syms(names_all))
-  
+  df <- df[, names_all, drop = FALSE]
+
   # Rename for internal use
-  df <- df %>%
-    dplyr::rename(
-      id       = !!quo_name(name_id)
-    )
-  
+  names(df)[names(df) == name_id] <- "id"
+
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  
-  # Sort by (id, groupvar, fu)
-  df <- df %>%
-    dplyr::arrange(.data$id, .data$fu)
-  
-  # Check uniqueness: each (id, groupvar, fu) should appear at most once
+
+  # Sort by (id, fu)
+  df <- df[order(df$id, df$fu), , drop = FALSE]
+
+  # Check uniqueness: each (id, fu) should appear at most once
   .check_uniqueness(df, group_by = c("id", "fu"))
-  
+
   ### 2) Calculate PCHC (Paretian Classification) ###
   # .pchc() compares the first level in levels_fu (e.g. "Pre-op") vs. the second (e.g. "Post-op")
-  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE) %>%
-    dplyr::filter(!is.na(.data$state)) %>%
-    # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
-    dplyr::mutate(
-      state_noprobs = factor(
-        .data$state_noprobs,
-        levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
-      )
-    )
-  
+  df <- .pchc(df = df, level_fu_1 = levels_fu[1], add_noprobs = TRUE)
+  df <- df[!is.na(df$state), , drop = FALSE]
+  # The factor levels for PCHC categories can be: "No problems", "No change", "Improve", "Worsen", "Mixed change"
+  df$state_noprobs <- factor(
+    df$state_noprobs,
+    levels = c("No problems", "No change", "Improve", "Worsen", "Mixed change")
+  )
+
   ### 3) Summarize for HPG ###
   # Create value set
   vs <- data.frame(profile = make_all_EQ_indexes(version = eq5d_version))
   vs$utility <- eq5d(vs$profile, country = country, version = eq5d_version)
-  vs <- vs %>%
-    dplyr::arrange(dplyr::desc(.data$utility)) %>%
-    dplyr::mutate(rank = dplyr::row_number())
+  vs <- vs[order(-vs$utility), , drop = FALSE]
+  vs$rank <- seq_len(nrow(vs))
   
   # Build profiles
   eqdims <- names_eq5d
@@ -1948,27 +1946,17 @@ figure_1_2_5 <- function(df,
     df[[paste0(d, "_t2")]] <- df[[d]]
     df[[paste0(d, "_t1")]] <- df[[d]] + df[[paste0(d, "_diff")]]
   }
-  df <- df %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(
-      # T1 profile e.g. '11211'
-      profile_t1 = as.integer(paste0(!!!syms(paste0(eqdims,"_t1")))),
-      # T2 profile
-      profile_t2 = as.integer(paste0(!!!syms(paste0(eqdims,"_t2"))))
-    ) %>%
-    dplyr::ungroup()
-  
-  # Get rank
-  df <- df %>%
-    dplyr::left_join(
-      vs %>% dplyr::select(.data$profile, rank_t1 = rank),
-      by = c("profile_t1" = "profile")
-    ) %>%
-    # T2
-    dplyr::left_join(
-      vs %>% dplyr::select(.data$profile, rank_t2 = rank),
-      by = c("profile_t2" = "profile")
-    )
+  # Build profile codes row-by-row using apply
+  t1_cols <- paste0(eqdims, "_t1")
+  t2_cols <- paste0(eqdims, "_t2")
+  df$profile_t1 <- as.integer(apply(df[, t1_cols, drop = FALSE], 1,
+                                     function(r) paste0(r, collapse = "")))
+  df$profile_t2 <- as.integer(apply(df[, t2_cols, drop = FALSE], 1,
+                                     function(r) paste0(r, collapse = "")))
+
+  # Get rank via match
+  df$rank_t1 <- vs$rank[match(df$profile_t1, vs$profile)]
+  df$rank_t2 <- vs$rank[match(df$profile_t2, vs$profile)]
   
   # Cteate plot
   max_rank <- nrow(vs)
@@ -2031,7 +2019,6 @@ figure_1_2_5 <- function(df,
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_1_3_1 <- function(df,
                        names_eq5d = NULL,
@@ -2049,48 +2036,42 @@ figure_1_3_1 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
-                   add_state = TRUE, 
+  df <- .prep_eq5d(df = df, names = names_eq5d,
+                   add_state = TRUE,
                    add_lss = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    # leave relevant columns only
-    select('lss', 'utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, c("lss", "utility"), drop = FALSE]
+
   ### analysis ###
-  
-  # prepare data for plotting
-  plot_data <- df %>%
-    select('lss', 'utility') %>%
-    # remove NAs
-    filter(!is.na(.data$lss) & !is.na(.data$utility)) %>%
-    group_by(.data$lss) %>%
-    # summarise
-    summarise(median = median(.data$utility),
-              min = min(.data$utility),
-              max = max(.data$utility),
-              .groups = "drop") %>%
-    # order
-    arrange(.data$lss)
-  
+
+  # prepare data for plotting: remove NAs, group by lss, summarise
+  df2 <- df[!is.na(df$lss) & !is.na(df$utility), , drop = FALSE]
+  plot_data <- do.call(rbind, lapply(split(df2$utility, df2$lss), function(vals) {
+    data.frame(median = median(vals), min = min(vals), max = max(vals))
+  }))
+  plot_data$lss <- as.integer(rownames(plot_data))
+  rownames(plot_data) <- NULL
+  plot_data <- plot_data[order(plot_data$lss), , drop = FALSE]
+
   # graphical parameters
-  # x-axis variable
-  xvar_lab <- "LSS (Level Sum Score)"
-  # axis breaks
   x_breaks <- 1:100
   y_breaks <- seq(from = -1, to = 1, by = 0.2)
-  
+
+  # pivot longer for segment plot
+  seg_data <- do.call(rbind, list(
+    data.frame(lss = plot_data$lss, name = "Median", value = plot_data$median),
+    data.frame(lss = plot_data$lss, name = "Lowest",  value = plot_data$min),
+    data.frame(lss = plot_data$lss, name = "Highest", value = plot_data$max)
+  ))
+  seg_data$name <- factor(seg_data$name, levels = c("Median", "Lowest", "Highest"))
+
   # plot
   p <- ggplot() +
     # plot median, min and max
-    geom_segment(data = plot_data %>%
-                   pivot_longer(-'lss') %>%
-                   mutate(name = factor(.data$name, 
-                                        levels = c("median", "min", "max"),
-                                        labels = c("Median", "Lowest", "Highest"))), 
-                 aes(x = .data$lss - 0.2, xend = .data$lss + 0.2, 
+    geom_segment(data = seg_data,
+                 aes(x = .data$lss - 0.2, xend = .data$lss + 0.2,
                      y = .data$value, yend = .data$value,
                      colour = .data$name)) +
     # connect values with a line segment
@@ -2098,19 +2079,18 @@ figure_1_3_1 <- function(df,
     # plot title
     ggtitle("EQ-5D values plotted against the LSS (Level Sum Score)") +
     # manipulate x-axis
-    scale_x_continuous(name = "Level Sum Score", 
+    scale_x_continuous(name = "Level Sum Score",
                        breaks = x_breaks,
                        expand = expansion(add = c(0.5, 0.5))) +
     # manipulate y-axis
     scale_y_continuous(name = "EQ-5D value",
                        breaks = y_breaks)
-  
+
   # tidy up summary
-  plot_data <- plot_data %>%
-    rename(LSS = 'lss',
-           Median = 'median',
-           Minimum = 'min',
-           Maximum = 'max')
+  names(plot_data)[names(plot_data) == "lss"]    <- "LSS"
+  names(plot_data)[names(plot_data) == "median"] <- "Median"
+  names(plot_data)[names(plot_data) == "min"]    <- "Minimum"
+  names(plot_data)[names(plot_data) == "max"]    <- "Maximum"
   
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
@@ -2133,7 +2113,6 @@ figure_1_3_1 <- function(df,
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_1_3_2 <- function(df,
                         names_eq5d = NULL,
@@ -2151,36 +2130,29 @@ figure_1_3_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
-                   add_state = TRUE, 
+  df <- .prep_eq5d(df = df, names = names_eq5d,
+                   add_state = TRUE,
                    add_lfs = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    # leave relevant columns only
-    select('lfs', 'utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, c("lfs", "utility"), drop = FALSE]
+
   ### analysis ###
-  
-  # prepare data for plotting
-  plot_data <- df %>%
-    select('lfs', 'utility') %>%
-    # remove NAs
-    filter(!is.na(.data$lfs) & !is.na(.data$utility)) %>%
-    group_by(.data$lfs) %>%
-    # summarise
-    summarise(median = median(.data$utility),
-              min = min(.data$utility),
-              max = max(.data$utility),
-              .groups = "drop") %>%
-    # order
-    arrange(-.data$median)
-  
+
+  # prepare data for plotting: remove NAs, group by lfs, summarise
+  df2 <- df[!is.na(df$lfs) & !is.na(df$utility), , drop = FALSE]
+  plot_data <- do.call(rbind, lapply(split(df2$utility, df2$lfs), function(vals) {
+    data.frame(median = median(vals), min = min(vals), max = max(vals))
+  }))
+  plot_data$lfs <- rownames(plot_data)
+  rownames(plot_data) <- NULL
+  # order by descending median
+  plot_data <- plot_data[order(-plot_data$median), , drop = FALSE]
+
   # impose order on the x-axis
   lfs_levels <- plot_data$lfs
-  plot_data <- plot_data %>%
-    mutate(lfs_f = factor(.data$lfs, levels = lfs_levels))
+  plot_data$lfs_f <- factor(plot_data$lfs, levels = lfs_levels)
   
   # axis breaks
   n <- length(lfs_levels)
@@ -2189,15 +2161,19 @@ figure_1_3_2 <- function(df,
   x_labels <- lfs_levels[i]
   y_breaks <- seq(from = -1, to = 1, by = 0.2)
   
+  # pivot longer for segment plot
+  seg_data2 <- do.call(rbind, list(
+    data.frame(lfs = plot_data$lfs, lfs_f = plot_data$lfs_f, name = "Median", value = plot_data$median),
+    data.frame(lfs = plot_data$lfs, lfs_f = plot_data$lfs_f, name = "Lowest",  value = plot_data$min),
+    data.frame(lfs = plot_data$lfs, lfs_f = plot_data$lfs_f, name = "Highest", value = plot_data$max)
+  ))
+  seg_data2$name <- factor(seg_data2$name, levels = c("Median", "Lowest", "Highest"))
+
   # plot
   p <- ggplot() +
     # plot median, min and max
-    geom_segment(data = plot_data %>%
-                   pivot_longer(-c('lfs', 'lfs_f')) %>%
-                   mutate(name = factor(.data$name, 
-                                        levels = c("median", "min", "max"),
-                                        labels = c("Median", "Lowest", "Highest"))), 
-                 aes(x = as.numeric(.data$lfs_f) - 0.5, xend = as.numeric(.data$lfs_f) + 0.5, 
+    geom_segment(data = seg_data2,
+                 aes(x = as.numeric(.data$lfs_f) - 0.5, xend = as.numeric(.data$lfs_f) + 0.5,
                      y = .data$value, yend = .data$value,
                      colour = .data$name)) +
     # connect values with a line segment
@@ -2219,12 +2195,11 @@ figure_1_3_2 <- function(df,
       axis.text.x = element_text(angle = 90))
   
   # tidy up summary
-  plot_data <- plot_data %>%
-    select(-'lfs_f') %>%
-    rename(LFS = 'lfs',
-           Median = 'median',
-           Minimum = 'min',
-           Maximum = 'max')
+  plot_data <- plot_data[, setdiff(names(plot_data), "lfs_f"), drop = FALSE]
+  names(plot_data)[names(plot_data) == "lfs"]    <- "LFS"
+  names(plot_data)[names(plot_data) == "median"] <- "Median"
+  names(plot_data)[names(plot_data) == "min"]    <- "Minimum"
+  names(plot_data)[names(plot_data) == "max"]    <- "Maximum"
   
   return(list(plot_data = plot_data, p = p))
 }
@@ -2239,7 +2214,6 @@ figure_1_3_2 <- function(df,
 #' tmp <- figure_2_1(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_2_1 <- function(df, name_vas = NULL){
   
@@ -2252,8 +2226,7 @@ figure_2_1 <- function(df, name_vas = NULL){
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_vas(df = df, name = name_vas)
   
@@ -2274,13 +2247,11 @@ figure_2_1 <- function(df, name_vas = NULL){
       # reinstate x-axis ticks
       axis.ticks.x = element_line(colour = "grey50"))
   
-  # output plotting data
-  plot_data <- df %>%
-    # count for each value between 0 & 100
-    count(vas = factor(.data$vas, levels = 1:100), .drop = FALSE) %>%
-    # order
-    arrange(.data$vas) %>%
-    rename(count = 'n')
+  # output plotting data: count for each value between 0 & 100
+  vas_factor <- factor(df$vas, levels = 1:100)
+  tbl <- tabulate(vas_factor, nbins = 100L)
+  plot_data <- data.frame(vas = factor(1:100, levels = 1:100), count = tbl,
+                          stringsAsFactors = FALSE)
   
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
@@ -2295,15 +2266,14 @@ figure_2_1 <- function(df, name_vas = NULL){
 #' tmp <- figure_2_2(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_2_2 <- function(df, name_vas = NULL){
   
   # produce output to be plotted (Table 3.2)
   # do not add totals
-  plot_data <- table_2_2(df = df, name_vas = name_vas, add_na_total = FALSE) %>%
-    # remove Range column, not needed
-    select(-Range)
+  plot_data <- table_2_2(df = df, name_vas = name_vas, add_na_total = FALSE)
+  # remove Range column, not needed
+  plot_data <- plot_data[, setdiff(names(plot_data), "Range"), drop = FALSE]
   
   # plot
   p <- ggplot(plot_data, aes(x = .data$Midpoint, y = .data$Frequency)) +
@@ -2348,7 +2318,6 @@ figure_2_2 <- function(df, name_vas = NULL){
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_3_1 <- function(df,
                        names_eq5d = NULL,
@@ -2372,15 +2341,13 @@ figure_3_1 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  df <- df %>%
-    select('fu', 'utility')
+  df <- df[, c("fu", "utility"), drop = FALSE]
   
   ### analysis ###
   
@@ -2398,7 +2365,7 @@ figure_3_1 <- function(df,
     # add error bars
     geom_errorbar(width = 0.1) +
     # plot title
-    ggtitle(str_c("EQ-5D values by ", name_fu, ": mean and 95% confidence intervals")) +
+    ggtitle(paste0("EQ-5D values by ", name_fu, ": mean and 95% confidence intervals")) +
     # manipulate x-axis
     scale_x_discrete(name = "time") +
     # manipulate y-axis
@@ -2427,7 +2394,6 @@ figure_3_1 <- function(df,
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_3_2 <- function(df,
                        names_eq5d = NULL,
@@ -2446,31 +2412,29 @@ figure_3_2 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(groupvar = !!quo_name(name_groupvar))
-  df <- .prep_eq5d(df = df, names = names_eq5d, 
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+  df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    select('groupvar', 'utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, c("groupvar", "utility"), drop = FALSE]
+
   ### analysis ###
-  
+
   # prepare data for plotting
   plot_data <- .summary_mean_ci(df = df, group_by = "groupvar")
-  
+
   # add totals
-  plot_data_total <- .summary_mean_ci(df = df, group_by = NULL) %>%
-    mutate(groupvar = "All groups") %>%
-    select('groupvar', everything())
-  
+  plot_data_total <- .summary_mean_ci(df = df, group_by = NULL)
+  plot_data_total$groupvar <- "All groups"
+  plot_data_total <- plot_data_total[, c("groupvar", setdiff(names(plot_data_total), "groupvar")), drop = FALSE]
+
   # combine
   groupvar_levels <- c(plot_data$groupvar, "All groups")
-  plot_data <- bind_rows(plot_data, plot_data_total) %>%
-    mutate(groupvar = factor(.data$groupvar, levels = groupvar_levels)) %>%
-    arrange(.data$groupvar)
+  plot_data <- rbind(plot_data, plot_data_total)
+  plot_data$groupvar <- factor(plot_data$groupvar, levels = groupvar_levels)
+  plot_data <- plot_data[order(plot_data$groupvar), , drop = FALSE]
   
   # plot
   p <- ggplot(data = plot_data, aes(x = .data$groupvar, y = .data$mean, ymin = .data$ci_lb, ymax = .data$ci_ub)) +
@@ -2480,7 +2444,7 @@ figure_3_2 <- function(df,
     # add error bars
     geom_errorbar(width = 0.1, size = 1) +
     # plot title
-    ggtitle(str_c("Mean EQ-5D values 95% confidence intervals: all vs by ", name_groupvar)) +
+    ggtitle(paste0("Mean EQ-5D values 95% confidence intervals: all vs by ", name_groupvar)) +
     # manipulate x-axis
     scale_x_discrete(name = name_groupvar) +
     # manipulate y-axis
@@ -2517,7 +2481,6 @@ figure_3_2 <- function(df,
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_3_3 <- function(df, 
                        names_eq5d = NULL,
@@ -2542,19 +2505,15 @@ figure_3_3 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  df <- df %>%
-    rename(groupvar = !!quo_name(name_groupvar)) %>%
-    # factorise groupvar variable
-    mutate(groupvar = factor(.data$groupvar))
+  names(df)[names(df) == name_groupvar] <- "groupvar"
+  df$groupvar <- factor(df$groupvar)
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  df <- df %>%
-    select('fu', 'groupvar', 'utility')
+  df <- df[, c("fu", "groupvar", "utility"), drop = FALSE]
   
   ### analysis ###
   
@@ -2572,7 +2531,7 @@ figure_3_3 <- function(df,
     # connect means with a smooth line
     geom_line() +
     # plot title
-    ggtitle(str_c("Longitudinal EQ-5D values by ", name_fu, " and ", name_groupvar, ":\nmeans and 95% confidence intervals")) +
+    ggtitle(paste0("Longitudinal EQ-5D values by ", name_fu, " and ", name_groupvar, ":\nmeans and 95% confidence intervals")) +
     # manipulate x-axis
     scale_x_discrete(name = name_fu) +
     # manipulate y-axis
@@ -2599,7 +2558,6 @@ figure_3_3 <- function(df,
 #' )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_3_4 <- function(df, 
                        names_eq5d = NULL,
@@ -2617,24 +2575,26 @@ figure_3_4 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    select('utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, "utility", drop = FALSE]
+
   ### analysis ###
-  
+
   # prepare data for plotting
-  plot_data <- df %>%
-    group_by(.data$utility) %>%
-    summarise(count = n()) %>%
-    arrange(.data$utility)
+  util_tbl <- table(df$utility)
+  plot_data <- data.frame(
+    utility = as.numeric(names(util_tbl)),
+    count   = as.integer(util_tbl),
+    stringsAsFactors = FALSE
+  )
+  plot_data <- plot_data[order(plot_data$utility), , drop = FALSE]
   
   # plot
-  p <- ggplot(plot_data, aes(x = .data$utility, y = count)) +
+  p <- ggplot(plot_data, aes(x = .data$utility, y = .data$count)) +
     geom_bar(fill = "blue", stat = "identity") + 
     scale_x_continuous(name = "EQ-5D value") +
     scale_y_continuous(name = "Frequency") + 
@@ -2666,7 +2626,6 @@ figure_3_4 <- function(df,
 #'  )
 #' tmp$p
 #' tmp$plot_data
-#' @importFrom rlang .data
 
 figure_3_5 <- function(df,
                         names_eq5d = NULL,
@@ -2686,20 +2645,18 @@ figure_3_5 <- function(df,
   if (!all(names_all %in% colnames(df)))
     stop("Provided column names not in dataframe. Stopping.")
   # all columns defined and exist; only leave relevant columns now
-  df <- df %>%
-    select(!!!syms(names_all)) 
+  df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   df <- .prep_vas(df = df, name = name_vas)
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
-                   add_utility = TRUE, eq5d_version = eq5d_version, country = country) %>%
-    select('vas', 'utility')
-  
+                   add_utility = TRUE, eq5d_version = eq5d_version, country = country)
+  df <- df[, c("vas", "utility"), drop = FALSE]
+
   ### analysis ###
-  
+
   # prepare data for plotting
-  plot_data <- df %>%
-    arrange(.data$vas, .data$utility)
+  plot_data <- df[order(df$vas, df$utility), , drop = FALSE]
   
   # plot
   p <- ggplot(plot_data, aes(x = .data$vas, y = .data$utility)) +

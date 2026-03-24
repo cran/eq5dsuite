@@ -7,19 +7,55 @@
 eq5d5l(x, country = NULL, dim.names = c("mo", "sc", "ua", "pd", "ad"))
 }
 \arguments{
-\item{x}{A vector of 5-digit EQ-5D-5L state indexes or a matrix/data.frame with columns corresponding to EQ-5D-5L state dimensions.}
+\item{x}{A vector of 5-digit EQ-5D-5L state indexes, or a matrix/data.frame
+with columns corresponding to the EQ-5D-5L dimensions.}
 
-\item{country}{String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.}
+\item{country}{String vector indicating country names or ISO3166 Alpha 2 / 3
+country codes.}
 
-\item{dim.names}{A character vector specifying the names of the EQ-5D-5L dimensions.  Default is c("mo", "sc", "ua", "pd", "ad").}
+\item{dim.names}{A character vector specifying the names of the EQ-5D-5L
+dimensions. Default is `c("mo", "sc", "ua", "pd", "ad")`.}
 }
 \value{
-A vector of EQ-5D-5L values or data.frame with one column for each value set requested.
+A numeric vector of EQ-5D-5L values, or a data.frame with one column
+  for each requested value set.
 }
 \description{
-Get EQ-5D-5L index values from individual responses to the five dimensions of the EQ-5D-5L.
+Get EQ-5D-5L index values from individual responses to the five
+dimensions of the EQ-5D-5L.
 }
 \examples{
-eq5d5l(c(11111, 12321, 32423, 55555), 'IT') # Italy -5L value set
-eq5d5l(make_all_EQ_states('5L'), c('ES', 'DE')) # Spanish and german value sets
+# Example 1: utility values from EQ-5D-5L profile codes
+eq5d5l(c(11111, 12321, 32423, 55555), country = "IT")
+
+# Example 2: request multiple value sets
+eq5d5l(make_all_EQ_states("5L"), country = c("ES", "DE"))
+
+# Example 3: use a data.frame with dimension columns
+df5l <- data.frame(
+  mo = c(1, 2, 5),
+  sc = c(1, 2, 4),
+  ua = c(1, 3, 3),
+  pd = c(2, 4, 2),
+  ad = c(1, 5, 1)
+)
+eq5d5l(df5l, country = "ES")
+
+# Example 4: use custom dimension column names from a real-world style dataset
+df5l_named <- data.frame(
+  mobility = c(1, 5, 3),
+  self_care = c(2, 4, 2),
+  usual_activities = c(3, 3, 1),
+  pain_discomfort = c(4, 2, 2),
+  anxiety_depression = c(5, 1, 3)
+)
+eq5d5l(
+  df5l_named,
+  country = "ES",
+  dim.names = c(
+    "mobility", "self_care", "usual_activities",
+    "pain_discomfort", "anxiety_depression"
+  )
+)
+
 }
