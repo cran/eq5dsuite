@@ -495,7 +495,7 @@ eqvs_drop <- function(country = NULL, version = "5L", saveOption = 1, savePath =
 #' @title eqvs_display
 #' @description Display available value sets, which can also be used as (reverse) crosswalks.
 #' @param return_df If set to TRUE, the function will return information on the names of the available value sets in a data.frame. Defaults to FALSE
-#' @param version Version of the EQ-5D instrument. Can take values 5L (default) or 3L.
+#' @param version Version of the EQ-5D instrument. Can take values 5L (default), 3L or 3LY.
 #' @return Default NULL, if return_df == TRUE, returns a data.frame with the displayed information.
 #' @examples 
 #' # Display available value sets.

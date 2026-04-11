@@ -7,7 +7,7 @@
 eqvs_display(version = "5L", return_df = FALSE)
 }
 \arguments{
-\item{version}{Version of the EQ-5D instrument. Can take values 5L (default) or 3L.}
+\item{version}{Version of the EQ-5D instrument. Can take values 5L (default), 3L or 3LY.}
 
 \item{return_df}{If set to TRUE, the function will return information on the names of the available value sets in a data.frame. Defaults to FALSE}
 }

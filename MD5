@@ -1,7 +1,7 @@
-284f5e9adf4c1268f86fcb0fb70b844e *DESCRIPTION
+cc1a5c5714908208f62ab5cd44ac6ccf *DESCRIPTION
 04b167fc34fe150ac5ca25543e507256 *NAMESPACE
-ba7b21bd77449d09b9a3813295fbc007 *NEWS.md
-3375fd076c9f8f8fc8bc5d6cc502cc01 *R/EQ_functions.R
+2bc8cd8949c495ff4ec6c2f97529e47d *NEWS.md
+e736c40d968cfd00dbbc8c499a1b30e8 *R/EQ_functions.R
 dab7cffc3447f1831b90b532549547e5 *R/data.R
 d9cdb292fa4adbc2f0ec25227329b44c *R/dependencies.R
 edd56813500e2c78d3a3ab368e01f4ca *R/eq5d_aux.R
@@ -11,7 +11,7 @@ d3d48fa0bb64cec722f2a3585d14592a *R/eqxw.R
 44aec7ba0ba2dabde171f4cdaaf77f71 *R/init.R
 0464655997fbfc23d0ae411a2d3263a9 *R/run_app.R
 4aa870495a037ee74b034eb2211c7e4d *R/shiny_helpers.R
-3af83335e432bde483acc58cbd127bc1 *R/sysdata.rda
+a9823f28204573ffcb9327b4fad9f69c *R/sysdata.rda
 ef4c57bb0137bde80185479720abe46f *R/utils.R
 72f392b7a33a795e92e70de6304440db *README.md
 e764d9135ecf9f6e5bf17dd3e59542dd *data/example_data.rda
@@ -23,7 +23,7 @@ e764d9135ecf9f6e5bf17dd3e59542dd *data/example_data.rda
 99f4e151e283f13025ec085e31db300f *inst/shiny/modules/mod_analysis_profile.R
 a14938c29b97eeaa13ac24948a089029 *inst/shiny/modules/mod_analysis_utility.R
 296db7bca37c0a967c487e24e1996113 *inst/shiny/modules/mod_analysis_vas.R
-93c3b14055fc4665b8c622a7576e8bfe *inst/shiny/modules/mod_data.R
+eedb6a2c81a928760a981ec2bc6eb3e4 *inst/shiny/modules/mod_data.R
 dfc78ddf19d5840dfbb522d0698b6235 *inst/shiny/modules/mod_export.R
 23ad451ac370a3babe148f4d8e2a90f0 *inst/shiny/modules/mod_results.R
 2edd00677c54951ea36420acd01434ca *inst/shiny/modules/mod_validation.R
@@ -56,7 +56,7 @@ c7c0988b7a87f99fd9116cc3df9f100c *man/dot-pstate5t3.Rd
 18bc6403f7599da8a44faae3386118d4 *man/eq5d5l.Rd
 ed02f9d6f236308a73bd6ef4570a67e2 *man/eq5dy3l.Rd
 4b5b363f1e0d636d387e2c2b1b655b70 *man/eqvs_add.Rd
-52071f4d290c74fe594e9a6e4414200d *man/eqvs_display.Rd
+b8b76fd7c16c9d70f9f8d2178e51368a *man/eqvs_display.Rd
 e134e04c11e4508391a83b23c30a538b *man/eqvs_drop.Rd
 f30c0a695a32567c65a7291d0bce3adc *man/eqvs_load.Rd
 b827ef2c1fa1da91d533d3a8e5bb0ccf *man/eqxw.Rd

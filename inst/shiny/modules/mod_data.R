@@ -340,8 +340,8 @@ mod_data_server <- function(id, rv) {
       method <- input$utility_method %||% "direct"
       ver <- switch(method,
                     direct = rv$mapping$eq5d_version,
-                    xw     = "XW",
-                    xwr    = "XWR",
+                    xw     = "3L",
+                    xwr    = "5L",
                     rv$mapping$eq5d_version
       )
       ch <- get_country_choices(ver)
