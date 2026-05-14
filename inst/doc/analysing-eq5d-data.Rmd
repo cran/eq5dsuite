@@ -1,0 +1,278 @@
+---
+title: "Analysing EQ-5D data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analysing EQ-5D data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 4
+)
+library(eq5dsuite)
+```
+
+## Introduction
+
+This vignette demonstrates how `eq5dsuite` supports the
+full EQ-5D analytical workflow recommended by Devlin et al.
+(2020), using the NHS Patient Reported Outcome Measures
+(PROMs) dataset bundled with the package. The dataset
+includes patients undergoing hip replacement, knee
+replacement, groin hernia repair, and varicose vein
+surgery, who completed the EQ-5D-3L before and after
+their procedure.
+
+```{r load-data}
+# The example dataset is bundled with the package
+data(example_data)
+head(example_data)
+```
+
+## Worked example 1: Hip replacement outcomes
+
+This example illustrates a typical single-group longitudinal
+workflow, addressing three practical questions: which problems
+do patients report before surgery, how does health change
+following the procedure, and how large is the overall
+health gain?
+
+### Data preparation
+
+```{r wex1-prep}
+dim_names <- c("mo", "sc", "ua", "pd", "ad")
+
+# Subset to hip replacement patients
+hip_data <- example_data[example_data$procedure == "Hip Replacement", ]
+
+# Add profile code and EQ-5D value
+hip_data$profile_code <- toEQ5Dindex(
+  x         = hip_data,
+  dim.names = dim_names
+)
+hip_data$value <- eq5d3l(
+  hip_data[, dim_names],
+  country   = "UK",
+  dim.names = dim_names
+)
+
+# Pre-operative subset
+hip_preop <- hip_data[hip_data$time == "Pre-op", ]
+```
+
+### Pre-operative profile distribution
+
+```{r wex1-profile}
+eq5d_profile_level_summary(
+  df           = hip_preop,
+  names_eq5d   = dim_names,
+  eq5d_version = "3L"
+)
+```
+
+Most patients report problems with pain/discomfort,
+usual activities, and mobility, consistent with the
+profile expected in patients awaiting hip replacement.
+
+### Most common health states
+
+```{r wex1-top-states}
+eq5d_profile_top_states(
+  df           = hip_preop,
+  names_eq5d   = dim_names,
+  eq5d_version = "3L",
+  n            = 5
+)
+```
+
+### Change between time points: PCHC
+
+The Paretian Classification of Health Change (PCHC)
+classifies each patient as Better, Worse, Mixed, or
+No Change between time points. All plot functions in
+`eq5dsuite` return ggplot2 objects that can be customised
+directly:
+
+```{r wex1-pchc, fig.cap = "PCHC classification for hip replacement patients."}
+eq5d_profile_pchc_by_group_plot(
+  df         = hip_data,
+  name_id    = "id",
+  names_eq5d = dim_names,
+  name_fu    = "time",
+  levels_fu  = c("Pre-op", "Post-op")
+)$p +
+  ggplot2::labs(
+    title = "PCHC: hip replacement patients",
+    x     = NULL,
+    y     = "Percentage of respondents"
+  ) +
+  ggplot2::theme_minimal()
+```
+
+### Dimensions driving improvement
+
+```{r wex1-better, fig.cap = "Dimensions improved among patients classified as Better."}
+eq5d_profile_better_dimensions_by_group_plot(
+  df         = hip_data,
+  name_id    = "id",
+  names_eq5d = dim_names,
+  name_fu    = "time",
+  levels_fu  = c("Pre-op", "Post-op")
+)$p +
+  ggplot2::theme_minimal()
+```
+
+### EQ-5D value summary
+
+```{r wex1-utility}
+eq5d_utility_summary(
+  df           = hip_data,
+  name_fu      = "time",
+  levels_fu    = c("Pre-op", "Post-op"),
+  names_eq5d   = dim_names,
+  eq5d_version = "3L",
+  country      = "UK"
+)
+```
+
+### EQ-VAS summary
+
+```{r wex1-vas}
+eq5d_vas_summary(
+  df        = hip_data,
+  name_vas  = "vas",
+  name_fu   = "time",
+  levels_fu = c("Pre-op", "Post-op")
+)
+```
+
+---
+
+## Worked example 2: Comparing two procedures
+
+This example demonstrates a cross-sectional group
+comparison using pre-operative data from knee replacement
+and groin hernia patients — two groups with very different
+levels of pre-operative health burden.
+
+### Data preparation
+
+```{r wex2-prep}
+# Subset to two procedures, pre-operative only
+procs <- c("Knee Replacement", "Groin Hernia")
+comparison_data <- example_data[
+  example_data$procedure %in% procs &
+  example_data$time == "Pre-op", ]
+
+# Add profile code and EQ-5D value
+comparison_data$profile_code <- toEQ5Dindex(
+  x         = comparison_data,
+  dim.names = dim_names
+)
+comparison_data$value <- eq5d3l(
+  comparison_data[, dim_names],
+  country   = "UK",
+  dim.names = dim_names
+)
+```
+
+### Profile comparison by group
+
+```{r wex2-profile}
+eq5d_profile_level_summary_by_group(
+  df           = comparison_data,
+  names_eq5d   = dim_names,
+  name_cat     = "procedure",
+  eq5d_version = "3L"
+)
+```
+
+### EQ-5D value comparison
+
+```{r wex2-utility-summary}
+eq5d_utility_summary_by_group(
+  df            = comparison_data,
+  names_eq5d    = dim_names,
+  name_groupvar = "procedure",
+  eq5d_version  = "3L",
+  country       = "UK"
+)
+```
+
+```{r wex2-utility-plot, fig.cap = "Mean pre-operative EQ-5D values by procedure group."}
+eq5d_utility_by_group_plot(
+  df            = comparison_data,
+  names_eq5d    = dim_names,
+  name_groupvar = "procedure",
+  eq5d_version  = "3L",
+  country       = "UK"
+)$p +
+  ggplot2::theme_minimal()
+```
+
+### LSS analysis by group
+
+The Level Sum Score (LSS) summarises overall severity as
+the sum of level scores across the five dimensions (range
+5–15 for 3L, 5–25 for 5L). The plot below shows how
+EQ-5D values relate to LSS within each procedure group:
+
+```{r wex2-lss-hernia, fig.cap = "EQ-5D values by LSS — Groin Hernia."}
+hernia_data <- comparison_data[
+  comparison_data$procedure == "Groin Hernia", ]
+
+eq5d_profile_lss_utility_plot(
+  hernia_data,
+  names_eq5d   = dim_names,
+  eq5d_version = "3L",
+  country      = "UK"
+)$p +
+  ggplot2::labs(
+    title = "Groin Hernia",
+    x     = "Level Sum Score (LSS)",
+    y     = "EQ-5D value"
+  ) +
+  ggplot2::scale_x_continuous(limits = c(5, 15),
+                               breaks = seq(5, 15, 2)) +
+  ggplot2::theme_minimal()
+```
+
+```{r wex2-lss-knee, fig.cap = "EQ-5D values by LSS — Knee Replacement."}
+knee_data <- comparison_data[
+  comparison_data$procedure == "Knee Replacement", ]
+
+eq5d_profile_lss_utility_plot(
+  knee_data,
+  names_eq5d   = dim_names,
+  eq5d_version = "3L",
+  country      = "UK"
+)$p +
+  ggplot2::labs(
+    title = "Knee Replacement",
+    x     = "Level Sum Score (LSS)",
+    y     = "EQ-5D value"
+  ) +
+  ggplot2::scale_x_continuous(limits = c(5, 15),
+                               breaks = seq(5, 15, 2)) +
+  ggplot2::theme_minimal()
+```
+
+## Further reading
+
+- `vignette("crosswalk-methods")` — when and how to use
+  crosswalk methods
+- `vignette("custom-value-sets")` — adding and managing
+  custom value sets
+- `vignette("update-value-sets")` — keeping value sets
+  up to date
+
+## References
+
+Devlin N, Parkin D, Janssen B (2020). *Methods for
+Analysing and Reporting EQ-5D Data*. Springer, Cham.
+<https://doi.org/10.1007/978-3-030-47622-9>

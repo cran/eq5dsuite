@@ -15,7 +15,7 @@ DIM_LABELS <- c(
 
 #' Ensure a follow-up column exists (adding a synthetic one when absent)
 #'
-#' Package functions such as \code{table_2_1} and \code{table_3_1} internally
+#' Package functions such as \code{eq5d_vas_summary} and \code{eq5d_utility_summary} internally
 #' require a follow-up column.  When the user has not mapped a timepoint
 #' variable, this helper adds a single-level factor column \code{".fu_all."}
 #' (value \code{"All"}) so those functions can run cross-sectionally without
@@ -52,7 +52,7 @@ ensure_fu <- function(df, mapping) {
 #' When multiple follow-up levels exist the fu label is prepended to avoid
 #' duplicate column names.
 #'
-#' @param df A data frame as returned by \code{table_1_1_1} etc.
+#' @param df A data frame as returned by \code{eq5d_profile_level_summary} etc.
 #' @return The same data frame with renamed columns (original order preserved).
 #' @keywords internal
 #' @noRd

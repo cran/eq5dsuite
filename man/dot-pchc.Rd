@@ -19,7 +19,7 @@ If 'add_noprobs' is TRUE, a separate classification for those without problems i
 }
 \description{
 This internal function determines Paretian Classification of Health Change (PCHC) for each combination of the variables specified in the `group_by` argument. 
-It is used in the code for table_2_4-table_2_5 and figure_2_1-figure_2_4. 
+It is used in the code for eq5d_profile_pchc_table, eq5d_profile_pchc_with_no_problems_table, eq5d_profile_dimension_change_table, and the eq5d_profile_*_by_group_plot functions.
 An EQ-5D health state is deemed to be `better` than another if it is better on at least one dimension and is no worse on any other dimension.
 An EQ-5D health state is deemed to be `worse` than another if it is worse in at least one dimension and is no better in any other dimension.
 }

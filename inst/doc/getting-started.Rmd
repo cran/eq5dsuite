@@ -1,0 +1,170 @@
+---
+title: "Getting started with eq5dsuite"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with eq5dsuite}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+library(eq5dsuite)
+```
+
+## Introduction
+
+The `eq5dsuite` package provides standardised tools for
+calculating EQ-5D preference-based values and analysing
+EQ-5D data following the recommendations of Devlin et al.
+(2020). This vignette introduces the core workflow:
+loading the package, exploring available value sets, and
+calculating EQ-5D values from profile data.
+
+## Installation
+
+Install the released version from CRAN:
+
+```{r install-cran, eval = FALSE}
+install.packages("eq5dsuite")
+```
+
+Install the development version from GitHub:
+
+```{r install-github, eval = FALSE}
+remotes::install_github("MathsInHealth/eq5dsuite-r")
+```
+
+## Available value sets
+
+The package includes country-specific value sets for
+the EQ-5D-3L, EQ-5D-5L, and EQ-5D-Y-3L instruments.
+Use `eqvs_display()` to see all available sets:
+
+```{r display-value-sets}
+# List all available EQ-5D-3L value sets
+eqvs_display(version = "3L")
+```
+
+## Calculating EQ-5D values
+
+### EQ-5D-3L
+
+The most common workflow uses a data frame with one column
+per EQ-5D dimension. The `dim.names` argument maps your
+column names to the five dimensions in the standard order
+(mobility, self-care, usual activities, pain/discomfort,
+anxiety/depression):
+
+```{r eq5d3l-example}
+# Example data with EQ-5D-3L responses
+eq5d3l_data <- data.frame(
+  id = 1:5,
+  mo = c(1, 2, 1, 3, 2),
+  sc = c(1, 1, 2, 2, 1),
+  ua = c(1, 2, 1, 3, 2),
+  pd = c(2, 2, 1, 3, 3),
+  ad = c(1, 1, 2, 2, 1)
+)
+
+# Calculate EQ-5D-3L values using the UK value set
+eq5d3l_data$value <- eq5d3l(
+  eq5d3l_data,
+  country   = "UK",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+
+eq5d3l_data
+```
+
+### EQ-5D-5L
+
+```{r eq5d5l-example}
+eq5d5l_data <- data.frame(
+  id = 1:5,
+  mo = c(1, 2, 3, 1, 2),
+  sc = c(1, 1, 2, 1, 3),
+  ua = c(2, 1, 3, 1, 2),
+  pd = c(2, 3, 2, 1, 4),
+  ad = c(1, 2, 1, 3, 2)
+)
+
+eq5d5l_data$value <- eq5d5l(
+  eq5d5l_data,
+  country   = "IT",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+
+eq5d5l_data
+```
+
+### EQ-5D-Y-3L
+
+```{r eq5dy3l-example}
+eq5dy3l_data <- data.frame(
+  id = 1:5,
+  mo = c(1, 2, 1, 2, 3),
+  sc = c(1, 1, 2, 1, 2),
+  ua = c(2, 1, 1, 3, 2),
+  pd = c(1, 2, 3, 2, 1),
+  ad = c(2, 1, 2, 1, 3)
+)
+
+eq5dy3l_data$value <- eq5dy3l(
+  eq5dy3l_data,
+  country   = "SI",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+
+eq5dy3l_data
+```
+
+## Custom value sets
+
+If a value set is not yet included in the package, you
+can add your own using `eqvs_add()`:
+
+```{r custom-vs, eval = FALSE}
+# Create a custom value set data frame
+custom_vs <- data.frame(
+  state = make_all_EQ_indexes(version = "3L"),
+  MY_VS = runif(243)
+)
+
+# Register it temporarily for this session
+eqvs_add(
+  custom_vs,
+  version     = "3L",
+  country     = "My Country",
+  countryCode = "MC",
+  VSCode      = "MC",
+  description = "Custom value set for demonstration",
+  saveOption  = 1
+)
+
+# Use the custom value set
+eq5d3l(c(11111, 12321), country = "MC")
+```
+
+## Keeping value sets up to date
+
+New EQ-5D value sets are published regularly. Use
+`update_value_sets()` to check for and install new
+value sets from the online repository:
+
+```{r update-vs, eval = FALSE}
+update_value_sets()
+```
+
+## Next steps
+
+- `vignette("analysing-eq5d-data")` — complete analytical
+  workflow using NHS PROMs data
+- `vignette("crosswalk-methods")` — when and how to use
+  crosswalk methods
+- `vignette("custom-value-sets")` — adding and managing
+  custom value sets
+- `?eq5dsuite` — full package documentation

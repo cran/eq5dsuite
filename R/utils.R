@@ -28,7 +28,15 @@ dir.create2 <- function(path, ...) {
 
 .fixCountries <- function(countries, EQvariant = '5L') {
   pkgenv <- getOption("eq.env")
-  cntrs <- rbind(pkgenv$country_codes[[EQvariant]], pkgenv[[paste0("user_defined_", EQvariant)]])
+  cc <- pkgenv$country_codes[[EQvariant]]
+  ud <- pkgenv[[paste0("user_defined_", EQvariant)]]
+  if (!is.null(ud) && nrow(ud) > 0) {
+    common_cols <- intersect(colnames(cc), colnames(ud))
+    cntrs <- rbind(cc[, common_cols, drop = FALSE],
+                   ud[, common_cols, drop = FALSE])
+  } else {
+    cntrs <- cc
+  }
   
   result <- sapply(countries, function(country) {
     matched_rows <- which(toupper(cntrs$Country_code) == toupper(country) | 

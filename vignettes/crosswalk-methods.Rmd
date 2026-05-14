@@ -1,0 +1,131 @@
+---
+title: "Crosswalk methods"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Crosswalk methods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+library(eq5dsuite)
+```
+
+## Introduction
+
+Crosswalk methods allow EQ-5D values to be estimated when
+a country-specific value set exists for one instrument
+version but not another. `eq5dsuite` implements three
+widely used approaches:
+
+- **Original crosswalk** (`eqxw`) — maps EQ-5D-5L responses
+  to EQ-5D-3L values (van Hout et al., 2012)
+- **Reverse crosswalk** (`eqxwr`) — maps EQ-5D-3L responses
+  to EQ-5D-5L values (van Hout and Shaw, 2021)
+- **UK-specific crosswalk** (`eqxw_UK`) — NICE-recommended
+  mapping for UK analyses (Hernandez Alava et al., 2023)
+
+## When to use crosswalk methods
+
+Use crosswalk methods when:
+
+- You have EQ-5D-5L data but only a 3L value set exists
+  for your country → use `eqxw()`
+- You have EQ-5D-3L data but only a 5L value set exists
+  → use `eqxwr()`
+- You are conducting a NICE technology appraisal and have
+  EQ-5D-5L data → use `eqxw_UK()` until a NICE-approved
+  5L value set is available
+
+## Original crosswalk: eqxw()
+
+```{r eqxw-example}
+eq5d5l_data <- data.frame(
+  id = 1:5,
+  mo = c(1, 2, 3, 1, 2),
+  sc = c(1, 1, 2, 1, 3),
+  ua = c(2, 1, 3, 1, 2),
+  pd = c(2, 3, 2, 1, 4),
+  ad = c(1, 2, 1, 3, 2)
+)
+
+# Apply crosswalk using UK 3L value set
+eq5d5l_data$value_xw <- eqxw(
+  eq5d5l_data,
+  country   = "UK",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+
+eq5d5l_data
+```
+
+## Reverse crosswalk: eqxwr()
+
+```{r eqxwr-example}
+eq5d3l_data <- data.frame(
+  id = 1:5,
+  mo = c(1, 2, 1, 3, 2),
+  sc = c(1, 1, 2, 2, 1),
+  ua = c(1, 2, 1, 3, 2),
+  pd = c(2, 2, 1, 3, 3),
+  ad = c(1, 1, 2, 2, 1)
+)
+
+# Apply reverse crosswalk using Spain 5L value set
+eq5d3l_data$value_rxw <- eqxwr(
+  eq5d3l_data,
+  country   = "ES",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+
+eq5d3l_data
+```
+
+## UK-specific crosswalk: eqxw_UK()
+
+The UK-specific crosswalk requires age and sex in addition
+to the five EQ-5D dimensions:
+
+```{r eqxw-uk-example}
+uk_data <- data.frame(
+  id   = 1:5,
+  mo   = c(1, 2, 1, 3, 2),
+  sc   = c(1, 1, 2, 2, 1),
+  ua   = c(1, 2, 1, 3, 2),
+  pd   = c(2, 2, 1, 3, 3),
+  ad   = c(1, 1, 2, 2, 1),
+  age  = c(45, 62, 38, 71, 55),
+  male = c(1,  0,  1,  0,  1)
+)
+
+uk_data$value_uk <- eqxw_UK(
+  uk_data,
+  age  = "age",
+  male = "male"
+)
+
+uk_data
+```
+
+## Crosswalk compatibility with custom value sets
+
+All crosswalk functions are compatible with custom value
+sets added via `eqvs_add()`. The mapping and valuation
+steps are independent, so any compatible value set can
+be used without modification.
+
+## References
+
+van Hout B, et al. (2012). Interim scoring for the
+EQ-5D-5L. *Value in Health*, 15(5), 708--715.
+
+van Hout B, Shaw JW (2021). Mapping EQ-5D-3L to EQ-5D-5L.
+*Value in Health*, 24(9), 1285--1293.
+
+Hernandez Alava M, et al. (2023). Estimating the
+relationship between EQ-5D-5L and EQ-5D-3L.
+*PharmacoEconomics*, 41(2), 199--207.

@@ -1,0 +1,92 @@
+---
+title: "Keeping value sets up to date"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Keeping value sets up to date}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+library(eq5dsuite)
+```
+
+## Introduction
+
+New EQ-5D value sets are published regularly. The
+`eq5dsuite` package includes a built-in update system
+that allows you to install new value sets without
+waiting for a CRAN package update.
+
+## How the update system works
+
+When you load the package, it checks the date of the
+last value set update. If more than two months have
+passed, you will see a reminder:
+
+```
+eq5dsuite: Value sets were last checked more than
+2 months ago.
+Run eq5dsuite::update_value_sets() to check for
+new value sets.
+```
+
+## Checking for updates
+
+Run `update_value_sets()` to check for new value sets:
+
+```{r update-basic, eval = FALSE}
+update_value_sets()
+```
+
+If new value sets are available, you will see:
+
+```
+eq5dsuite: Checking EQ-5D-3L value sets...
+
+eq5dsuite: New EQ-5D-3L value sets available:
+  - China 2026 (CN_2026) doi:10.xxxx/xxxxx
+
+1 new value set(s) available. Install now?
+Enter [y] to install or [n] to cancel:
+```
+
+## Checking specific instruments
+
+```{r update-specific, eval = FALSE}
+# Check only EQ-5D-5L value sets
+update_value_sets(versions = "5L")
+
+# Check 3L and Y3L only
+update_value_sets(versions = c("3L", "Y3L"))
+```
+
+## Non-interactive updates
+
+For use in scripts or automated workflows:
+
+```{r update-noninteractive, eval = FALSE}
+# Install without asking for confirmation
+update_value_sets(ask = FALSE)
+```
+
+## Automatic migrations
+
+When value set codes change across the package ecosystem
+(for example, when a country publishes a second value set
+and the original code is disambiguated), `update_value_sets()`
+automatically applies the necessary renames before checking
+for new value sets. This ensures your installed value sets
+remain consistent with the online repository without
+requiring manual intervention.
+
+## Value sets repository
+
+All available value sets are maintained in the
+[eq5dsuite-value-sets](https://github.com/MathsInHealth/eq5dsuite-value-sets)
+repository. You can browse the available value sets and
+their metadata there directly.

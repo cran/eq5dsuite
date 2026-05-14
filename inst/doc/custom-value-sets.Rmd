@@ -1,0 +1,131 @@
+---
+title: "Custom value sets"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Custom value sets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+library(eq5dsuite)
+```
+
+## Introduction
+
+New EQ-5D value sets are published regularly. Rather than
+waiting for a package update, `eq5dsuite` allows you to
+add your own value sets using `eqvs_add()`. Custom value
+sets work with all scoring and analysis functions in the
+package.
+
+## Adding a custom value set
+
+A custom value set must be a data frame with two columns:
+
+- `state` — the EQ-5D health state code (integer)
+- A column named after the VS_code containing utility values
+
+```{r add-custom-vs}
+# Generate all valid 3L health state codes
+states <- make_all_EQ_indexes(version = "3L")
+
+# Create a custom value set (random values for illustration)
+set.seed(42)
+custom_vs <- data.frame(
+  state  = states,
+  MY_VS  = runif(243, min = -0.5, max = 1.0)
+)
+
+head(custom_vs)
+```
+
+```{r register-vs, eval = FALSE}
+# Register for current session only (saveOption = 1)
+eqvs_add(
+  custom_vs,
+  version     = "3L",
+  country     = "My Country",
+  countryCode = "MC",
+  VSCode      = "MY_VS",
+  description = "Custom value set — demonstration",
+  saveOption  = 1
+)
+
+# Verify it appears in the list
+eqvs_display(version = "3L")
+
+# Use it for value calculation
+eq5d3l(c(11111, 12321), country = "MY_VS")
+```
+
+## Saving a custom value set permanently
+
+To persist a custom value set across R sessions, use
+`saveOption = 2`:
+
+```{r save-vs, eval = FALSE}
+eqvs_add(
+  custom_vs,
+  version     = "3L",
+  country     = "My Country",
+  countryCode = "MC",
+  VSCode      = "MY_VS",
+  description = "Custom value set — permanent",
+  saveOption  = 2  # saves to user cache
+)
+```
+
+Load it in a new session with:
+
+```{r load-vs, eval = FALSE}
+eqvs_load(country = "MY_VS", version = "3L")
+```
+
+## Removing a custom value set
+
+```{r drop-vs, eval = FALSE}
+eqvs_drop(
+  country    = "MY_VS",
+  version    = "3L",
+  saveOption = 1  # remove from current session only
+)
+```
+
+## Validation
+
+`eqvs_add()` validates the value set before registration:
+
+- For 3L: checks all 243 health states are present
+- For 5L: checks all 3125 health states are present
+- Checks values are numeric with no duplicates
+
+## Using custom value sets with crosswalk methods
+
+Custom value sets are fully compatible with all crosswalk
+functions:
+
+```{r custom-xw, eval = FALSE}
+# Use custom 3L value set with original crosswalk
+eqxw(
+  eq5d5l_data,
+  country   = "MY_VS",
+  dim.names = c("mo", "sc", "ua", "pd", "ad")
+)
+```
+
+## Keeping value sets up to date
+
+Use `update_value_sets()` to automatically check for
+and install newly published value sets from the
+eq5dsuite online repository:
+
+```{r update-vs, eval = FALSE}
+update_value_sets()
+```
+
+See `vignette("update-value-sets")` for full details.

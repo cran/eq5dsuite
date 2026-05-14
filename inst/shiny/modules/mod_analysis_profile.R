@@ -492,9 +492,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver)
-      cs   <- format_call("table_1_1_1", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_level_summary", c(list(df = "data"), args))
       tryCatch({
-        r111$data <- do.call(table_1_1_1, c(list(df = rv$processed_data), args))
+        r111$data <- do.call(eq5d_profile_level_summary, c(list(df = rv$processed_data), args))
         r111$call <- cs
         save_result(rv, "Level frequencies (1.1.1)", cs, "table", data = r111$data)
       }, error = function(e) err_notify(e))
@@ -514,9 +514,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, rv$mapping$name_groupvar)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, name_cat = "groupvar", eq5d_version = ver)
-      cs   <- format_call("table_1_1_2", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_level_summary_by_group", c(list(df = "data"), args))
       tryCatch({
-        r112$data <- do.call(table_1_1_2, c(list(df = rv$processed_data), args))
+        r112$data <- do.call(eq5d_profile_level_summary_by_group, c(list(df = rv$processed_data), args))
         r112$call <- cs
         save_result(rv, "Level freq. by group (1.1.2)", cs, "table", data = r112$data)
       }, error = function(e) err_notify(e))
@@ -536,9 +536,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, input$n_113)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver, n = as.integer(input$n_113))
-      cs   <- format_call("table_1_1_3", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_top_states", c(list(df = "data"), args))
       tryCatch({
-        r113$data <- do.call(table_1_1_3, c(list(df = rv$processed_data), args))
+        r113$data <- do.call(eq5d_profile_top_states, c(list(df = rv$processed_data), args))
         r113$call <- cs
         save_result(rv, "Most common states (1.1.3)", cs, "table", data = r113$data)
       }, error = function(e) err_notify(e))
@@ -562,9 +562,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, rv$mapping$name_fu)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, name_fu = "fu", eq5d_version = ver)
-      cs   <- format_call("table_1_2_1", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_change_summary", c(list(df = "data"), args))
       tryCatch({
-        r121$data <- do.call(table_1_2_1, c(list(df = rv$processed_data), args))
+        r121$data <- do.call(eq5d_profile_change_summary, c(list(df = rv$processed_data), args))
         r121$call <- cs
         save_result(rv, "Level freq. by timepoint (1.2.1)", cs, "table", data = r121$data)
       }, error = function(e) err_notify(e))
@@ -583,9 +583,9 @@ mod_analysis_profile_server <- function(id, rv) {
     shiny::observeEvent(input$run_124, {
       shiny::req(rv$processed_data, rv$mapping$name_fu, rv$mapping$name_id, is_3L())
       args <- list(name_id = "id", names_eq5d = DIMS_STD, name_fu = "fu")
-      cs   <- format_call("table_1_2_4", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_dimension_change_table", c(list(df = "data"), args))
       tryCatch({
-        r124$data <- do.call(table_1_2_4, c(list(df = rv$processed_data), args))
+        r124$data <- do.call(eq5d_profile_dimension_change_table, c(list(df = rv$processed_data), args))
         r124$call <- cs
         save_result(rv, "Level change (1.2.4)", cs, "table", data = r124$data)
       }, error = function(e) err_notify(e))
@@ -606,9 +606,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("table_1_2_2", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_pchc_table", c(list(df = "data"), args))
       tryCatch({
-        r122$data <- do.call(table_1_2_2, c(list(df = df_gv), args))
+        r122$data <- do.call(eq5d_profile_pchc_table, c(list(df = df_gv), args))
         r122$call <- cs
         save_result(rv, "PCHC (1.2.2)", cs, "table", data = r122$data)
       }, error = function(e) err_notify(e))
@@ -629,9 +629,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("table_1_2_3", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_pchc_with_no_problems_table", c(list(df = "data"), args))
       tryCatch({
-        r123$data <- do.call(table_1_2_3, c(list(df = df_gv), args))
+        r123$data <- do.call(eq5d_profile_pchc_with_no_problems_table, c(list(df = df_gv), args))
         r123$call <- cs
         save_result(rv, "PCHC no-problems (1.2.3)", cs, "table", data = r123$data)
       }, error = function(e) err_notify(e))
@@ -652,9 +652,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("figure_1_2_1", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_pchc_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_2_1, c(list(df = df_gv), args))
+        res          <- do.call(eq5d_profile_pchc_by_group_plot, c(list(df = df_gv), args))
         r121fig$plot <- res$p
         r121fig$call <- cs
         save_result(rv, "PCHC bar chart (fig. 1.2.1)", cs, "plot", plot = res$p)
@@ -677,9 +677,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("figure_1_2_2", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_better_dimensions_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_2_2, c(list(df = df_gv), args))
+        res          <- do.call(eq5d_profile_better_dimensions_by_group_plot, c(list(df = df_gv), args))
         r122fig$plot <- res$p
         r122fig$call <- cs
         save_result(rv, "Improvements chart (fig. 1.2.2)", cs, "plot", plot = res$p)
@@ -702,9 +702,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("figure_1_2_3", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_worse_dimensions_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_2_3, c(list(df = df_gv), args))
+        res          <- do.call(eq5d_profile_worse_dimensions_by_group_plot, c(list(df = df_gv), args))
         r123fig$plot <- res$p
         r123fig$call <- cs
         save_result(rv, "Worsenings chart (fig. 1.2.3)", cs, "plot", plot = res$p)
@@ -727,9 +727,9 @@ mod_analysis_profile_server <- function(id, rv) {
       df_gv <- ensure_groupvar(rv$processed_data)
       args  <- list(name_id = "id", name_groupvar = "groupvar",
                     names_eq5d = DIMS_STD, name_fu = "fu")
-      cs    <- format_call("figure_1_2_4", c(list(df = "data"), args))
+      cs    <- format_call("eq5d_profile_mixed_dimensions_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_2_4, c(list(df = df_gv), args))
+        res          <- do.call(eq5d_profile_mixed_dimensions_by_group_plot, c(list(df = df_gv), args))
         r124fig$plot <- res$p
         r124fig$call <- cs
         save_result(rv, "Mixed change chart (fig. 1.2.4)", cs, "plot", plot = res$p)
@@ -761,9 +761,9 @@ mod_analysis_profile_server <- function(id, rv) {
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, name_fu = "fu", levels_fu = tp_sel,
                    name_id = "id", eq5d_version = ver, country = input$country_125)
-      cs   <- format_call("figure_1_2_5", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_health_profile_grid", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_2_5, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_profile_health_profile_grid, c(list(df = rv$processed_data), args))
         r125fig$plot <- res$p
         r125fig$call <- cs
         save_result(rv, "HPG scatter (fig. 1.2.5)", cs, "plot", plot = res$p)
@@ -789,9 +789,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, nzchar(input$country_131 %||% ""))
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver, country = input$country_131)
-      cs   <- format_call("table_1_3_1", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_lss_utility_summary", c(list(df = "data"), args))
       tryCatch({
-        r131$data <- do.call(table_1_3_1, c(list(df = rv$processed_data), args))
+        r131$data <- do.call(eq5d_profile_lss_utility_summary, c(list(df = rv$processed_data), args))
         r131$call <- cs
         save_result(rv, "LSS summary stats (1.3.1)", cs, "table", data = r131$data)
       }, error = function(e) err_notify(e))
@@ -811,9 +811,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, nzchar(input$country_131fig %||% ""))
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver, country = input$country_131fig)
-      cs   <- format_call("figure_1_3_1", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_lss_utility_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_3_1, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_profile_lss_utility_plot, c(list(df = rv$processed_data), args))
         r131fig$plot <- res$p
         r131fig$call <- cs
         save_result(rv, "LSS scatter (fig. 1.3.1)", cs, "plot", plot = res$p)
@@ -835,9 +835,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver)
-      cs   <- format_call("table_1_3_2", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_lfs_distribution", c(list(df = "data"), args))
       tryCatch({
-        r132$data <- do.call(table_1_3_2, c(list(df = rv$processed_data), args))
+        r132$data <- do.call(eq5d_profile_lfs_distribution, c(list(df = rv$processed_data), args))
         r132$call <- cs
         save_result(rv, "LFS distribution (1.3.2)", cs, "table", data = r132$data)
       }, error = function(e) err_notify(e))
@@ -857,9 +857,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, nzchar(input$country_134 %||% ""))
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver, country = input$country_134)
-      cs   <- format_call("table_1_3_4", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_lfs_utility_summary", c(list(df = "data"), args))
       tryCatch({
-        r134$data <- do.call(table_1_3_4, c(list(df = rv$processed_data), args))
+        r134$data <- do.call(eq5d_profile_lfs_utility_summary, c(list(df = rv$processed_data), args))
         r134$call <- cs
         save_result(rv, "LFS summary stats (1.3.4)", cs, "table", data = r134$data)
       }, error = function(e) err_notify(e))
@@ -879,9 +879,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data, nzchar(input$country_132fig %||% ""))
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver, country = input$country_132fig)
-      cs   <- format_call("figure_1_3_2", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_lfs_utility_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_1_3_2, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_profile_lfs_utility_plot, c(list(df = rv$processed_data), args))
         r132fig$plot <- res$p
         r132fig$call <- cs
         save_result(rv, "LFS scatter (fig. 1.3.2)", cs, "plot", plot = res$p)
@@ -907,9 +907,9 @@ mod_analysis_profile_server <- function(id, rv) {
       shiny::req(rv$processed_data)
       ver  <- eq5d_ver()
       args <- list(names_eq5d = DIMS_STD, eq5d_version = ver)
-      cs   <- format_call("figure_1_4_1", c(list(df = "data"), args))
+      cs   <- format_call("eq5d_profile_density_curve", c(list(df = "data"), args))
       tryCatch({
-        res       <- do.call(figure_1_4_1, c(list(df = rv$processed_data), args))
+        res       <- do.call(eq5d_profile_density_curve, c(list(df = rv$processed_data), args))
         r141$plot <- res$p
         r141$call <- cs
         save_result(rv, "HSDI (fig. 1.4.1)", cs, "plot", plot = r141$plot)
@@ -988,7 +988,7 @@ render_analysis_table <- function(data_reactive) {
     
     container      <- build_profile_container(df)
     freq_col_names <- names(df)[grepl("^freq_", names(df))]
-    # Bare proportion columns produced by table_1_1_3 / table_1_2_x functions
+    # Bare proportion columns produced by eq5d_profile_top_states / eq5d_profile_*_table functions
     pct_col_names  <- intersect(c("p", "cum_p"), names(df))
     all_pct        <- c(freq_col_names, pct_col_names)
     # Round remaining double columns (e.g. mean, sd) to 2 decimal places

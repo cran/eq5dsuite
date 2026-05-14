@@ -124,9 +124,9 @@ mod_analysis_vas_server <- function(id, rv) {
       }
       fu_info  <- ensure_fu(df, rv$mapping)
       args     <- list(name_vas = "vas", name_fu = fu_info$name_fu)
-      call_str <- format_call("table_2_1", list(df = "data", name_vas = "vas"))
+      call_str <- format_call("eq5d_vas_summary", list(df = "data", name_vas = "vas"))
       tryCatch({
-        r21$data <- do.call(table_2_1, c(list(df = fu_info$df), args))
+        r21$data <- do.call(eq5d_vas_summary, c(list(df = fu_info$df), args))
         r21$call <- call_str
         save_result(rv, "VAS summary stats (2.1)", call_str, "table", data = r21$data)
       }, error = function(e) err_notify(e))
@@ -145,9 +145,9 @@ mod_analysis_vas_server <- function(id, rv) {
     shiny::observeEvent(input$run_22, {
       shiny::req(rv$processed_data)
       args     <- list(name_vas = "vas")
-      call_str <- format_call("table_2_2", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_vas_distribution_table", c(list(df = "data"), args))
       tryCatch({
-        r22$data <- do.call(table_2_2, c(list(df = rv$processed_data), args))
+        r22$data <- do.call(eq5d_vas_distribution_table, c(list(df = rv$processed_data), args))
         r22$call <- call_str
         save_result(rv, "VAS mid-points (2.2)", call_str, "table", data = r22$data)
       }, error = function(e) err_notify(e))
@@ -166,9 +166,9 @@ mod_analysis_vas_server <- function(id, rv) {
     shiny::observeEvent(input$run_fig21, {
       shiny::req(rv$processed_data)
       args     <- list(name_vas = "vas")
-      call_str <- format_call("figure_2_1", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_vas_histogram", c(list(df = "data"), args))
       tryCatch({
-        res         <- do.call(figure_2_1, c(list(df = rv$processed_data), args))
+        res         <- do.call(eq5d_vas_histogram, c(list(df = rv$processed_data), args))
         rfig21$plot <- res$p
         rfig21$call <- call_str
         save_result(rv, "VAS histogram (fig. 2.1)", call_str, "plot", plot = rfig21$plot)
@@ -191,9 +191,9 @@ mod_analysis_vas_server <- function(id, rv) {
     shiny::observeEvent(input$run_fig22, {
       shiny::req(rv$processed_data)
       args     <- list(name_vas = "vas")
-      call_str <- format_call("figure_2_2", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_vas_grouped_distribution_plot", c(list(df = "data"), args))
       tryCatch({
-        res         <- do.call(figure_2_2, c(list(df = rv$processed_data), args))
+        res         <- do.call(eq5d_vas_grouped_distribution_plot, c(list(df = rv$processed_data), args))
         rfig22$plot <- res$p
         rfig22$call <- call_str
         save_result(rv, "VAS box plot (fig. 2.2)", call_str, "plot", plot = rfig22$plot)

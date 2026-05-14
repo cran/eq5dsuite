@@ -545,7 +545,6 @@
 #'   levels_fu = c('Pre-op', 'Post-op')
 #' )
 #' @export
-
 .pchctab <- function(df,
                   name_id,
                   name_groupvar,
@@ -576,8 +575,6 @@
   df[, names_eq5d] <- tmp
   rm(tmp)
   
-  
-  
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
@@ -589,8 +586,6 @@
   df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
   # check uniqueness of id-groupvar-fu combinations
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
-  
   
   
   ### analysis ###
@@ -663,7 +658,7 @@
 #' Wrapper to determine Paretian Classification of Health Change
 #' 
 #' This internal function determines Paretian Classification of Health Change (PCHC) for each combination of the variables specified in the `group_by` argument. 
-#' It is used in the code for table_2_4-table_2_5 and figure_2_1-figure_2_4. 
+#' It is used in the code for eq5d_profile_pchc_table, eq5d_profile_pchc_with_no_problems_table, eq5d_profile_dimension_change_table, and the eq5d_profile_*_by_group_plot functions.
 #' An EQ-5D health state is deemed to be `better` than another if it is better on at least one dimension and is no worse on any other dimension.
 #' An EQ-5D health state is deemed to be `worse` than another if it is worse in at least one dimension and is no better in any other dimension.
 #' @param df A data frame with EQ-5D states and follow-up variable. The dataset is assumed to be have been ordered correctly.

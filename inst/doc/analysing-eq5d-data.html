@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Analysing EQ-5D data</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Analysing EQ-5D data</h1>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This vignette demonstrates how <code>eq5dsuite</code> supports the
+full EQ-5D analytical workflow recommended by Devlin et al. (2020),
+using the NHS Patient Reported Outcome Measures (PROMs) dataset bundled
+with the package. The dataset includes patients undergoing hip
+replacement, knee replacement, groin hernia repair, and varicose vein
+surgery, who completed the EQ-5D-3L before and after their
+procedure.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># The example dataset is bundled with the package</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">data</span>(example_data)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">head</span>(example_data)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt;    id    time mo sc ua pd ad vas providercode       procedure    year ageband</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; 1  86  Pre-op  2  2  3  3  1  85        NT213 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; 2  86 Post-op  1  1  1  1  1  88        NT213 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt; 3 121  Pre-op  2  2  2  2  2  85        NT218 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; 4 121 Post-op  1  1  2  2  2  70        NT218 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt; 5 123  Pre-op  2  2  2  2  1  35        NT218 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt; 6 123 Post-op  2  2  2  2  2  65        NT218 Hip Replacement 2013/14    &lt;NA&gt;</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt;   gender</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt; 1   &lt;NA&gt;</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt; 2   &lt;NA&gt;</span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co">#&gt; 3   &lt;NA&gt;</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; 4   &lt;NA&gt;</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; 5   &lt;NA&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; 6   &lt;NA&gt;</span></span></code></pre></div>
+</div>
+<div id="worked-example-1-hip-replacement-outcomes" class="section level2">
+<h2>Worked example 1: Hip replacement outcomes</h2>
+<p>This example illustrates a typical single-group longitudinal
+workflow, addressing three practical questions: which problems do
+patients report before surgery, how does health change following the
+procedure, and how large is the overall health gain?</p>
+<div id="data-preparation" class="section level3">
+<h3>Data preparation</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>dim_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;mo&quot;</span>, <span class="st">&quot;sc&quot;</span>, <span class="st">&quot;ua&quot;</span>, <span class="st">&quot;pd&quot;</span>, <span class="st">&quot;ad&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co"># Subset to hip replacement patients</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>hip_data <span class="ot">&lt;-</span> example_data[example_data<span class="sc">$</span>procedure <span class="sc">==</span> <span class="st">&quot;Hip Replacement&quot;</span>, ]</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co"># Add profile code and EQ-5D value</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>hip_data<span class="sc">$</span>profile_code <span class="ot">&lt;-</span> <span class="fu">toEQ5Dindex</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">x         =</span> hip_data,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">dim.names =</span> dim_names</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>hip_data<span class="sc">$</span>value <span class="ot">&lt;-</span> <span class="fu">eq5d3l</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  hip_data[, dim_names],</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;UK&quot;</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">dim.names =</span> dim_names</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co"># Pre-operative subset</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>hip_preop <span class="ot">&lt;-</span> hip_data[hip_data<span class="sc">$</span>time <span class="sc">==</span> <span class="st">&quot;Pre-op&quot;</span>, ]</span></code></pre></div>
+</div>
+<div id="pre-operative-profile-distribution" class="section level3">
+<h3>Pre-operative profile distribution</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">eq5d_profile_level_summary</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">df           =</span> hip_preop,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; No ordering of time suppled. The time variable will be factorised according to the order in the data frame.</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, eq5d_version =</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; eq5d_version): 346 observations were coerced to NAs as they were not</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; interpretable as integer values in the range allowed by the EQ-5D descriptive</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; system.</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;                                        level n_All_mo freq_All_mo n_All_sc</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 1                                          1      158 0.086956522      870</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 2                                          2     1646 0.905888828      915</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 3                                          3       13 0.007154651       23</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 4                                      Total     1817 1.000000000     1808</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; 5 Number reporting any problems (levels 2+3)     1659 0.913043478      938</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 6                               Missing data       61 0.032481363       70</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;   freq_All_sc n_All_ua freq_All_ua n_All_pd freq_All_pd n_All_ad freq_All_ad</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; 1  0.48119469      128  0.07067918       17  0.00942873     1107  0.61329640</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; 2  0.50608407     1360  0.75096632     1044  0.57903494      610  0.33795014</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; 3  0.01272124      323  0.17835450      742  0.41153633       88  0.04875346</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; 4  1.00000000     1811  1.00000000     1803  1.00000000     1805  1.00000000</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 5  0.51880531     1683  0.92932082     1786  0.99057127      698  0.38670360</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; 6  0.03727370       67  0.03567625       75  0.03993610       73  0.03887114</span></span></code></pre></div>
+<p>Most patients report problems with pain/discomfort, usual activities,
+and mobility, consistent with the profile expected in patients awaiting
+hip replacement.</p>
+</div>
+<div id="most-common-health-states" class="section level3">
+<h3>Most common health states</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">eq5d_profile_top_states</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">df           =</span> hip_preop,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">n            =</span> <span class="dv">5</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, eq5d_version = eq5d_version,</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; : 346 observations were coerced to NAs as they were not interpretable as</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; integer values in the range allowed by the EQ-5D descriptive system.</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   Health state Frequency  Percentage Cumulative percentage</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1        21221       325 0.184031710             0.1840317</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2        22221       221 0.125141563             0.3091733</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3        22231       144 0.081540204             0.3907135</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4        22232       138 0.078142695             0.4688562</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 5        22222       116 0.065685164             0.5345413</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 6          ...        NA          NA                    NA</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; 7        33333         3 0.001698754             1.0000000</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; 8      Missing       112 0.059637913                    NA</span></span></code></pre></div>
+</div>
+<div id="change-between-time-points-pchc" class="section level3">
+<h3>Change between time points: PCHC</h3>
+<p>The Paretian Classification of Health Change (PCHC) classifies each
+patient as Better, Worse, Mixed, or No Change between time points. All
+plot functions in <code>eq5dsuite</code> return ggplot2 objects that can
+be customised directly:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">eq5d_profile_pchc_by_group_plot</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">df         =</span> hip_data,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">name_id    =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">names_eq5d =</span> dim_names,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">name_fu    =</span> <span class="st">&quot;time&quot;</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">levels_fu  =</span> <span class="fu">c</span>(<span class="st">&quot;Pre-op&quot;</span>, <span class="st">&quot;Post-op&quot;</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>)<span class="sc">$</span>p <span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;PCHC: hip replacement patients&quot;</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>    <span class="at">x     =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>    <span class="at">y     =</span> <span class="st">&quot;Percentage of respondents&quot;</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d): 535 observations were</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; coerced to NAs as they were not interpretable as integer values in the range</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; allowed by the EQ-5D descriptive system.</span></span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="PCHC classification for hip replacement patients." src="data:image/png;base64,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" alt="PCHC classification for hip replacement patients." />
+<div class="figcaption">PCHC classification for hip replacement
+patients.</div>
+</div>
+</div>
+<div id="dimensions-driving-improvement" class="section level3">
+<h3>Dimensions driving improvement</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">eq5d_profile_better_dimensions_by_group_plot</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">df         =</span> hip_data,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">name_id    =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">names_eq5d =</span> dim_names,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">name_fu    =</span> <span class="st">&quot;time&quot;</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">levels_fu  =</span> <span class="fu">c</span>(<span class="st">&quot;Pre-op&quot;</span>, <span class="st">&quot;Post-op&quot;</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>)<span class="sc">$</span>p <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d): 535 observations were</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; coerced to NAs as they were not interpretable as integer values in the range</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; allowed by the EQ-5D descriptive system.</span></span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="Dimensions improved among patients classified as Better." src="data:image/png;base64,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" alt="Dimensions improved among patients classified as Better." />
+<div class="figcaption">Dimensions improved among patients classified as
+Better.</div>
+</div>
+</div>
+<div id="eq-5d-value-summary" class="section level3">
+<h3>EQ-5D value summary</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">eq5d_utility_summary</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">df           =</span> hip_data,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">name_fu      =</span> <span class="st">&quot;time&quot;</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">levels_fu    =</span> <span class="fu">c</span>(<span class="st">&quot;Pre-op&quot;</span>, <span class="st">&quot;Post-op&quot;</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">country      =</span> <span class="st">&quot;UK&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, add_state = TRUE,</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; add_utility = TRUE, : 535 observations were coerced to NAs as they were not</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; interpretable as integer values in the range allowed by the EQ-5D descriptive</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; system.</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;                  name       Post-op        Pre-op</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 1                Mean  7.927837e-01  3.654281e-01</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 2      Standard error  5.868664e-03  7.785437e-03</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 3              Median  8.480001e-01  5.160000e-01</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 4                Mode  1.000000e+00  6.910000e-01</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; 5  Standard deviation  2.491937e-01  3.271736e-01</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 6            Kurtosis  6.093719e+00  1.642925e+00</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 7            Skewness -1.650594e+00 -2.961227e-01</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 8             Minimum -3.490000e-01 -5.940000e-01</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; 9             Maximum  1.000000e+00  1.000000e+00</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 10              Range  1.349000e+00  1.594000e+00</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 11       Observations  1.803000e+03  1.766000e+03</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 12        Missing (n)  7.500000e+01  1.120000e+02</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 13       Total sample  1.878000e+03  1.878000e+03</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 14        Missing (%)  3.993610e-02  5.963791e-02</span></span></code></pre></div>
+</div>
+<div id="eq-vas-summary" class="section level3">
+<h3>EQ-VAS summary</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">eq5d_vas_summary</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">df        =</span> hip_data,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">name_vas  =</span> <span class="st">&quot;vas&quot;</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">name_fu   =</span> <span class="st">&quot;time&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">levels_fu =</span> <span class="fu">c</span>(<span class="st">&quot;Pre-op&quot;</span>, <span class="st">&quot;Post-op&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_vas(df = df, name = name_vas): TRUE observations were coerced</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; to NAs as they were not interpretable as integer values in the range allowed by</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; the EQ-5D descriptive system.</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;                  name       Post-op       Pre-op</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; 1                Mean   77.01895206   65.5425849</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; 2      Standard error    0.42801380    0.5326207</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; 3              Median   80.00000000   70.0000000</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; 4                Mode   90.00000000   80.0000000</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; 5  Standard deviation   18.12879736   21.8244527</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; 6            Kurtosis    4.92332191    2.9313944</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; 7            Skewness   -1.33560730   -0.7415802</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; 8             Minimum    0.00000000    0.0000000</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; 9             Maximum  100.00000000  100.0000000</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; 10              Range  100.00000000  100.0000000</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; 11       Observations 1794.00000000 1679.0000000</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; 12        Missing (n)   84.00000000  199.0000000</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; 13       Total sample 1878.00000000 1878.0000000</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; 14        Missing (%)    0.04472843    0.1059638</span></span></code></pre></div>
+<hr />
+</div>
+</div>
+<div id="worked-example-2-comparing-two-procedures" class="section level2">
+<h2>Worked example 2: Comparing two procedures</h2>
+<p>This example demonstrates a cross-sectional group comparison using
+pre-operative data from knee replacement and groin hernia patients — two
+groups with very different levels of pre-operative health burden.</p>
+<div id="data-preparation-1" class="section level3">
+<h3>Data preparation</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Subset to two procedures, pre-operative only</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>procs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Knee Replacement&quot;</span>, <span class="st">&quot;Groin Hernia&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>comparison_data <span class="ot">&lt;-</span> example_data[</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  example_data<span class="sc">$</span>procedure <span class="sc">%in%</span> procs <span class="sc">&amp;</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  example_data<span class="sc">$</span>time <span class="sc">==</span> <span class="st">&quot;Pre-op&quot;</span>, ]</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Add profile code and EQ-5D value</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>comparison_data<span class="sc">$</span>profile_code <span class="ot">&lt;-</span> <span class="fu">toEQ5Dindex</span>(</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">x         =</span> comparison_data,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">dim.names =</span> dim_names</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>)</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>comparison_data<span class="sc">$</span>value <span class="ot">&lt;-</span> <span class="fu">eq5d3l</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  comparison_data[, dim_names],</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;UK&quot;</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="at">dim.names =</span> dim_names</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="profile-comparison-by-group" class="section level3">
+<h3>Profile comparison by group</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">eq5d_profile_level_summary_by_group</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">df           =</span> comparison_data,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">name_cat     =</span> <span class="st">&quot;procedure&quot;</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; No ordering of time suppled. The time variable will be factorised according to the order in the data frame.</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, eq5d_version =</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; eq5d_version): 427 observations were coerced to NAs as they were not</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; interpretable as integer values in the range allowed by the EQ-5D descriptive</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; system.</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt;                                        level n_Knee Replacement_mo</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; 1                                          1                   133</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; 2                                          2                  1789</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; 3                                          3                     9</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; 4                                      Total                  1931</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; 5 Number reporting any problems (levels 2+3)                  1798</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; 8                               Missing data                    65</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt;   freq_Knee Replacement_mo n_Groin Hernia_mo freq_Groin Hernia_mo</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; 1              0.068876230               735          0.823068309</span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; 2              0.926462973               158          0.176931691</span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; 3              0.004660798                NA                   NA</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; 4              1.000000000               893          1.000000000</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; 5              0.931123770               158          0.176931691</span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="co">#&gt; 8              0.032565130                 6          0.006674082</span></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a><span class="co">#&gt;   n_Knee Replacement_sc freq_Knee Replacement_sc n_Groin Hernia_sc</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a><span class="co">#&gt; 1                  1353              0.702492212               853</span></span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a><span class="co">#&gt; 2                   559              0.290238837                32</span></span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a><span class="co">#&gt; 3                    14              0.007268951                 3</span></span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a><span class="co">#&gt; 4                  1926              1.000000000               888</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a><span class="co">#&gt; 5                   573              0.297507788                35</span></span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a><span class="co">#&gt; 8                    70              0.035070140                11</span></span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a><span class="co">#&gt;   freq_Groin Hernia_sc n_Knee Replacement_ua freq_Knee Replacement_ua</span></span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a><span class="co">#&gt; 1          0.960585586                   164               0.08523909</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a><span class="co">#&gt; 2          0.036036036                  1518               0.78898129</span></span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a><span class="co">#&gt; 3          0.003378378                   242               0.12577963</span></span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a><span class="co">#&gt; 4          1.000000000                  1924               1.00000000</span></span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a><span class="co">#&gt; 5          0.039414414                  1760               0.91476091</span></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a><span class="co">#&gt; 8          0.012235818                    72               0.03607214</span></span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a><span class="co">#&gt;   n_Groin Hernia_ua freq_Groin Hernia_ua n_Knee Replacement_pd</span></span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a><span class="co">#&gt; 1               665          0.746352413                    18</span></span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a><span class="co">#&gt; 2               209          0.234567901                  1130</span></span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a><span class="co">#&gt; 3                17          0.019079686                   756</span></span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a><span class="co">#&gt; 4               891          1.000000000                  1904</span></span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a><span class="co">#&gt; 5               226          0.253647587                  1886</span></span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a><span class="co">#&gt; 8                 8          0.008898776                    92</span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a><span class="co">#&gt;   freq_Knee Replacement_pd n_Groin Hernia_pd freq_Groin Hernia_pd</span></span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a><span class="co">#&gt; 1              0.009453782               287           0.32283465</span></span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a><span class="co">#&gt; 2              0.593487395               560           0.62992126</span></span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a><span class="co">#&gt; 3              0.397058824                42           0.04724409</span></span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a><span class="co">#&gt; 4              1.000000000               889           1.00000000</span></span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a><span class="co">#&gt; 5              0.990546218               602           0.67716535</span></span>
+<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a><span class="co">#&gt; 8              0.046092184                10           0.01112347</span></span>
+<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a><span class="co">#&gt;   n_Knee Replacement_ad freq_Knee Replacement_ad n_Groin Hernia_ad</span></span>
+<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a><span class="co">#&gt; 1                  1205               0.63023013               759</span></span>
+<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a><span class="co">#&gt; 2                   624               0.32635983               118</span></span>
+<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a><span class="co">#&gt; 3                    83               0.04341004                13</span></span>
+<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a><span class="co">#&gt; 4                  1912               1.00000000               890</span></span>
+<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a><span class="co">#&gt; 5                   707               0.36976987               131</span></span>
+<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a><span class="co">#&gt; 8                    84               0.04208417                 9</span></span>
+<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a><span class="co">#&gt;   freq_Groin Hernia_ad</span></span>
+<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a><span class="co">#&gt; 1           0.85280899</span></span>
+<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a><span class="co">#&gt; 2           0.13258427</span></span>
+<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a><span class="co">#&gt; 3           0.01460674</span></span>
+<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a><span class="co">#&gt; 4           1.00000000</span></span>
+<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a><span class="co">#&gt; 5           0.14719101</span></span>
+<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a><span class="co">#&gt; 8           0.01001112</span></span></code></pre></div>
+</div>
+<div id="eq-5d-value-comparison" class="section level3">
+<h3>EQ-5D value comparison</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">eq5d_utility_summary_by_group</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">df            =</span> comparison_data,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">names_eq5d    =</span> dim_names,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">name_groupvar =</span> <span class="st">&quot;procedure&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">eq5d_version  =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">country       =</span> <span class="st">&quot;UK&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, add_state = TRUE,</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; add_utility = TRUE, : 427 observations were coerced to NAs as they were not</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; interpretable as integer values in the range allowed by the EQ-5D descriptive</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; system.</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt;             name Groin Hernia Knee Replacement   All groups</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; 1           Mean 7.877045e-01     4.039469e-01 5.262618e-01</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; 2 Standard error 6.945801e-03     7.163948e-03 6.355527e-03</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt; 3         Median 7.960000e-01     5.870000e-01 6.910000e-01</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt; 4           25th 7.270000e-01     8.799999e-02 1.590000e-01</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; 5           75th 1.000000e+00     6.910000e-01 7.600000e-01</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt; 6              N 8.730000e+02     1.866000e+03 2.739000e+03</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; 7        Missing 2.600000e+01     1.300000e+02 1.560000e+02</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">eq5d_utility_by_group_plot</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">df            =</span> comparison_data,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">names_eq5d    =</span> dim_names,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">name_groupvar =</span> <span class="st">&quot;procedure&quot;</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">eq5d_version  =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">country       =</span> <span class="st">&quot;UK&quot;</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>)<span class="sc">$</span>p <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, add_state = TRUE,</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; add_utility = TRUE, : 427 observations were coerced to NAs as they were not</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; interpretable as integer values in the range allowed by the EQ-5D descriptive</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; system.</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; ℹ Please use `linewidth` instead.</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; ℹ The deprecated feature was likely used in the eq5dsuite package.</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;   Please report the issue to the authors.</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt; This warning is displayed once per session.</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt; Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt; generated.</span></span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="Mean pre-operative EQ-5D values by procedure group." src="data:image/png;base64,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" alt="Mean pre-operative EQ-5D values by procedure group." />
+<div class="figcaption">Mean pre-operative EQ-5D values by procedure
+group.</div>
+</div>
+</div>
+<div id="lss-analysis-by-group" class="section level3">
+<h3>LSS analysis by group</h3>
+<p>The Level Sum Score (LSS) summarises overall severity as the sum of
+level scores across the five dimensions (range 5–15 for 3L, 5–25 for
+5L). The plot below shows how EQ-5D values relate to LSS within each
+procedure group:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>hernia_data <span class="ot">&lt;-</span> comparison_data[</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  comparison_data<span class="sc">$</span>procedure <span class="sc">==</span> <span class="st">&quot;Groin Hernia&quot;</span>, ]</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="fu">eq5d_profile_lss_utility_plot</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  hernia_data,</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="at">country      =</span> <span class="st">&quot;UK&quot;</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>)<span class="sc">$</span>p <span class="sc">+</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;Groin Hernia&quot;</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>    <span class="at">x     =</span> <span class="st">&quot;Level Sum Score (LSS)&quot;</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>    <span class="at">y     =</span> <span class="st">&quot;EQ-5D value&quot;</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">15</span>),</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>                               <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">15</span>, <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, add_state = TRUE, add_lss =</span></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="co">#&gt; TRUE, : 44 observations were coerced to NAs as they were not interpretable as</span></span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="co">#&gt; integer values in the range allowed by the EQ-5D descriptive system.</span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="co">#&gt; Scale for x is already present.</span></span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a><span class="co">#&gt; Adding another scale for x, which will replace the existing scale.</span></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 3 rows containing missing values or values outside the scale range</span></span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="co">#&gt; (`geom_segment()`).</span></span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="EQ-5D values by LSS — Groin Hernia." src="data:image/png;base64,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" alt="EQ-5D values by LSS — Groin Hernia." />
+<div class="figcaption">EQ-5D values by LSS — Groin Hernia.</div>
+</div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>knee_data <span class="ot">&lt;-</span> comparison_data[</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  comparison_data<span class="sc">$</span>procedure <span class="sc">==</span> <span class="st">&quot;Knee Replacement&quot;</span>, ]</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="fu">eq5d_profile_lss_utility_plot</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  knee_data,</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  <span class="at">names_eq5d   =</span> dim_names,</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  <span class="at">eq5d_version =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>  <span class="at">country      =</span> <span class="st">&quot;UK&quot;</span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>)<span class="sc">$</span>p <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;Knee Replacement&quot;</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>    <span class="at">x     =</span> <span class="st">&quot;Level Sum Score (LSS)&quot;</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>    <span class="at">y     =</span> <span class="st">&quot;EQ-5D value&quot;</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">15</span>),</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>                               <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">15</span>, <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="co">#&gt; Warning in .prep_eq5d(df = df, names = names_eq5d, add_state = TRUE, add_lss =</span></span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a><span class="co">#&gt; TRUE, : 383 observations were coerced to NAs as they were not interpretable as</span></span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a><span class="co">#&gt; integer values in the range allowed by the EQ-5D descriptive system.</span></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="co">#&gt; Scale for x is already present.</span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a><span class="co">#&gt; Adding another scale for x, which will replace the existing scale.</span></span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 3 rows containing missing values or values outside the scale range</span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt; (`geom_segment()`).</span></span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a><span class="co">#&gt; Warning: Removed 3 rows containing missing values or values outside the scale range</span></span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="co">#&gt; (`geom_segment()`).</span></span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="EQ-5D values by LSS — Knee Replacement." src="data:image/png;base64,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" alt="EQ-5D values by LSS — Knee Replacement." />
+<div class="figcaption">EQ-5D values by LSS — Knee Replacement.</div>
+</div>
+</div>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further reading</h2>
+<ul>
+<li><code>vignette(&quot;crosswalk-methods&quot;)</code> — when and how to use
+crosswalk methods</li>
+<li><code>vignette(&quot;custom-value-sets&quot;)</code> — adding and managing
+custom value sets</li>
+<li><code>vignette(&quot;update-value-sets&quot;)</code> — keeping value sets up
+to date</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Devlin N, Parkin D, Janssen B (2020). <em>Methods for Analysing and
+Reporting EQ-5D Data</em>. Springer, Cham. <a href="https://doi.org/10.1007/978-3-030-47622-9" class="uri">https://doi.org/10.1007/978-3-030-47622-9</a></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

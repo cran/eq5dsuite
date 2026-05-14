@@ -4,20 +4,30 @@
 \alias{eqvs_display}
 \title{eqvs_display}
 \usage{
-eqvs_display(version = "5L", return_df = FALSE)
+eqvs_display(version = "5L", return_df = FALSE, show_citation = FALSE)
 }
 \arguments{
-\item{version}{Version of the EQ-5D instrument. Can take values 5L (default), 3L or 3LY.}
+\item{version}{Version of the EQ-5D instrument. One of \code{"3L"},
+\code{"5L"} (default), or \code{"Y3L"}.}
 
-\item{return_df}{If set to TRUE, the function will return information on the names of the available value sets in a data.frame. Defaults to FALSE}
+\item{return_df}{Logical. If \code{TRUE}, returns a data.frame with
+all columns (including \code{citation} if present). Defaults to
+\code{FALSE}.}
+
+\item{show_citation}{Logical. If \code{TRUE}, prints the full AMA
+citation for each value set after the summary table. Defaults to
+\code{FALSE}.}
 }
 \value{
-Default NULL, if return_df == TRUE, returns a data.frame with the displayed information.
+\code{NULL} invisibly (default), or a data.frame when
+  \code{return_df = TRUE}.
 }
 \description{
-Display available value sets, which can also be used as (reverse) crosswalks.
+Display available value sets, which can also be used as
+  (reverse) crosswalks. Built-in value sets are shown first, followed
+  by any user-defined value sets added via \code{eqvs_add()}.
 }
 \examples{
-# Display available value sets.
-eqvs_display
+# Display available EQ-5D-5L value sets.
+eqvs_display(version = "5L")
 }

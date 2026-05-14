@@ -214,11 +214,11 @@ mod_analysis_utility_server <- function(id, rv) {
       fu_info  <- ensure_fu(rv$processed_data, rv$mapping)
       args     <- c(base_args(),
                     list(name_fu = fu_info$name_fu, country = input$country_31))
-      call_str <- format_call("table_3_1",
+      call_str <- format_call("eq5d_utility_summary",
                               c(list(df = "data"), base_args(),
                                 list(country = input$country_31)))
       tryCatch({
-        r31$data <- do.call(table_3_1, c(list(df = fu_info$df), args))
+        r31$data <- do.call(eq5d_utility_summary, c(list(df = fu_info$df), args))
         r31$call <- call_str
         save_result(rv, "Utility summary stats (3.1)", call_str, "table", data = r31$data)
       }, error = function(e) err_notify(e))
@@ -237,9 +237,9 @@ mod_analysis_utility_server <- function(id, rv) {
     shiny::observeEvent(input$run_fig34, {
       shiny::req(rv$processed_data, nzchar(input$country_fig34 %||% ""))
       args     <- c(base_args(), list(country = input$country_fig34))
-      call_str <- format_call("figure_3_4", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_distribution_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_3_4, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_utility_distribution_plot, c(list(df = rv$processed_data), args))
         rfig34$plot  <- res$p
         rfig34$call  <- call_str
         save_result(rv, "Utility bar chart (fig. 3.4)", call_str, "plot", plot = rfig34$plot)
@@ -278,9 +278,9 @@ mod_analysis_utility_server <- function(id, rv) {
                  nzchar(input$country_32 %||% ""))
       args     <- c(base_args(),
                     list(name_groupvar = "groupvar", country = input$country_32))
-      call_str <- format_call("table_3_2", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_summary_by_group", c(list(df = "data"), args))
       tryCatch({
-        r32$data <- do.call(table_3_2, c(list(df = rv$processed_data), args))
+        r32$data <- do.call(eq5d_utility_summary_by_group, c(list(df = rv$processed_data), args))
         r32$call <- call_str
         save_result(rv, "Utility by group (3.2)", call_str, "table", data = r32$data)
       }, error = function(e) err_notify(e))
@@ -315,9 +315,9 @@ mod_analysis_utility_server <- function(id, rv) {
                  nzchar(input$country_fig32 %||% ""))
       args     <- c(base_args(),
                     list(name_groupvar = "groupvar", country = input$country_fig32))
-      call_str <- format_call("figure_3_2", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_3_2, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_utility_by_group_plot, c(list(df = rv$processed_data), args))
         rfig32$plot  <- res$p
         rfig32$call  <- call_str
         save_result(rv, "Utility CI bar chart (fig. 3.2)", call_str, "plot", plot = rfig32$plot)
@@ -354,9 +354,9 @@ mod_analysis_utility_server <- function(id, rv) {
       shiny::req(rv$processed_data, rv$mapping$name_fu,
                  nzchar(input$country_fig31 %||% ""))
       args     <- c(base_args(), list(name_fu = "fu", country = input$country_fig31))
-      call_str <- format_call("figure_3_1", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_over_time_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_3_1, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_utility_over_time_plot, c(list(df = rv$processed_data), args))
         rfig31$plot  <- res$p
         rfig31$call  <- call_str
         save_result(rv, "Utility box plots (fig. 3.1)", call_str, "plot", plot = rfig31$plot)
@@ -409,9 +409,9 @@ mod_analysis_utility_server <- function(id, rv) {
                     list(name_fu       = "fu",
                          name_groupvar = "groupvar",
                          country       = input$country_fig33))
-      call_str <- format_call("figure_3_3", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_change_by_group_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_3_3, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_utility_change_by_group_plot, c(list(df = rv$processed_data), args))
         rfig33$plot  <- res$p
         rfig33$call  <- call_str
         save_result(rv, "Utility by timepoint & group (fig. 3.3)", call_str,
@@ -449,9 +449,9 @@ mod_analysis_utility_server <- function(id, rv) {
       shiny::req(rv$processed_data, rv$mapping$name_vas,
                  nzchar(input$country_fig35 %||% ""))
       args     <- c(base_args(), list(name_vas = "vas", country = input$country_fig35))
-      call_str <- format_call("figure_3_5", c(list(df = "data"), args))
+      call_str <- format_call("eq5d_utility_vas_scatter_plot", c(list(df = "data"), args))
       tryCatch({
-        res          <- do.call(figure_3_5, c(list(df = rv$processed_data), args))
+        res          <- do.call(eq5d_utility_vas_scatter_plot, c(list(df = rv$processed_data), args))
         rfig35$plot  <- res$p
         rfig35$call  <- call_str
         save_result(rv, "Utility vs VAS (fig. 3.5)", call_str, "plot", plot = rfig35$plot)

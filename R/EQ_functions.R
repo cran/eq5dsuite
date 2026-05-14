@@ -40,6 +40,7 @@ toEQ5Dindex <- function(
   if (length(dim(x)) == 2L) {
     
     # Normalise column names to lower-case
+    dim.names <- tolower(dim.names)
     if (!is.null(colnames(x))) colnames(x) <- tolower(colnames(x))
     
     # Assign default names if none present
@@ -186,35 +187,77 @@ make_all_EQ_indexes <- function(version = "5L", dim.names = c("mo", "sc", "ua", 
 #'              add_intercept = TRUE, 
 #'              prepend = "d_")
 #' @export
-make_dummies <- function(df, version = "5L", dim.names = c("mo", "sc", "ua", "pd", "ad"), drop_level_1 = TRUE, add_intercept = FALSE, incremental = FALSE, prepend = NULL, append = NULL, return_df = TRUE) {
-  if(!length(dim.names) == 5) stop("Argument dim.names not of length 5.")
-  if(!length(dim(df) == 2)) stop("Need to provide matrix or data.frame of 2 dimensions.")
-
-  colnames(df) <- tolower(colnames(df))
-  if(is.null(colnames(df))) {
-    message("No column names")
-    if(NCOL(df) == 5) {
-      message("Given 5 columns, will assume dimensions in conventional order: MO, SC, UA, PD, AD.")
-      colnames(df) <- dim.names
-    } 
-  }
-  if(!all(dim.names %in% colnames(df))) stop("Provided dimension names not available in matrix/data.frame.")
-  # intercept_col <- NULL
-  # if(add_intercept) intercept_col <- data.frame(intercept = rep(1, NROW(df)))
+make_dummies <- function(df, 
+                         version      = "5L", 
+                         dim.names    = c("mo", "sc", "ua", "pd", "ad"), 
+                         drop_level_1  = TRUE, 
+                         add_intercept = FALSE, 
+                         incremental   = FALSE, 
+                         prepend       = NULL, 
+                         append        = NULL, 
+                         return_df     = TRUE) {
   
-  vers <- ifelse(version == '5L', 5, 3)
+  if (!length(dim.names) == 5) 
+    stop("Argument dim.names not of length 5.")
+  if (!length(dim(df) == 2)) 
+    stop("Need to provide matrix or data.frame of 2 dimensions.")
   
-  startlevel <- ifelse(drop_level_1, 2, 1)
-  if(incremental) {
-    tmp <- 1*lower.tri(diag(vers), TRUE)[,startlevel:vers]  
+  # Case-insensitive column matching without renaming
+  col_lower    <- tolower(colnames(df))
+  dim_lower    <- tolower(dim.names)
+  matched_cols <- col_lower %in% dim_lower
+  
+  if (!all(dim_lower %in% col_lower)) {
+    if (NCOL(df) == 5) {
+      # Assume conventional order — map actual column names
+      # to dim.names without renaming
+      message(
+        "Column names do not match dim.names. ",
+        "Assuming dimensions are in conventional order: ",
+        paste(dim.names, collapse = ", "), "."
+      )
+      # Create a named mapping: dim.name -> actual column name
+      col_map <- setNames(colnames(df), dim.names)
+    } else {
+      stop(
+        "Provided dimension names (",
+        paste(dim.names, collapse = ", "),
+        ") not found in column names (",
+        paste(colnames(df), collapse = ", "),
+        "). Please rename your columns or update dim.names."
+      )
+    }
   } else {
-    tmp <- diag(vers)[,startlevel:vers]
+    # Match dim.names to actual column names case-insensitively
+    col_map <- setNames(
+      colnames(df)[match(dim_lower, col_lower)],
+      dim.names
+    )
   }
   
-  tmpout <- do.call(cbind, lapply(df[,dim.names], function(x) tmp[x,      ]))
-  colnames(tmpout) <- as.vector(t(outer(paste0(prepend, dim.names), paste0(startlevel:vers, append), FUN = paste0)))
-  if(add_intercept) tmpout <- cbind(intercept = 1, tmpout)
-  if(return_df) tmpout <- as.data.frame(tmpout)
+  vers       <- ifelse(version == "5L", 5, 3)
+  startlevel <- ifelse(drop_level_1, 2, 1)
+  
+  if (incremental) {
+    tmp <- 1 * lower.tri(diag(vers), TRUE)[, startlevel:vers]
+  } else {
+    tmp <- diag(vers)[, startlevel:vers]
+  }
+  
+  # Use actual column names via col_map
+  tmpout <- do.call(cbind, lapply(col_map, function(col) {
+    tmp[df[[col]], ]
+  }))
+  
+  colnames(tmpout) <- as.vector(
+    t(outer(paste0(prepend, dim.names),
+            paste0(startlevel:vers, append),
+            FUN = paste0))
+  )
+  
+  if (add_intercept) tmpout <- cbind(intercept = 1, tmpout)
+  if (return_df)     tmpout <- as.data.frame(tmpout)
+  
   tmpout
 }
 
@@ -493,32 +536,96 @@ eqvs_drop <- function(country = NULL, version = "5L", saveOption = 1, savePath =
 
 
 #' @title eqvs_display
-#' @description Display available value sets, which can also be used as (reverse) crosswalks.
-#' @param return_df If set to TRUE, the function will return information on the names of the available value sets in a data.frame. Defaults to FALSE
-#' @param version Version of the EQ-5D instrument. Can take values 5L (default), 3L or 3LY.
-#' @return Default NULL, if return_df == TRUE, returns a data.frame with the displayed information.
-#' @examples 
-#' # Display available value sets.
-#' eqvs_display
+#' @description Display available value sets, which can also be used as
+#'   (reverse) crosswalks. Built-in value sets are shown first, followed
+#'   by any user-defined value sets added via \code{eqvs_add()}.
+#' @param version Version of the EQ-5D instrument. One of \code{"3L"},
+#'   \code{"5L"} (default), or \code{"Y3L"}.
+#' @param return_df Logical. If \code{TRUE}, returns a data.frame with
+#'   all columns (including \code{citation} if present). Defaults to
+#'   \code{FALSE}.
+#' @param show_citation Logical. If \code{TRUE}, prints the full AMA
+#'   citation for each value set after the summary table. Defaults to
+#'   \code{FALSE}.
+#' @return \code{NULL} invisibly (default), or a data.frame when
+#'   \code{return_df = TRUE}.
+#' @examples
+#' # Display available EQ-5D-5L value sets.
+#' eqvs_display(version = "5L")
 #' @export
-eqvs_display <- function(version = "5L", return_df = FALSE) {
-  pkgenv <- getOption("eq.env")
-  
-  # read off version name
-  version <- toupper(version)
-  user_defined_str <- paste0("user_defined_", version)
-  
-  message(paste0("Available national value sets for ", version, " version:"))
-  .prettyPrint(pkgenv$country_codes[[version]], 'l')
-  if(NROW(pkgenv[[user_defined_str]])) {
-    message('User-defined value sets:')    
-    .prettyPrint(pkgenv[[user_defined_str]], 'l')
-  } else {
-    message('No user-defined value sets available.')
+eqvs_display <- function(version       = "5L",
+                          return_df     = FALSE,
+                          show_citation = FALSE) {
+
+  # Helper: print a compact table (no citation column)
+  print_vs_table <- function(df) {
+    display_cols <- c("Version", "Name_short", "Country_code", "VS_code", "doi")
+    display_cols <- display_cols[display_cols %in% colnames(df)]
+    display_df   <- df[, display_cols, drop = FALSE]
+    if ("Name_short" %in% colnames(display_df))
+      display_df$Name_short <- strtrim(display_df$Name_short, 20)
+    if ("doi" %in% colnames(display_df))
+      display_df$doi <- strtrim(display_df$doi, 35)
+    print(display_df, row.names = FALSE)
   }
-  if(return_df) 
-    return(rbind(cbind(Type = 'Value set', pkgenv$country_codes[[version]]), if(NROW(pkgenv[[user_defined_str]])) cbind(Type = 'User-defined', pkgenv[[user_defined_str]]) else NULL))
-  retval <- NULL
+
+  # Helper: align columns of two data frames before rbind
+  align_df_cols <- function(df1, df2) {
+    for (col in setdiff(colnames(df1), colnames(df2)))
+      df2[[col]] <- NA
+    for (col in setdiff(colnames(df2), colnames(df1)))
+      df1[[col]] <- NA
+    df2 <- df2[, colnames(df1), drop = FALSE]
+    rbind(df1, df2)
+  }
+
+  pkgenv          <- getOption("eq.env")
+  version         <- toupper(version)
+  user_defined_str <- paste0("user_defined_", version)
+
+  builtin <- pkgenv$country_codes[[version]]
+  ud      <- pkgenv[[user_defined_str]]
+
+  # --- Print built-in sets ---
+  message("Available national value sets for ", version, " version:")
+  print_vs_table(builtin)
+
+  # --- Print user-defined sets ---
+  if (NROW(ud) > 0) {
+    message("User-defined value sets:")
+    print_vs_table(ud)
+  } else {
+    message("No user-defined value sets available.")
+  }
+
+  # --- Optionally print citations ---
+  if (show_citation) {
+    combined_for_cit <- if (NROW(ud) > 0) align_df_cols(builtin, ud) else builtin
+    if ("citation" %in% colnames(combined_for_cit)) {
+      message("\nCitations:")
+      for (i in seq_len(nrow(combined_for_cit))) {
+        cit <- combined_for_cit$citation[i]
+        vs  <- combined_for_cit$VS_code[i]
+        if (!is.na(cit) && nchar(trimws(cit)) > 0)
+          message("[", vs, "] ", cit)
+      }
+    }
+  }
+
+  # --- Return data frame if requested ---
+  if (return_df) {
+    if (NROW(ud) > 0) {
+      combined <- align_df_cols(
+        cbind(Type = "Value set",    builtin),
+        cbind(Type = "User-defined", ud)
+      )
+    } else {
+      combined <- cbind(Type = "Value set", builtin)
+    }
+    return(combined)
+  }
+
+  invisible(NULL)
 }
 
 

@@ -1,18 +1,18 @@
-#' Table 1.1.1: Frequency of levels by dimensions, cross-sectional
-#' 
+#' eq5d_profile_level_summary: Frequency of levels by dimensions, cross-sectional
+#'
 #' @param df Data frame with the EQ-5D and follow-up columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_1_1(
+#' eq5d_profile_level_summary(
 #'  df = example_data[example_data$time == "Pre-op",],
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'  eq5d_version = "3L"
 #' )
 #' @export
 
-table_1_1_1<- function(df, 
+eq5d_profile_level_summary <- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL) {
   do.call(.freqtab, list(
@@ -24,7 +24,7 @@ table_1_1_1<- function(df,
 }
 
 
-#' Table 1.1.2: Frequency of levels by dimensions, separated by category
+#' eq5d_profile_level_summary_by_group: Frequency of levels by dimensions, separated by category
 #' 
 #' @param df Data frame with the EQ-5D and follow-up columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -34,7 +34,7 @@ table_1_1_1<- function(df,
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_1_2(
+#' eq5d_profile_level_summary_by_group(
 #'  df = example_data[example_data$time == "Pre-op",],
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'  name_cat = "procedure",
@@ -43,7 +43,7 @@ table_1_1_1<- function(df,
 #' )
 #' @export
 #' 
-table_1_1_2<- function(df, 
+eq5d_profile_level_summary_by_group <- function(df, 
                        names_eq5d = NULL,
                        name_cat = NULL,
                        levels_cat = NULL,
@@ -52,7 +52,7 @@ table_1_1_2<- function(df,
   tmp[-(NROW(tmp)-(1:2)),]
 }
 
-#' Table 1.2.1: Frequency of levels by dimensions, by follow-up
+#' eq5d_profile_change_summary: Frequency of levels by dimensions, by follow-up
 #' 
 #' @param df Data frame with the EQ-5D and follow-up columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -62,7 +62,7 @@ table_1_1_2<- function(df,
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @return Summary data frame.
 #' @examples
-#' table_1_2_1(
+#' eq5d_profile_change_summary(
 #'   df = example_data,
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'   name_fu = "time",
@@ -71,7 +71,7 @@ table_1_1_2<- function(df,
 #' )
 #' @export
 
-table_1_2_1<- function(df, 
+eq5d_profile_change_summary <- function(df, 
                        names_eq5d = NULL,
                        name_fu = NULL,
                        levels_fu = NULL,
@@ -85,7 +85,7 @@ table_1_2_1<- function(df,
   do.call(.freqtab, mc)
 }
 
-#' Table 1.1.3: Prevalence of the 10 most frequently observed self-reported health states
+#' eq5d_profile_top_states: Prevalence of the 10 most frequently observed self-reported health states
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -94,14 +94,14 @@ table_1_2_1<- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_1_3(
+#' eq5d_profile_top_states(
 #'   df = example_data[example_data$time == "Pre-op",],
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'   eq5d_version = "3L",
 #'   n = 10
 #' )
 
-table_1_1_3 <- function(df, 
+eq5d_profile_top_states <- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL,
                       n = 10) {
@@ -170,19 +170,19 @@ table_1_1_3 <- function(df,
   return(retval)
 }
 
-#' Table 1.2.2: Changes in health according to the PCHC (Paretian Classification of Health Change)
+#' eq5d_profile_pchc_table: Changes in health according to the PCHC (Paretian Classification of Health Change)
 #' 
 #' @param df Data frame with the EQ-5D, grouping, id and follow-up columns
 #' @param name_id Character string for the patient id column
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
+#' @param levels_fu Character vector containing the order of the values in the follow-up column.
 #' If NULL (default value), the levels will be ordered in the order of appearance in df.
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_2(
+#' eq5d_profile_pchc_table(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -191,11 +191,11 @@ table_1_1_3 <- function(df,
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
 
-table_1_2_2 <- function(df,
+eq5d_profile_pchc_table <- function(df,
                       name_id,
-                      name_groupvar,
+                      name_groupvar = NULL,
                       names_eq5d = NULL,
-                      name_fu = NULL, 
+                      name_fu = NULL,
                       levels_fu = NULL) {
   
   ### data preparation ###
@@ -215,8 +215,11 @@ table_1_2_2 <- function(df,
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   names(df)[names(df) == name_id] <- "id"
-
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - groupvar - time
@@ -224,9 +227,9 @@ table_1_2_2 <- function(df,
   df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
   # check uniqueness of id-groupvar-fu combinations
   .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
+
   ### analysis ###
-  
+
   # calculate change
   df <- .pchc(df = df, level_fu_1 = levels_fu[1])
   df <- df[!is.na(df$state), , drop = FALSE]
@@ -269,19 +272,19 @@ table_1_2_2 <- function(df,
   return(retval)
 }
 
-#' Table 1.2.3: Changes in health according to the PCHC, taking account of those with no problems
+#' eq5d_profile_pchc_with_no_problems_table: Changes in health according to the PCHC, taking account of those with no problems
 #' 
 #' @param df Data frame with the EQ-5D, grouping, id and follow-up columns
 #' @param name_id Character string for the patient id column
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
+#' @param levels_fu Character vector containing the order of the values in the follow-up column.
 #' If NULL (default value), the levels will be ordered in the order of appearance in df.
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_3(
+#' eq5d_profile_pchc_with_no_problems_table(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -290,9 +293,9 @@ table_1_2_2 <- function(df,
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
 
-table_1_2_3 <- function(df, 
+eq5d_profile_pchc_with_no_problems_table <- function(df,
                       name_id,
-                      name_groupvar,
+                      name_groupvar = NULL,
                       names_eq5d = NULL,
                       name_fu = NULL,
                       levels_fu = NULL) {
@@ -314,8 +317,11 @@ table_1_2_3 <- function(df,
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
   names(df)[names(df) == name_id] <- "id"
-
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
   df <- .prep_eq5d(df = df, names = names_eq5d)
   df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
   # sort by id - groupvar - time
@@ -377,7 +383,7 @@ table_1_2_3 <- function(df,
   return(retval)
 }
 
-#' Table 1.2.4: Changes in levels in each dimension, percentages of total and of type of change
+#' eq5d_profile_dimension_change_table: Changes in levels in each dimension, percentages of total and of type of change
 #' 
 #' @param df Data frame with the EQ-5D, id and follow-up columns
 #' @param name_id Character string for the patient id column
@@ -388,7 +394,7 @@ table_1_2_3 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_2_4(
+#' eq5d_profile_dimension_change_table(
 #'   df = example_data,
 #'   name_id = "id",
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
@@ -396,7 +402,7 @@ table_1_2_3 <- function(df,
 #'   levels_fu = c("Pre-op" , "Post-op")
 #' )
 
-table_1_2_4 <- function(df, 
+eq5d_profile_dimension_change_table <- function(df, 
                       name_id,
                       names_eq5d = NULL,
                       name_fu = NULL,
@@ -502,7 +508,7 @@ table_1_2_4 <- function(df,
   return(retval)
 }
 
-#' Table 1.3.1: Summary statistics for the EQ-5D values by all the different LSSs (Level Sum Scores)
+#' eq5d_profile_lss_utility_summary: Summary statistics for the EQ-5D values by all the different LSSs (Level Sum Scores)
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -513,14 +519,14 @@ table_1_2_4 <- function(df,
 #' @export
 #' @examples
 #' df <- data.frame(make_all_EQ_states(version = "5L"))
-#' table_1_3_1(
+#' eq5d_profile_lss_utility_summary(
 #'   df, 
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   eq5d_version = "3L", 
 #'   country = "US"
 #' )
 
-table_1_3_1 <- function(df, 
+eq5d_profile_lss_utility_summary <- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL,
                       country){
@@ -576,7 +582,7 @@ table_1_3_1 <- function(df,
   return(retval)
 }
 
-#' Table 1.3.2: Distribution of the EQ-5D states by LFS (Level Frequency Score)
+#' eq5d_profile_lfs_distribution: Distribution of the EQ-5D states by LFS (Level Frequency Score)
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -584,13 +590,13 @@ table_1_3_1 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_2(
+#' eq5d_profile_lfs_distribution(
 #'   example_data, 
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   eq5d_version = "3L"
 #' )
 
-table_1_3_2 <- function(df, 
+eq5d_profile_lfs_distribution <- function(df, 
                       names_eq5d = NULL, 
                       eq5d_version = NULL){
   
@@ -636,7 +642,7 @@ table_1_3_2 <- function(df,
   return(retval)
 }
 
-#' Table 1.3.3: Number of observations in the LFS (Level Frequency Score) according to the EQ-5D values
+#' eq5d_profile_lfs_mean_utility: Number of observations in the LFS (Level Frequency Score) according to the EQ-5D values
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -646,14 +652,14 @@ table_1_3_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_3(
+#' eq5d_profile_lfs_mean_utility(
 #'   example_data, 
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
 
-table_1_3_3 <- function(df, 
+eq5d_profile_lfs_mean_utility <- function(df, 
                       names_eq5d = NULL,
                       eq5d_version = NULL,
                       country){
@@ -707,7 +713,7 @@ table_1_3_3 <- function(df,
   return(retval)
 }
 
-#' Table 1.3.4: Summary statistics of EQ-5D values by LFS (Level Frequency Score)
+#' eq5d_profile_lfs_utility_summary: Summary statistics of EQ-5D values by LFS (Level Frequency Score)
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -717,14 +723,14 @@ table_1_3_3 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_1_3_4(
+#' eq5d_profile_lfs_utility_summary(
 #'   example_data, 
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   eq5d_version = "3L",
 #'   country = "UK"
 #' )
 
-table_1_3_4 <- function(df, 
+eq5d_profile_lfs_utility_summary <- function(df, 
                        names_eq5d = NULL,
                        eq5d_version = NULL,
                        country){
@@ -765,7 +771,7 @@ table_1_3_4 <- function(df,
   return(retval)
 }
 
-#' Figure 1.4.1: Generate a Health State Density Curve (HSDC) for EQ-5D Data
+#' eq5d_profile_density_curve: Generate a Health State Density Curve (HSDC) for EQ-5D Data
 #'
 #' This function calculates and plots the Health State Density Curve (HSDC) for a given
 #' EQ-5D dataset. It concatenates dimension values to form health state profiles, filters
@@ -783,7 +789,7 @@ table_1_3_4 <- function(df,
 #'   \item{p}{A ggplot2 object showing the Health State Density Index}
 #' @export
 #' @examples
-#' figure <- figure_1_4_1(
+#' figure <- eq5d_profile_density_curve(
 #'             df = example_data, 
 #'             names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'             eq5d_version = "3L"
@@ -792,7 +798,7 @@ table_1_3_4 <- function(df,
 #' figure$p
 #' @importFrom utils head
 
-figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
+eq5d_profile_density_curve <- function(df, names_eq5d, eq5d_version) {
   
   # Retrieve validated names & version from helper function
   temp <- .get_names(names_eq5d = names_eq5d, eq5d_version = eq5d_version)
@@ -869,7 +875,7 @@ figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
   return(list(plot_data = profile_freq, p = p))
 }
 
-#' Table 2.1: EQ VAS Score by timepoints
+#' eq5d_vas_summary: EQ VAS Score by timepoints
 #' 
 #' @param df Data frame with the VAS and the follow-up columns
 #' @param name_vas Character string for the VAS column
@@ -878,14 +884,14 @@ figure_1_4_1 <- function(df, names_eq5d, eq5d_version) {
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_2_1(
+#' eq5d_vas_summary(
 #'   example_data,
 #'   name_vas = 'vas', 
 #'   name_fu = 'time', 
 #'   levels_fu = c('Pre-op', 'Post-op')
 #' )
 
-table_2_1 <- function(df, 
+eq5d_vas_summary <- function(df, 
                       name_vas = NULL,
                       name_fu = NULL,
                       levels_fu = NULL){
@@ -917,7 +923,7 @@ table_2_1 <- function(df,
   return(retval)
 }
 
-#' Table 2.2: EQ VAS Scores frequency of mid-points
+#' eq5d_vas_distribution_table: EQ VAS Scores frequency of mid-points
 #' 
 #' @param df Data frame with the VAS column
 #' @param name_vas Character string for the VAS column
@@ -925,13 +931,13 @@ table_2_1 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_2_2(
+#' eq5d_vas_distribution_table(
 #'   example_data,
 #'   name_vas = 'vas', 
 #'   add_na_total =  TRUE
 #'   )
 
-table_2_2 <- function(df, 
+eq5d_vas_distribution_table <- function(df, 
                       name_vas = NULL, 
                       add_na_total = TRUE){
   
@@ -981,7 +987,7 @@ table_2_2 <- function(df,
   return(retval)
 }
 
-#' Table 3.1: EQ-5D values: by timepoints
+#' eq5d_utility_summary: EQ-5D values: by timepoints
 #' 
 #' @param df Data frame with the EQ-5D and follow-up columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -994,7 +1000,7 @@ table_2_2 <- function(df,
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_3_1(
+#' eq5d_utility_summary(
 #'   example_data,
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'   name_fu = "time",
@@ -1003,7 +1009,7 @@ table_2_2 <- function(df,
 #'   country = "UK"
 #' )
 
-table_3_1 <- function(df, 
+eq5d_utility_summary <- function(df, 
                       names_eq5d = NULL,
                       name_fu = NULL,
                       levels_fu = NULL,
@@ -1043,17 +1049,17 @@ table_3_1 <- function(df,
   return(retval)
 }
 
-#' Table 3.2 EQ-5D values: by groupvar
+#' eq5d_utility_summary_by_group:EQ-5D values: by groupvar
 #' 
 #' @param df Data frame with the EQ-5D, follow-up and grouping columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param eq5d_version Version of the EQ-5D instrument
-#' @param country A character string representing the name of the country. 
+#' @param country A character string representing the name of the country.
 #' @return Summary data frame
 #' @export
 #' @examples
-#' table_3_2(
+#' eq5d_utility_summary_by_group(
 #'   example_data,
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'   name_groupvar = "procedure",
@@ -1061,9 +1067,9 @@ table_3_1 <- function(df,
 #'   country = "UK"
 #' )
 
-table_3_2 <- function(df,
+eq5d_utility_summary_by_group <- function(df,
                       names_eq5d = NULL,
-                      name_groupvar,
+                      name_groupvar = NULL,
                       eq5d_version = NULL,
                       country){
   
@@ -1082,7 +1088,11 @@ table_3_2 <- function(df,
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
@@ -1121,14 +1131,14 @@ table_3_2 <- function(df,
   return(retval)
 }
 
-#' Table 3.3 EQ-5D values: by age and groupvar
+#' eq5d_utility_norms_comparison:EQ-5D values: by age and groupvar
 #' 
 #' @param df Data frame with the EQ-5D, age, follow-up and grouping columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
+#' @param levels_fu Character vector containing the order of the values in the follow-up column.
 #' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param name_age Character string for the age column
 #' @param eq5d_version Version of the EQ-5D instrument
 #' @param country A character string representing the name of the country. 
@@ -1141,7 +1151,7 @@ table_3_2 <- function(df,
 #'   levels = c("20 to 29", "30 to 39", "40 to 49", "50 to 59", "60 to 69", "70 to 79", "80 to 89")
 #' )
 #' example_data <- example_data[example_data$gender %in% c("Male", "Female"),]
-#' table_3_3(
+#' eq5d_utility_norms_comparison(
 #'   example_data,
 #'   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'   name_fu = "time",
@@ -1152,11 +1162,11 @@ table_3_2 <- function(df,
 #'   country = "UK"
 #' )
 
-table_3_3 <- function(df,
+eq5d_utility_norms_comparison <- function(df,
                       names_eq5d = NULL,
                       name_fu = NULL,
                       levels_fu = NULL,
-                      name_groupvar,
+                      name_groupvar = NULL,
                       name_age,
                       eq5d_version = NULL,
                       country){
@@ -1179,7 +1189,11 @@ table_3_3 <- function(df,
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
   names(df)[names(df) == name_age]      <- "age"
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
@@ -1260,13 +1274,13 @@ table_3_3 <- function(df,
 }
 
 
-#' Figure 1.2.1: Paretian Classification of Health Change (PCHC) by Group
+#' eq5d_profile_pchc_by_group_plot: Paretian Classification of Health Change (PCHC) by Group
 #' This function computes PCHC categories between two time points for each subject, 
 #' stratifies them by a grouping variable, and produces
 #' a single bar chart with side-by-side bars showing the distribution of PCHC categories.
 #' @param df Data frame containing EQ-5D dimensions, a grouping variable, patient ID, and follow-up columns
 #' @param name_id Character string for the patient ID column
-#' @param name_groupvar Character string for the grouping column (e.g., procedure)
+#' @param name_groupvar Character string for the grouping column (e.g., procedure). If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
 #' @param levels_fu Character vector of length 2 indicating the order of follow-up time points (e.g., c("Pre-op", "Post-op"))
@@ -1275,7 +1289,7 @@ table_3_3 <- function(df,
 #'   \item{p}{A ggplot2 object showing a bar chart with side-by-side bars for each PCHC category}
 #' @export
 #' @examples
-#' result <- figure_1_2_1(
+#' result <- eq5d_profile_pchc_by_group_plot(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -1286,9 +1300,9 @@ table_3_3 <- function(df,
 #' result$p        # shows the plot
 #' result$plot_data  # shows the summary table
 
-figure_1_2_1 <- function(df,
+eq5d_profile_pchc_by_group_plot <- function(df,
                          name_id,
-                         name_groupvar,
+                         name_groupvar = NULL,
                          names_eq5d = NULL,
                          name_fu = NULL,
                          levels_fu = NULL) {
@@ -1313,8 +1327,12 @@ figure_1_2_1 <- function(df,
   df <- df[, names_all, drop = FALSE]
 
   # Rename for internal use
-  names(df)[names(df) == name_id]       <- "id"
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  names(df)[names(df) == name_id] <- "id"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
 
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
@@ -1387,13 +1405,13 @@ figure_1_2_1 <- function(df,
   ))
 }
 
-#' Figure 1.2.2: Percentage of Respondents Who Improved in Each EQ-5D Dimension, by Group
+#' eq5d_profile_better_dimensions_by_group_plot: Percentage of Respondents Who Improved in Each EQ-5D Dimension, by Group
 #' This function calculates how many respondents improved in each dimension between
 #' two time points and summarizes the results for each group. The, it prodcuces 
 #' a dimension-focused chart illustrating improvement percentages by dimension.
 #' @param df Data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column
 #' @param name_id Character string for the patient ID column
-#' @param name_groupvar Character string for the grouping column (e.g. procedure)
+#' @param name_groupvar Character string for the grouping column (e.g. procedure). If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d Character vector of EQ-5D dimension names
 #' @param name_fu Character string for the follow-up column
 #' @param levels_fu Character vector of length 2, specifying the order of the follow-up levels (e.g. c("Pre-op","Post-op"))
@@ -1403,7 +1421,7 @@ figure_1_2_1 <- function(df,
 #' @export
 #'
 #' @examples
-#' result <- figure_1_2_2(
+#' result <- eq5d_profile_better_dimensions_by_group_plot(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -1414,9 +1432,9 @@ figure_1_2_1 <- function(df,
 #' result$p
 #' result$plot_data
 #'
-figure_1_2_2 <- function(df,
+eq5d_profile_better_dimensions_by_group_plot <- function(df,
                          name_id,
-                         name_groupvar,
+                         name_groupvar = NULL,
                          names_eq5d = NULL,
                          name_fu = NULL,
                          levels_fu = NULL) {
@@ -1441,8 +1459,12 @@ figure_1_2_2 <- function(df,
   df <- df[, names_all, drop = FALSE]
 
   # Rename internal columns
-  names(df)[names(df) == name_id]       <- "id"
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  names(df)[names(df) == name_id] <- "id"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
 
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
@@ -1538,7 +1560,7 @@ figure_1_2_2 <- function(df,
 #'
 #' @param df A data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column
 #' @param name_id A character string for the patient ID column
-#' @param name_groupvar A character string for the grouping column (e.g., procedure)
+#' @param name_groupvar A character string for the grouping column (e.g., procedure). If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d A character vector of EQ-5D dimension names
 #' @param name_fu A character string for the follow-up column
 #' @param levels_fu A character vector of length 2, specifying the order of the follow-up levels (e.g., c("Pre-op","Post-op"))
@@ -1549,7 +1571,7 @@ figure_1_2_2 <- function(df,
 #' @export
 #'
 #' @examples
-#' result <- figure_1_2_3(
+#' result <- eq5d_profile_worse_dimensions_by_group_plot(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -1560,9 +1582,9 @@ figure_1_2_2 <- function(df,
 #' result$p        # shows the plot
 #' result$plot_data  # shows the summary table
 #'
-figure_1_2_3 <- function(df,
+eq5d_profile_worse_dimensions_by_group_plot <- function(df,
                          name_id,
-                         name_groupvar,
+                         name_groupvar = NULL,
                          names_eq5d = NULL,
                          name_fu = NULL,
                          levels_fu = NULL) {
@@ -1589,8 +1611,12 @@ figure_1_2_3 <- function(df,
   df <- df[, names_all, drop = FALSE]
 
   # Rename internal columns
-  names(df)[names(df) == name_id]       <- "id"
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  names(df)[names(df) == name_id] <- "id"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
 
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
@@ -1677,7 +1703,7 @@ figure_1_2_3 <- function(df,
 }
 
 
-#' Figure 1.2.4: Percentage of Respondents Who Had a Mixed Change Overall,
+#' eq5d_profile_mixed_dimensions_by_group_plot: Percentage of Respondents Who Had a Mixed Change Overall,
 #' by Dimension Improved or Worsened, Grouped by Procedure (or Other Grouping)
 #'
 #' This function focuses on patients classified as having "Mixed change" overall
@@ -1688,7 +1714,7 @@ figure_1_2_3 <- function(df,
 #' @param df Data frame containing columns for EQ-5D dimensions, a grouping variable,
 #' a patient ID, and a follow-up variable
 #' @param name_id Character string indicating the patient ID column
-#' @param name_groupvar Character string for the grouping column (e.g. "procedure")
+#' @param name_groupvar Character string for the grouping column (e.g. "procedure"). If NULL (default), the analysis is performed on the full population.
 #' @param names_eq5d Character vector naming the EQ-5D dimensions (e.g. c("mo","sc","ua","pd","ad"))
 #' @param name_fu Character string for the follow-up column (e.g. "time")
 #' @param levels_fu Character vector of length 2 specifying the time order (e.g. c("Pre-op","Post-op"))
@@ -1700,7 +1726,7 @@ figure_1_2_3 <- function(df,
 #' @export
 #'
 #' @examples
-#' result <- figure_1_2_4(
+#' result <- eq5d_profile_mixed_dimensions_by_group_plot(
 #'   df = example_data,
 #'   name_id = "id",
 #'   name_groupvar = "procedure",
@@ -1711,9 +1737,9 @@ figure_1_2_3 <- function(df,
 #' result$plot_data
 #' result$p
 #'
-figure_1_2_4 <- function(df,
+eq5d_profile_mixed_dimensions_by_group_plot <- function(df,
                          name_id,
-                         name_groupvar,
+                         name_groupvar = NULL,
                          names_eq5d = NULL,
                          name_fu = NULL,
                          levels_fu = NULL) {
@@ -1739,8 +1765,12 @@ figure_1_2_4 <- function(df,
   df <- df[, names_all, drop = FALSE]
 
   # Rename for internal use
-  names(df)[names(df) == name_id]       <- "id"
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  names(df)[names(df) == name_id] <- "id"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
 
   # Prepare EQ-5D & Follow-up columns
   df <- .prep_eq5d(df = df, names = names_eq5d)
@@ -1853,7 +1883,7 @@ figure_1_2_4 <- function(df,
   ))
 }
 
-#' Figure 1.2.5: Health Profile Grid (HPG) for Two Time Points
+#' eq5d_profile_health_profile_grid: Health Profile Grid (HPG) for Two Time Points
 #'
 #' This function creates a Health Profile Grid (HPG) for EQ-5D data, plotting each
 #' individual's change in health states (ranked from best to worst) between two time
@@ -1872,7 +1902,7 @@ figure_1_2_4 <- function(df,
 #'   \item{p}{A \code{ggplot2} object displaying the HPG scatter plot.}
 #' @export
 #' @examples
-#' tmp <- figure_1_2_5(
+#' tmp <- eq5d_profile_health_profile_grid(
 #'            df = example_data, 
 #'            names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'            name_fu = "time", 
@@ -1882,7 +1912,7 @@ figure_1_2_4 <- function(df,
 #'            country = "UK"
 #'        )
 
-figure_1_2_5 <- function(df,
+eq5d_profile_health_profile_grid <- function(df,
                          names_eq5d,
                          name_fu,
                          levels_fu = NULL,
@@ -2000,7 +2030,7 @@ figure_1_2_5 <- function(df,
 
 
 
-#' Figure 1.3.1: EQ-5D values plotted against LSS
+#' eq5d_profile_lss_utility_plot: EQ-5D values plotted against LSS
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -2011,7 +2041,7 @@ figure_1_2_5 <- function(df,
 #' @export
 #' @examples
 #' df <- data.frame(make_all_EQ_states(version = "5L"))
-#' tmp <- figure_1_3_1(
+#' tmp <- eq5d_profile_lss_utility_plot(
 #'  df, 
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  eq5d_version = "5L", 
@@ -2020,7 +2050,7 @@ figure_1_2_5 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_1_3_1 <- function(df,
+eq5d_profile_lss_utility_plot <- function(df,
                        names_eq5d = NULL,
                        eq5d_version = NULL,
                        country){
@@ -2095,7 +2125,7 @@ figure_1_3_1 <- function(df,
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 1.3.2: EQ-5D values plotted against LFS
+#' eq5d_profile_lfs_utility_plot: EQ-5D values plotted against LFS
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -2105,7 +2135,7 @@ figure_1_3_1 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_1_3_2(
+#' tmp <- eq5d_profile_lfs_utility_plot(
 #'  example_data, 
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  eq5d_version = "3L",
@@ -2114,7 +2144,7 @@ figure_1_3_1 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_1_3_2 <- function(df,
+eq5d_profile_lfs_utility_plot <- function(df,
                         names_eq5d = NULL,
                         eq5d_version = NULL,
                         country){
@@ -2204,18 +2234,18 @@ figure_1_3_2 <- function(df,
   return(list(plot_data = plot_data, p = p))
 }
 
-#' Figure 2.1: EQ VAS scores
+#' eq5d_vas_histogram: EQ VAS scores
 #' 
 #' @param df Data frame with the VAS column
 #' @param name_vas Character string for the VAS column
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_2_1(example_data, name_vas = 'vas')
+#' tmp <- eq5d_vas_histogram(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
 
-figure_2_1 <- function(df, name_vas = NULL){
+eq5d_vas_histogram <- function(df, name_vas = NULL){
   
   ### data preparation ###
   # replace NULL names with defaults
@@ -2256,22 +2286,22 @@ figure_2_1 <- function(df, name_vas = NULL){
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 2.2: Mid-point EQ VAS scores
+#' eq5d_vas_grouped_distribution_plot: Mid-point EQ VAS scores
 #' 
 #' @param df Data frame with the VAS column
 #' @param name_vas Character string for the VAS column
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_2_2(example_data, name_vas = 'vas')
+#' tmp <- eq5d_vas_grouped_distribution_plot(example_data, name_vas = 'vas')
 #' tmp$p
 #' tmp$plot_data
 
-figure_2_2 <- function(df, name_vas = NULL){
+eq5d_vas_grouped_distribution_plot <- function(df, name_vas = NULL){
   
   # produce output to be plotted (Table 3.2)
   # do not add totals
-  plot_data <- table_2_2(df = df, name_vas = name_vas, add_na_total = FALSE)
+  plot_data <- eq5d_vas_distribution_table(df = df, name_vas = name_vas, add_na_total = FALSE)
   # remove Range column, not needed
   plot_data <- plot_data[, setdiff(names(plot_data), "Range"), drop = FALSE]
   
@@ -2295,7 +2325,7 @@ figure_2_2 <- function(df, name_vas = NULL){
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 3.1: EQ-5D values by timepoints: mean values and 95\% confidence intervals
+#' eq5d_utility_over_time_plot: EQ-5D values by timepoints: mean values and 95\% confidence intervals
 #' 
 #' @param df Data frame with the VAS columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -2308,7 +2338,7 @@ figure_2_2 <- function(df, name_vas = NULL){
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_1(
+#' tmp <- eq5d_utility_over_time_plot(
 #'  example_data,
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  name_fu = "time",
@@ -2319,7 +2349,7 @@ figure_2_2 <- function(df, name_vas = NULL){
 #' tmp$p
 #' tmp$plot_data
 
-figure_3_1 <- function(df,
+eq5d_utility_over_time_plot <- function(df,
                        names_eq5d = NULL,
                        name_fu = NULL,
                        levels_fu = NULL,
@@ -2374,18 +2404,18 @@ figure_3_1 <- function(df,
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 3.2: Mean EQ-5D values and 95\% confidence intervals: all vs by groupvar
+#' eq5d_utility_by_group_plot: Mean EQ-5D values and 95\% confidence intervals: all vs by groupvar
 #' 
 #' @param df Data frame with the EQ-5D and grouping columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param eq5d_version Version of the EQ-5D instrument
-#' @param country A character string representing the name of the country. 
+#' @param country A character string representing the name of the country.
 #' This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_2(
+#' tmp <- eq5d_utility_by_group_plot(
 #'  example_data,
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  name_groupvar = "procedure",
@@ -2395,9 +2425,9 @@ figure_3_1 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_3_2 <- function(df,
+eq5d_utility_by_group_plot <- function(df,
                        names_eq5d = NULL,
-                       name_groupvar,
+                       name_groupvar = NULL,
                        eq5d_version = NULL,
                        country) {
   
@@ -2414,7 +2444,11 @@ figure_3_2 <- function(df,
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  names(df)[names(df) == name_groupvar] <- "groupvar"
+  if (is.null(name_groupvar)) {
+    df$groupvar <- "All"
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+  }
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
@@ -2435,7 +2469,8 @@ figure_3_2 <- function(df,
   plot_data <- rbind(plot_data, plot_data_total)
   plot_data$groupvar <- factor(plot_data$groupvar, levels = groupvar_levels)
   plot_data <- plot_data[order(plot_data$groupvar), , drop = FALSE]
-  
+
+  groupvar_label <- if (is.null(name_groupvar)) "Group" else name_groupvar
   # plot
   p <- ggplot(data = plot_data, aes(x = .data$groupvar, y = .data$mean, ymin = .data$ci_lb, ymax = .data$ci_ub)) +
     # plot means
@@ -2444,9 +2479,9 @@ figure_3_2 <- function(df,
     # add error bars
     geom_errorbar(width = 0.1, size = 1) +
     # plot title
-    ggtitle(paste0("Mean EQ-5D values 95% confidence intervals: all vs by ", name_groupvar)) +
+    ggtitle(paste0("Mean EQ-5D values 95% confidence intervals: all vs by ", groupvar_label)) +
     # manipulate x-axis
-    scale_x_discrete(name = name_groupvar) +
+    scale_x_discrete(name = groupvar_label) +
     # manipulate y-axis
     scale_y_continuous(name = "EQ-5D value",
                        limits = c(0, 1),
@@ -2456,21 +2491,21 @@ figure_3_2 <- function(df,
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 3.3: EQ-5D values: smoothed lines and confidence intervals by groupvar
+#' eq5d_utility_change_by_group_plot: EQ-5D values: smoothed lines and confidence intervals by groupvar
 #' 
 #' @param df Data frame with the EQ-5D, follow-up and grouping columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
 #' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
+#' @param levels_fu Character vector containing the order of the values in the follow-up column.
 #' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param name_groupvar Character string for the grouping column
+#' @param name_groupvar Character string for the grouping column. If NULL (default), the analysis is performed on the full population.
 #' @param eq5d_version Version of the EQ-5D instrument
-#' @param country A character string representing the name of the country. 
+#' @param country A character string representing the name of the country.
 #' This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_3(
+#' tmp <- eq5d_utility_change_by_group_plot(
 #'  example_data,
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  name_fu = "time",
@@ -2482,11 +2517,11 @@ figure_3_2 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_3_3 <- function(df, 
+eq5d_utility_change_by_group_plot <- function(df,
                        names_eq5d = NULL,
                        name_fu = NULL,
                        levels_fu = NULL,
-                       name_groupvar,
+                       name_groupvar = NULL,
                        eq5d_version = NULL,
                        country) {
   
@@ -2507,8 +2542,12 @@ figure_3_3 <- function(df,
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
-  names(df)[names(df) == name_groupvar] <- "groupvar"
-  df$groupvar <- factor(df$groupvar)
+  if (is.null(name_groupvar)) {
+    df$groupvar <- factor("All")
+  } else {
+    names(df)[names(df) == name_groupvar] <- "groupvar"
+    df$groupvar <- factor(df$groupvar)
+  }
   df <- .prep_eq5d(df = df, names = names_eq5d,
                    add_state = TRUE,
                    add_utility = TRUE, eq5d_version = eq5d_version, country = country)
@@ -2519,9 +2558,10 @@ figure_3_3 <- function(df,
   
   # prepare data for plotting
   plot_data <- .summary_mean_ci(df = df, group_by = c("fu", "groupvar"))
-  
+
+  groupvar_label <- if (is.null(name_groupvar)) "Group" else name_groupvar
   # plot
-  p <- ggplot(data = plot_data, aes(x = .data$fu, 
+  p <- ggplot(data = plot_data, aes(x = .data$fu,
                                     y = .data$mean, ymin = .data$ci_lb, ymax = .data$ci_ub,
                                     group = .data$groupvar, colour = .data$groupvar)) +
     # plot means
@@ -2531,7 +2571,7 @@ figure_3_3 <- function(df,
     # connect means with a smooth line
     geom_line() +
     # plot title
-    ggtitle(paste0("Longitudinal EQ-5D values by ", name_fu, " and ", name_groupvar, ":\nmeans and 95% confidence intervals")) +
+    ggtitle(paste0("Longitudinal EQ-5D values by ", name_fu, " and ", groupvar_label, ":\nmeans and 95% confidence intervals")) +
     # manipulate x-axis
     scale_x_discrete(name = name_fu) +
     # manipulate y-axis
@@ -2540,7 +2580,7 @@ figure_3_3 <- function(df,
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 3.4: EQ-5D values: smoothed lines and confidence intervals by groupvar
+#' eq5d_utility_distribution_plot: EQ-5D values: smoothed lines and confidence intervals by groupvar
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -2550,7 +2590,7 @@ figure_3_3 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_4(
+#' tmp <- eq5d_utility_distribution_plot(
 #'  example_data,
 #'  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
 #'  eq5d_version = "3L",
@@ -2559,7 +2599,7 @@ figure_3_3 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_3_4 <- function(df, 
+eq5d_utility_distribution_plot <- function(df, 
                        names_eq5d = NULL,
                        eq5d_version = NULL,
                        country) {
@@ -2606,7 +2646,7 @@ figure_3_4 <- function(df,
   return(list(plot_data = plot_data, p = .modify_ggplot_theme(p = p)))
 }
 
-#' Figure 3.5: EQ-5D values: smoothed lines and confidence intervals by groupvar
+#' eq5d_utility_vas_scatter_plot: EQ-5D values: smoothed lines and confidence intervals by groupvar
 #' 
 #' @param df Data frame with the EQ-5D columns
 #' @param names_eq5d Character vector of column names for the EQ-5D dimensions
@@ -2617,7 +2657,7 @@ figure_3_4 <- function(df,
 #' @return Summary plot and data used for plotting
 #' @export
 #' @examples
-#' tmp <- figure_3_5(
+#' tmp <- eq5d_utility_vas_scatter_plot(
 #'    example_data,
 #'    names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
 #'    name_vas = "vas",
@@ -2627,7 +2667,7 @@ figure_3_4 <- function(df,
 #' tmp$p
 #' tmp$plot_data
 
-figure_3_5 <- function(df,
+eq5d_utility_vas_scatter_plot <- function(df,
                         names_eq5d = NULL,
                         name_vas = NULL,
                         eq5d_version = NULL,
