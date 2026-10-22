@@ -14,18 +14,46 @@ eq5d(
 \arguments{
 \item{x}{A vector of 5-digit EQ-5D-3L state indexes or a matrix/data.frame with columns corresponding to EQ-5D state dimensions}
 
-\item{country}{String vector indicating country names or  ISO3166 Alpha 2 / 3 country codes.}
+\item{country}{A country code or value set code identifying the value set
+to use, as listed by \code{eqvs_display()}. Matching is case-insensitive.
+For countries with more than one value set (for example Germany, with
+\code{"DE_TTO"} and \code{"DE_VAS"}), the value set code must be
+given; supplying the country code alone raises an error listing the
+available codes.}
 
-\item{version}{String indicating which version to use. Options are '5L'  (default), '3L', 'xw', 'xwr', and 'Y3L'.}
+\item{version}{String indicating which version to use. Options are '5L'  (default), '3L', 'xw', 'xwr', and 'Y3L'. Matching is case-insensitive.}
 
 \item{dim.names}{A vector of dimension names to identify dimension columns.}
 }
 \value{
-A vector of values or data.frame with one column for each value set requested.
+A numeric vector of values, or a data.frame with one column for
+  each value set requested. The result is an unnamed numeric vector, one element per
+  element or row of \code{x} and in the same order.
 }
 \description{
-Get EQ-5D index values for the -3L, -5L, crosswalk (-3L value set applied to -5L health states),  reverse crosswealk (-5L value set applied to -3L health states), and -Y-3L
+Get EQ-5D values for the -3L, -5L, crosswalk (-3L value set applied to -5L health states), reverse crosswalk (-5L value set applied to -3L health states), and -Y-3L
 }
+\section{Missing and invalid responses}{
+
+Each health state is checked before it is scored, and a state that cannot
+be scored gives \code{NA} for that element or row; the others are scored
+as usual.
+\itemize{
+  \item A missing response (\code{NA} in any dimension, or an \code{NA}
+    state index) gives \code{NA} without a warning.
+  \item An invalid response gives \code{NA} with a warning, which gives
+    the number of such states and examples. Invalid means a level the
+    instrument does not have (for example \code{4} in the EQ-5D-3L, or a
+    missing-value code such as \code{9}), a level or index that is not a
+    whole, finite number, or an index that is not five digits long.
+    Each problem is reported once, however many value sets are requested.
+  \item State indexes and levels given as text or as factors are read
+    through their labels, so \code{"21111"} and \code{factor(2)} are
+    scored as \code{21111} and \code{2}.
+}
+Recode missing-value codes to \code{NA} first if the warning is not wanted.
+}
+
 \examples{
 # US -3L value set
 eq5d(c(11111, 12321, 32123, 33333), 'US', '3L') 

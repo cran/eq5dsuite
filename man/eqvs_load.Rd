@@ -15,3 +15,36 @@ TRUE if loading is successful, FALSE otherwise.
 \description{
 Load cache data from a specified path.
 }
+\details{
+\code{loadPath} is the *directory* a cache was written to with
+\code{eqvs_add(saveOption = 3, savePath = ...)} or
+\code{eqvs_drop(saveOption = 3, savePath = ...)}, not a single value set.
+Everything saved there is restored at once.
+
+A cache written with \code{saveOption = 2} goes to the package's user cache
+directory and is read back automatically when the package loads, so it needs
+no call to \code{eqvs_load()}.
+}
+\examples{
+# Save a custom value set to a directory of your choosing, then read it
+# back. tempdir() is used here so the example leaves nothing behind.
+path <- file.path(tempdir(), "eq5d-value-sets")
+dir.create(path, showWarnings = FALSE)
+
+my_vs <- data.frame(state = make_all_EQ_indexes("3L"),
+                    MY_VS = round(seq(1, -0.5, length.out = 243), 4))
+eqvs_add(my_vs, version = "3L", country = "My Country",
+         countryCode = "MC", VSCode = "MY_VS",
+         saveOption = 3, savePath = path)
+
+# In a later session, restore it from that directory.
+eqvs_load(loadPath = path)
+eq5d3l(c(11111, 33333), country = "MY_VS")
+
+# Tidy up.
+eqvs_drop(country = "MY_VS", version = "3L", ask = FALSE)
+unlink(path, recursive = TRUE)
+}
+\seealso{
+\code{\link{eqvs_add}}, \code{\link{eqvs_drop}}
+}

@@ -40,6 +40,17 @@ health state got worse between levels_fu[1] and levels_fu[2]), checks
 dimension-specific changes (e.g., mo_diff < 0), and summarizes by a grouping variable
 (e.g., procedure) and time points. It returns a data table and a ggplot object.
 }
+\section{Pairing records}{
+
+Each respondent's records are compared in timepoint order, using only the
+timepoints in \code{levels_fu}. The function stops, naming the respondents,
+if a respondent has more than one record at the same timepoint: it cannot
+tell which to compare, and does not choose. Where the analysis is split by
+\code{name_groupvar}, it also stops if a respondent is not in the same
+group at every timepoint (a missing group at one timepoint counts as a
+change), because the change is attributed to the respondent's group.
+}
+
 \examples{
 result <- eq5d_profile_worse_dimensions_by_group_plot(
   df = example_data,

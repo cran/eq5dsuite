@@ -20,8 +20,19 @@ Defaults to TRUE.}
 Logical. TRUE if successful, FALSE otherwise.
 }
 \description{
-Renames a value set by dropping the old VS_code and
-reinstalling under the new VS_code. The value data is
-preserved — only the identifier changes.
+Renames a \emph{user-defined} value set, preserving its values and its
+metadata: only the identifier changes. The two tables are rebuilt as
+locals, checked, and committed together, so a rename that cannot complete
+leaves the session and the cache exactly as they were.
+}
+\details{
+A \strong{built-in} code is not renamed at runtime. It is part of the
+installed package's data, and changing it in one session would mean two
+installations of the same version disagreeing about what a code means. A
+built-in code change ships in a release; where backward compatibility is
+needed the old code is kept as a deprecated alias in
+\code{.fixCountries()}, as \code{"UK"} is for \code{"GB"}. Asked to
+rename a built-in, this function explains that and returns \code{FALSE}
+without changing anything.
 }
 \keyword{internal}

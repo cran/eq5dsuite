@@ -28,9 +28,17 @@
 
 \item{add_utility}{logical indicating whether the utility should be added}
 
-\item{eq5d_version}{character indicating the version of the EQ-5D questionnaire to use (either "3L" or "5L")}
+\item{eq5d_version}{character indicating the version of the EQ-5D
+questionnaire to use: "3L", "5L" or "Y3L". Matching is case-insensitive. \code{NULL}
+leaves the instrument unspecified, in which case levels 1 to 5 are
+accepted.}
 
-\item{country}{character indicating the country to retrieve the quality of life score for}
+\item{country}{A country code or value set code identifying the value set
+to use, as listed by \code{eqvs_display()}. Matching is case-insensitive.
+For countries with more than one value set (for example Germany, with
+\code{"DE_TTO"} and \code{"DE_VAS"}), the value set code must be
+given; supplying the country code alone raises an error listing the
+available codes.}
 }
 \value{
 a modified data frame with EQ-5D domain columns renamed to default names, and, if necessary, with added columns for state, LSS, LFS, and/or utility. If any of the checks fail (e.g. EQ-5D columns are not in an integer format), an error message is displayed and the function is stopping.
@@ -38,13 +46,4 @@ a modified data frame with EQ-5D domain columns renamed to default names, and, i
 \description{
 This function prepares a data frame for analysis by extracting, processing, and adding columns for EQ-5D variables, including state, LSS (Level Sum Score), LFS (Level Frequency Score) and utility.
 }
-\examples{
-set.seed(1234)
-df <- data.frame(mo = sample(1:5, 3), sc = sample(1:5, 3), 
-  ua = sample(1:5, 3), pd = sample(1:5, 3), ad = sample(1:5, 3))
-.prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"), 
-  add_state = TRUE, add_lss = TRUE)
-.prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"),
-  add_state = TRUE, add_lss = TRUE, add_lfs = TRUE, add_utility = TRUE,
-  eq5d_version = "5L", country = "ES")
-}
+\keyword{internal}

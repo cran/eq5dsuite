@@ -9,7 +9,8 @@
 \arguments{
 \item{s}{A character vector representing the EQ-5D state, e.g. 11123.}
 
-\item{eq5d_version}{A character string specifying the version of EQ-5D, i.e. 3L or 5L.}
+\item{eq5d_version}{A character string specifying the version of EQ-5D:
+"3L", "5L" or "Y3L". Matching is case-insensitive.}
 }
 \value{
 A character vector representing the calculated LFS.
@@ -18,8 +19,4 @@ A character vector representing the calculated LFS.
 This function calculates the Level Frequency Score (LFS) for a given EQ-5D state and a specified version of EQ-5D.
 If at least one domain contains a missing entry, the whole LFS is set to be NA.
 }
-\examples{
-.get_lfs("333", "3L") # returns 003
-.get_lfs("333", "5L") # returns 00300
-.get_lfs("12345", "5L") # returns 11111
-}
+\keyword{internal}

@@ -1,0 +1,117 @@
+Third-party material included in eq5dsuite
+==========================================
+
+NICE Decision Support Unit EQ-5D-3L <-> EQ-5D-5L mapping tables
+---------------------------------------------------------------
+
+The object `.crosswalk_NICE` in R/sysdata.rda, used by `eqxw_UK()` and
+`eqxwr_UK()`, is derived from the mapping tables distributed with the NICE
+Decision Support Unit's commands for mapping between the EQ-5D-3L and the
+EQ-5D-5L (R release for the DSU website, April 2026), which use the UK
+EQ-5D-5L value set of Rowen et al. (2026).
+
+    Source files: EQ5Dmap_table3.csv (EQ-5D-3L to EQ-5D-5L)
+                  EQ5Dmap_table5.csv (EQ-5D-5L to EQ-5D-3L)
+
+    Authors:      Mónica Hernández Alava, Stephen Pudney and Allan Wailoo
+                  School of Health and Related Research,
+                  University of Sheffield, Sheffield, UK
+
+Only the United Kingdom columns are included, reshaped into a table holding,
+for each health state, age band and sex, the mapped value and the value of the
+state on the source instrument. The mapped values are reproduced unchanged; the
+source-instrument values are taken from this package's own value sets and
+checked against the DSU's corresponding columns.
+
+The tables are taken from the publicly available commands for mapping between
+the EQ-5D-3L and the EQ-5D-5L published by the NICE Decision Support Unit:
+
+    https://sheffield.ac.uk/nice-dsu/methods-development/mapping-eq-5d-5l-3l
+
+As the DSU requests, work using these mappings cites:
+
+    Hernández Alava M, Pudney S, Wailoo A. Estimating the Relationship
+    Between EQ-5D-5L and EQ-5D-3L: Results from a UK Population Study.
+    PharmacoEconomics. 2023;41(2):199-207.
+    doi:10.1007/s40273-022-01218-7
+
+and, for the underlying model:
+
+    Hernández-Alava M, Pudney S. Econometric modelling of multiple
+    self-reports of health states: The switch from EQ-5D-3L to EQ-5D-5L
+    in evaluating drug therapies for rheumatoid arthritis.
+    Journal of Health Economics. 2017;55:139-152.
+    doi:10.1016/j.jhealeco.2017.06.013
+
+and, for the UK EQ-5D-5L value set used by this release of the mapping:
+
+    Rowen D, Mukuria C, Bray N, Carlton J, Longworth L, Meads D,
+    Oluboyede Y, O'Neill C, Yang Y. A UK value set for the EQ-5D-5L.
+    Value in Health. 2026;29(5):858-869. doi:10.1016/j.jval.2026.03.008
+
+EQ-5D value sets
+----------------
+
+The value sets in R/sysdata.rda -- 40 for the EQ-5D-3L, 44 for the EQ-5D-5L and
+10 for the EQ-5D-Y-3L -- are the published country value sets for the
+instrument. Each is recorded in the package's registry together with the
+publication it is taken from and that publication's DOI, which
+`eqvs_display(show_citation = TRUE)` prints; work using a value set is expected
+to cite it. Value sets published or revised after a release reach an installed
+copy of the package through `update_value_sets()`, which reads them from
+
+    https://github.com/MathsInHealth/eq5dsuite-value-sets
+
+EQ-5D-5L <-> EQ-5D-3L crosswalks
+--------------------------------
+
+The crosswalk used by `eqxw()` and the reverse crosswalk used by `eqxwr()` are
+the tables published with:
+
+    van Hout B, Janssen MF, Feng YS, et al. Interim scoring for the EQ-5D-5L:
+    mapping the EQ-5D-5L to EQ-5D-3L value sets. Value in Health.
+    2012;15(5):708-715. doi:10.1016/j.jval.2012.02.008
+
+    van Hout B, Shaw JW. Mapping EQ-5D-3L to EQ-5D-5L. Value in Health.
+    2021;24(9):1285-1293. doi:10.1016/j.jval.2021.03.009
+
+These are distinct from the NICE DSU mapping above, which is for the United
+Kingdom only and is age- and sex-specific.
+
+NHS Patient Reported Outcome Measures (PROMs) data
+--------------------------------------------------
+
+The example dataset `example_data` in data/example_data.rda is a sample of
+patient-level records from the NHS Patient Reported Outcome Measures (PROMs)
+programme: 5,000 patients, each with a pre-operative and a post-operative
+EQ-5D-3L response and EQ VAS score, for groin hernia repair, hip replacement,
+knee replacement and varicose vein surgery.
+
+    Publisher:    NHS England (formerly NHS Digital)
+    Publication:  Patient Reported Outcome Measures (PROMs)
+    URL:          https://digital.nhs.uk/data-and-information/publications/statistical/patient-reported-outcome-measures-proms
+
+It is included to document and demonstrate the package, and is subject to the
+terms of re-use the publisher states at that address.
+
+EuroQol
+-------
+
+The EQ-5D instrument and its value sets are the property of the EuroQol
+Research Foundation (https://euroqol.org/) and are subject to its own terms.
+
+Typefaces in the Shiny app
+--------------------------
+
+The Shiny app bundles two typefaces in inst/shiny/WWW/fonts, as web fonts
+(WOFF2, Latin and Latin Extended subsets, as distributed by Google Fonts):
+
+  DM Sans   Copyright 2014 The DM Sans Project Authors
+            (https://github.com/googlefonts/dm-fonts)
+  Fraunces  Copyright 2018 The Fraunces Project Authors
+            (https://github.com/undercasetype/Fraunces)
+
+Both are licensed under the SIL Open Font License, Version 1.1, not under the
+package's licence. The licence texts are in inst/shiny/WWW/fonts/OFL-DMSans.txt
+and inst/shiny/WWW/fonts/OFL-Fraunces.txt. They are bundled so that the app
+needs no font service and makes no request to one.

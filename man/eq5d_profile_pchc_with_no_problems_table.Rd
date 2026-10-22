@@ -28,11 +28,26 @@ eq5d_profile_pchc_with_no_problems_table(
 If NULL (default value), the levels will be ordered in the order of appearance in df.}
 }
 \value{
-Summary data frame
+Summary data frame. For each group and later timepoint, \code{_n}
+  is a count and \code{_p} a proportion: of everyone for "No problems" and
+  "Total with problems", and of those with problems for the four change
+  categories. Where nobody in a group had problems at a timepoint, those
+  four proportions are \code{NA}, as they have no denominator.
 }
 \description{
 eq5d_profile_pchc_with_no_problems_table: Changes in health according to the PCHC, taking account of those with no problems
 }
+\section{Pairing records}{
+
+Each respondent's records are compared in timepoint order, using only the
+timepoints in \code{levels_fu}. The function stops, naming the respondents,
+if a respondent has more than one record at the same timepoint: it cannot
+tell which to compare, and does not choose. Where the analysis is split by
+\code{name_groupvar}, it also stops if a respondent is not in the same
+group at every timepoint (a missing group at one timepoint counts as a
+change), because the change is attributed to the respondent's group.
+}
+
 \examples{
 eq5d_profile_pchc_with_no_problems_table(
   df = example_data,

@@ -11,7 +11,9 @@
 
 \item{name}{Column name in the data frame that contains follow-up information.}
 
-\item{levels}{Levels to factorise the FU variable into.}
+\item{levels}{Levels to factorise the FU variable into. Any value not among
+them becomes \code{NA} and is excluded from the analysis, with a warning
+naming the values responsible.}
 }
 \value{
 A data frame with the follow-up variable renamed as "fu" and factorised.
@@ -19,8 +21,4 @@ A data frame with the follow-up variable renamed as "fu" and factorised.
 \description{
 This function prepares the follow-up (FU) variable for analysis by giving it a default name (`fu`) and factorising
 }
-\examples{
-df <- data.frame(id = c(1, 1, 2, 2),
-  visit = c("baseline", "follow-up", "baseline", "follow-up"))
-.prep_fu(df = df, name = "visit", levels = c("baseline", "follow-up"))
-}
+\keyword{internal}

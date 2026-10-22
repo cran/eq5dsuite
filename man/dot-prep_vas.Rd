@@ -9,17 +9,18 @@
 \arguments{
 \item{df}{A data frame.}
 
-\item{name}{Column name in the data frame that holds the VAS score. The column can only contain integers or NAs}
+\item{name}{Column name in the data frame that holds the VAS score. The EQ
+VAS is recorded on a 0 to 100 integer scale. Values that are not whole
+numbers are rounded to the nearest integer, with a warning; values outside
+0 to 100, and anything that is not a number, become \code{NA}, also with a
+warning.}
 }
 \value{
-A modified data frame with the VAS score renamed to "vas". If any checks fail (e.g. column is not numeric), an error message is displayed and the function is stopping.
+A modified data frame with the VAS score renamed to "vas", held as
+  an integer vector. The function does not stop on invalid input; it coerces
+  and warns.
 }
 \description{
 The function prepares the data for VAS (Visual Analogue Scale) analyses.
 }
-\examples{
-df <- data.frame(vas_score = c(20, 50, 80, NA, 100))
-.prep_vas(df = df, name = "vas_score")
-df <- data.frame(vas_score = c(20.5, 50, 80, NA, 100))
-.prep_vas(df = df, name = "vas_score")
-}
+\keyword{internal}

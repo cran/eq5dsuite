@@ -16,31 +16,73 @@ eqvs_add(
 )
 }
 \arguments{
-\item{df}{A data.frame or file name pointing to csv file. The contents of the data.frame or csv file should be exactly two columns: state, containing a list of all 3125 (for 5L) or 243 (for 3L) EQ-5D health state vectors, and a column of corresponding utility values, with a suitable name.}
+\item{df}{A data.frame or file name pointing to csv file. The contents of the data.frame or csv file should be exactly two columns: state, containing a list of all 3125 (for 5L) or 243 (for 3L and Y3L) EQ-5D health state vectors, and a column of corresponding utility values, with a suitable name. The EQ-5D-Y-3L uses the same 243 health states as the EQ-5D-3L.}
 
-\item{version}{Version of the EQ-5D instrument. Can take values 5L (default) or 3L.}
+\item{version}{Version of the EQ-5D instrument. Can take values 5L (default), 3L or Y3L. Matching is case-insensitive.}
 
 \item{country}{Optional string. If not NULL, will be used as a country description for the user-defined value set.}
 
 \item{countryCode}{Optional string. If not NULL, will be used as the two-digit code for the value set. Must be different from any existing national value set code.}
 
-\item{VSCode}{Optional string. If not NULL, will be used as the three-digit code for the value set. Must be different from any existing national value set code.}
+\item{VSCode}{Optional string. If not NULL, will be used as the code for the
+value set; otherwise the name of the second column of \code{df} is used.
+It must differ from every built-in value set code, compared without regard
+to case and across all three instruments, and from the codes of your own
+value sets for this instrument. \code{eqvs_display()} lists the codes
+already in use.}
 
 \item{description}{Optional string. If not NULL, will be used as a descriptive text for the user-defined value set.}
 
-\item{saveOption}{Integer indicating how the cache data should be saved. 1: Do not save (default), 2: Save in package folder, 3: Save in another path.}
+\item{saveOption}{Integer indicating how the cache data should be saved.
+1: Do not save (default).
+2: Save in this package's user cache directory, as returned by
+\code{tools::R_user_dir("eq5dsuite", "cache")}. It is read back
+automatically when the package is next loaded. Nothing is written inside
+the installed package, which CRAN does not permit.
+3: Save in the directory given by \code{savePath}, to be read back with
+\code{eqvs_load()}.}
 
 \item{savePath}{A path where the cache data should be saved when `saveOption` is 3. Please use `eqvs_load` to load it in your next session.}
 }
 \value{
-True/False, indicating success or error.
+Called for its side effect. When the value set is added,
+  \code{NULL}, invisibly, with a message. When \code{VSCode} is already
+  used by one of your own value sets for this instrument, \code{0}, with a
+  warning, and nothing is added.
 }
 \description{
 Add user-defined EQ-5D value set and corresponding crosswalk option.
 }
+\details{
+Every check below is made before anything is changed, so a value set that
+fails one is not added, in part or in full, and nothing is saved.
+\itemize{
+  \item \code{df}, if a file name, must name an existing csv file, and must
+    have exactly two columns.
+  \item It must have exactly one row per health state of the instrument
+    (3,125 for the EQ-5D-5L, 243 for the EQ-5D-3L and EQ-5D-Y-3L), and every
+    state must be present exactly once. The rows may be in any order, and the
+    states may be given as numbers, text or factors; they must be whole
+    numbers, so \code{11111.9} is refused rather than read as \code{11111}.
+  \item The value set code (\code{VSCode}, or the name of the second column)
+    must not be a built-in value set code, compared without regard to case
+    and across all three instruments; this is an error. If it is the code of
+    one of your own value sets for the same instrument, again without regard
+    to case, the function warns and returns \code{0} without adding it.
+  \item Every value must be numeric and finite: \code{NA}, \code{NaN},
+    text, \code{Inf} and \code{-Inf} are errors.
+  \item With \code{saveOption = 3}, \code{savePath} must name an existing
+    directory. With \code{saveOption = 2} or \code{3}, if the cache cannot
+    be saved, the value set is removed again.
+}
+The values themselves are not checked further: nothing requires full health
+(\code{11111}) to be 1, or the values to fall as the levels worsen.
+}
 \examples{
-# make nonsense value set
-new_df <- data.frame(state = make_all_EQ_indexes(), TEST = runif(3125))
+# Make a nonsense value set. The values are a plain sequence rather than
+# runif(), which would move the random seed of whoever runs the example.
+new_df <- data.frame(state = make_all_EQ_indexes(),
+                     TEST = seq(1, -0.5, length.out = 3125))
 # Add as value set for Fantasia
 eqvs_add(
    new_df,
@@ -51,4 +93,6 @@ eqvs_add(
    saveOption = 1
 )
 eq5d5l(55555,country = "FAN")
+# Remove it again, so the example leaves no value set behind.
+eqvs_drop(country = "FAN", version = "5L", saveOption = 1, ask = FALSE)
 }

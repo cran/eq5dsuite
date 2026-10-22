@@ -7,19 +7,21 @@
 eq5d_profile_lss_utility_summary(
   df,
   names_eq5d = NULL,
-  eq5d_version = NULL,
-  country
+  name_utility = NULL,
+  eq5d_version = NULL
 )
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D columns}
+\item{df}{Data frame with the EQ-5D dimension and value columns}
 
 \item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
 
-\item{eq5d_version}{Version of the EQ-5D instrument}
+\item{name_utility}{Character string naming the column of pre-calculated
+EQ-5D values. If \code{NULL} (default), the column \code{"utility"} is
+used. The values are analysed as they stand; see
+\code{\link{eq5d}} for calculating them from the dimensions.}
 
-\item{country}{A character string representing the name of the country. 
-This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
+\item{eq5d_version}{Version of the EQ-5D instrument}
 }
 \value{
 Summary data frame
@@ -29,10 +31,11 @@ eq5d_profile_lss_utility_summary: Summary statistics for the EQ-5D values by all
 }
 \examples{
 df <- data.frame(make_all_EQ_states(version = "5L"))
+df$value <- eq5d5l(df[, c("mo", "sc", "ua", "pd", "ad")], country = "US")
 eq5d_profile_lss_utility_summary(
   df, 
   names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
-  eq5d_version = "3L", 
-  country = "US"
+  name_utility = "value",
+  eq5d_version = "5L"
 )
 }

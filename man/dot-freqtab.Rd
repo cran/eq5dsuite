@@ -23,7 +23,8 @@
 \item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
 If NULL (default value), the levels will be ordered in the order of appearance in df.}
 
-\item{eq5d_version}{Version of the EQ-5D instrument}
+\item{eq5d_version}{Version of the EQ-5D instrument: "3L", "5L" or
+"Y3L". Matching is case-insensitive.}
 
 \item{add_summary_problems_change}{If set to false, the resulting dataframe does not include a row on problems change.}
 }

@@ -13,7 +13,10 @@ toEQ5Dindex(
 }
 \arguments{
 \item{x}{A data.frame, matrix, or named numeric vector of EQ-5D dimension
-scores. Each dimension must contain integer values (typically 1–3 or 1–5).}
+scores. Each dimension must be a whole number from 1 to 9; a value that is
+fractional, non-finite or outside that range is not encoded and returns
+\code{NA} for its row, with a warning. Fractional values are not rounded.
+Factor columns are read through their labels.}
 
 \item{dim.names}{Character vector of length 5 giving the dimension names, in
 the conventional MO, SC, UA, PD, AD order.}

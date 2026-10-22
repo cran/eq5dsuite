@@ -15,3 +15,4 @@ ggplot2 plot with modified theme
 \description{
 Modify ggplot2 theme
 }
+\keyword{internal}

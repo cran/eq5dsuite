@@ -39,6 +39,17 @@ This function focuses on patients classified as having "Mixed change" overall
 improved vs. worsened for each subject. Results are summarized by a grouping variable
 (e.g., procedure) and time points. The final output is a table plus a ggplot object.
 }
+\section{Pairing records}{
+
+Each respondent's records are compared in timepoint order, using only the
+timepoints in \code{levels_fu}. The function stops, naming the respondents,
+if a respondent has more than one record at the same timepoint: it cannot
+tell which to compare, and does not choose. Where the analysis is split by
+\code{name_groupvar}, it also stops if a respondent is not in the same
+group at every timepoint (a missing group at one timepoint counts as a
+change), because the change is attributed to the respondent's group.
+}
+
 \examples{
 result <- eq5d_profile_mixed_dimensions_by_group_plot(
   df = example_data,

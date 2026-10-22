@@ -10,12 +10,12 @@ make_all_EQ_indexes(
 )
 }
 \arguments{
-\item{version}{Either "3L" or "5L", to signify whether 243 or 3125 states should be generated}
+\item{version}{"3L", "5L" or "Y3L", to signify whether 243 or 3125 states should be generated. The EQ-5D-Y-3L has the same 243 states as the EQ-5D-3L. Matching is case-insensitive.}
 
 \item{dim.names}{A vector of dimension names to be used as names for output columns.}
 }
 \value{
-A vector with 5-digit state indexes for all 243 (-3L) or 3125 (-5L) EQ-5D health states
+A vector with 5-digit state indexes for all 243 (-3L, -Y-3L) or 3125 (-5L) EQ-5D health states
 }
 \description{
 Make a vector containing all 5-digit EQ-5D indexes for -3L or -5L version.

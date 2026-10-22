@@ -4,43 +4,50 @@
 \alias{eq5d_utility_summary}
 \title{eq5d_utility_summary: EQ-5D values: by timepoints}
 \usage{
-eq5d_utility_summary(
-  df,
-  names_eq5d = NULL,
-  name_fu = NULL,
-  levels_fu = NULL,
-  eq5d_version = NULL,
-  country
-)
+eq5d_utility_summary(df, name_utility = NULL, name_fu = NULL, levels_fu = NULL)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D and follow-up columns}
+\item{df}{Data frame with the EQ-5D value and follow-up columns}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_utility}{Character string naming the column of pre-calculated
+EQ-5D values. If \code{NULL} (default), the column \code{"utility"} is
+used. The values are analysed as they stand; see
+\code{\link{eq5d}} for calculating them from the dimensions.}
 
 \item{name_fu}{Character string for the follow-up column}
 
 \item{levels_fu}{Character vector containing the order of the values in the follow-up column. 
 If NULL (default value), the levels will be ordered in the order of appearance in df.}
-
-\item{eq5d_version}{Version of the EQ-5D instrument}
-
-\item{country}{A character string representing the name of the country. 
-This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
 }
 \value{
-Summary data frame
+Summary data frame with one row per statistic and one column per
+  follow-up level, in the order given by \code{levels_fu}.
+  \code{"Missing (\%)"} is a percentage, from 0 to 100, of the rows at
+  that follow-up (the \code{"Total sample"} row) with no usable
+  value; it is \code{NA} for a follow-up with no rows. Before 2.1.0
+  it was a proportion.
 }
 \description{
 eq5d_utility_summary: EQ-5D values: by timepoints
 }
+\details{
+Skewness and kurtosis are the population (biased) estimators
+\eqn{m_3 / m_2^{3/2}} and \eqn{m_4 / m_2^2}, as returned by
+\code{moments::skewness()} and \code{moments::kurtosis()}.
+
+The kurtosis is **non-excess**: a normal distribution gives 3, not 0. The
+row is labelled "Kurtosis (non-excess)" so that the output says which
+convention it uses. Stata's \code{summarize, detail} reports the same
+quantity. Excel's \code{KURT()} reports *excess* kurtosis with a
+sample-bias correction, so it is roughly 3 lower for the same data.
+}
 \examples{
+example_data$value <- eq5d3l(example_data[, c("mo", "sc", "ua", "pd", "ad")],
+                             country = "GB")
 eq5d_utility_summary(
   example_data,
-  names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
+  name_utility = "value",
   name_fu = "time",
-  levels_fu = c('Pre-op', 'Post-op'),
-  eq5d_version = "3L",
-  country = "UK"
+  levels_fu = c('Pre-op', 'Post-op')
 )
 }

@@ -4,24 +4,17 @@
 \alias{eq5d_utility_summary_by_group}
 \title{eq5d_utility_summary_by_group:EQ-5D values: by groupvar}
 \usage{
-eq5d_utility_summary_by_group(
-  df,
-  names_eq5d = NULL,
-  name_groupvar = NULL,
-  eq5d_version = NULL,
-  country
-)
+eq5d_utility_summary_by_group(df, name_utility = NULL, name_groupvar = NULL)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D, follow-up and grouping columns}
+\item{df}{Data frame with the EQ-5D value and grouping columns}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_utility}{Character string naming the column of pre-calculated
+EQ-5D values. If \code{NULL} (default), the column \code{"utility"} is
+used. The values are analysed as they stand; see
+\code{\link{eq5d}} for calculating them from the dimensions.}
 
 \item{name_groupvar}{Character string for the grouping column. If NULL (default), the analysis is performed on the full population.}
-
-\item{eq5d_version}{Version of the EQ-5D instrument}
-
-\item{country}{A character string representing the name of the country.}
 }
 \value{
 Summary data frame
@@ -30,11 +23,11 @@ Summary data frame
 eq5d_utility_summary_by_group:EQ-5D values: by groupvar
 }
 \examples{
+example_data$value <- eq5d3l(example_data[, c("mo", "sc", "ua", "pd", "ad")],
+                             country = "GB")
 eq5d_utility_summary_by_group(
   example_data,
-  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
-  name_groupvar = "procedure",
-  eq5d_version = "3L",
-  country = "UK"
+  name_utility = "value",
+  name_groupvar = "procedure"
 )
 }

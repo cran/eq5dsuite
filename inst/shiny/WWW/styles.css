@@ -1,279 +1,668 @@
-/* =============================================================================
-   eq5dsuite Shiny App — Company theme
-   Maths in Health visual identity
-   ============================================================================= */
+/* styles.css — the app's look, in one place.
 
-/* ── Navbar ──────────────────────────────────────────────────────────────── */
+   The house style follows the EQ-5D Aggregate Utility Transporter
+   (apps.krand.no/eqtransport): a warm cream ground, white cards with soft
+   shadows and generous rounding, terracotta for the things you act on, DM Sans
+   for text and Fraunces for headings. Nothing here sets a fixed height: cards
+   size to their content and only the page scrolls.
+
+   The two typefaces are bundled in fonts/ (SIL Open Font License; see the
+   OFL-*.txt files there), so the app makes no request to a font service and
+   looks the same offline. */
+
+/* ── Typefaces ──────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("fonts/dm-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("fonts/dm-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "DM Sans"; font-style: italic; font-weight: 300 700; font-display: swap;
+  src: url("fonts/dm-sans-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "DM Sans"; font-style: italic; font-weight: 300 700; font-display: swap;
+  src: url("fonts/dm-sans-italic-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Fraunces"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("fonts/fraunces-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Fraunces"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("fonts/fraunces-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+
+:root {
+  --cream:        #FAF8F5;   /* page */
+  --cream-warm:   #F5F0EA;   /* navbar, sidebar, table heads */
+  --sand:         #ECE5DB;   /* rules and borders */
+  --blush:        #C9A99B;   /* focus */
+  --blush-light:  #E8D5CC;
+  --blush-deep:   #A87968;   /* terracotta: active tab, primary buttons */
+  --taupe:        #8B7E74;   /* secondary text, labels */
+  --warm-brown:   #6B5B50;   /* hover, brand, small headings */
+  --charcoal:     #3A3330;   /* text */
+  --success-soft: #8BAB7F;  --success-bg: #EEF4EB;
+  --warning-soft: #C4A44E;  --warning-bg: #FAF5E8;
+  --danger-soft:  #B8645A;  --danger-bg:  #FAEAE8;
+  --info-soft:    #7A9BB5;  --info-bg:    #EAF1F6;
+  --radius-sm:    10px;
+  --radius-md:    16px;
+  --shadow-card:  0 2px 16px rgba(139,126,116,.08), 0 1px 4px rgba(139,126,116,.05);
+  --shadow-hover: 0 6px 28px rgba(139,126,116,.13), 0 2px 8px rgba(139,126,116,.07);
+  --sans:  "DM Sans", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Fraunces", Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+
+  /* The names the rest of this file has always used. */
+  --ink:        var(--charcoal);
+  --muted:      var(--taupe);
+  --line:       var(--sand);
+  --ground:     var(--cream);
+  --surface:    #FFFFFF;
+  --bar:        var(--cream-warm);
+  --primary:    var(--blush-deep);
+  --primary-dk: var(--warm-brown);
+  --header:     var(--info-soft);   /* steel blue: the bar at the top of a card */
+  --link:       #934D30;            /* rust, for contrast on cream */
+  --radius:     var(--radius-sm);
+  --pad:        1.25rem;
+  --gap:        1.5rem;
+}
+
+body, .bslib-page-navbar {
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+p { line-height: 1.7; }
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6,
+.card-header, .modal-title, .sidebar-title, .home-title, .home-h2 {
+  font-family: var(--serif);
+  letter-spacing: -.01em;
+}
+h1, h2, .h1, .h2 { font-weight: 600; letter-spacing: -.02em; }
+
+a { color: var(--link); }
+a:hover { color: var(--warm-brown); }
+
+.text-muted { color: var(--taupe) !important; }
+hr { border-color: var(--sand); opacity: .6; }
+code {
+  background: var(--cream-warm);
+  color: var(--blush-deep);
+  padding: .15em .4em;
+  border-radius: 4px;
+  font-size: .85em;
+}
+
+/* The page is centred, as in the reference. The reference's 1100px is too
+   narrow for a data preview of a dozen columns, so it is a little wider. */
+.bslib-page-navbar > .navbar > .container-fluid,
+.bslib-page-navbar > .container-fluid,
+.bslib-page-navbar > .html-fill-container > .container-fluid {
+  max-width: 1320px;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────── */
+/* A light bar with the brand at the left, and the page you are on marked by a
+   terracotta pill rather than an underline. */
 
 .navbar {
-  background-color: #142036 !important;
-  border-bottom: 2px solid #142036;
-  padding-top: 0.35rem;
-  padding-bottom: 0.35rem;
+  background: var(--cream-warm) !important;
+  border-bottom: 1px solid var(--sand);
+  box-shadow: none;
+  padding: .6rem 1.2rem;
 }
-
-.navbar-brand {
-  color: #ffffff !important;
-  font-weight: 700;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Nav links */
-.navbar-nav .nav-link {
-  color: rgba(255, 255, 255, 0.82) !important;
-  padding: 0.3rem 0.75rem;
-  border-radius: 4px;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.navbar-nav .nav-link:hover {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.navbar-nav .nav-link.active {
-  color: #ffffff !important;
-  background-color: #4f6f9f !important;
-  border-radius: 4px;
-}
-
-/* Right-side nav items (package link etc.) */
-.navbar-nav.ms-auto .nav-item a,
-.navbar-nav.ms-auto .nav-item small {
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-size: 0.78rem;
-}
-
-/* ── MiH brand text logo ─────────────────────────────────────────────────── */
-
-.mih-brand-logo {
+.brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: .55rem;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--warm-brown) !important;
 }
+.brand strong { font-weight: 600; }
+.brand img { display: block; }
 
-.mih-brand-logo .mih-badge {
-  background-color: #142036;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.1rem 0.38rem;
-  border-radius: 3px;
-  letter-spacing: 0.03em;
+.navbar .nav-link {
+  font-weight: 500;
+  font-size: .88rem;
+  color: var(--taupe) !important;
+  border-radius: var(--radius-sm);
+  padding: .45rem 1rem;
+  margin-right: .15rem;
+  transition: background-color .2s ease, color .2s ease;
 }
-
-.mih-brand-logo .mih-label {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.78rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+.navbar .nav-link:hover { color: var(--warm-brown) !important; background: var(--sand); }
+.navbar .nav-link.active,
+.navbar .nav-link.active:hover {
+  background: var(--blush-deep);
+  color: var(--cream) !important;
 }
+.navbar-toggler { border-color: var(--sand); border-radius: var(--radius-sm); }
+.navbar-toggler:focus { box-shadow: 0 0 0 3px rgba(201,169,155,.35); }
+.nav-ext { font-size: .8rem; color: var(--taupe) !important; opacity: .85; }
+.nav-version { display: inline-flex; align-items: center; gap: .35rem; }
+.nav-update { color: var(--blush-deep) !important; font-size: .9rem; }
 
-/* ── Page body / main content area ──────────────────────────────────────── */
-
-body {
-  background-color: #f5f6f8;
-  padding-bottom: 42px; /* room for fixed footer */
-}
-
-.tab-content {
-  background-color: #f5f6f8;
-  min-height: calc(100vh - 100px);
-  padding: 1.1rem 1.25rem 1rem;
-}
-
-/* ── Cards ───────────────────────────────────────────────────────────────── */
+/* ── Cards ──────────────────────────────────────────────────────────────── */
 
 .card {
-  border: 1px solid #dde3ec;
-  border-radius: 6px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
-  background-color: #ffffff;
-  margin-bottom: 1rem;
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--gap);
+  background: var(--surface);
+  overflow: hidden;
+  transition: box-shadow .3s ease;
 }
-
+.card:hover { box-shadow: var(--shadow-hover); }
+/* A card is titled by a coloured bar, as in the house style. */
 .card-header {
-  background-color: #5fa3c7;
-  color: #ffffff;
+  background: var(--header);
+  color: #fff;
+  border-bottom: 1px solid var(--sand);
   font-weight: 600;
-  font-size: 0.875rem;
-  padding: 0.45rem 0.85rem;
-  border-bottom: none;
-  border-radius: 5px 5px 0 0;
+  font-size: 1.05rem;
+  padding: 1rem var(--pad);
+  border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
 }
-
+.card-header .hint, .card-header small { color: rgba(255, 255, 255, .85); }
 .card-body {
-  padding: 0.85rem 0.9rem;
+  padding: var(--pad);
+  background: var(--surface);
+  font-size: .9rem;
+  line-height: 1.65;
+}
+/* Full screen keeps its rounding off the edges of the window. */
+.bslib-full-screen .card, .card[data-full-screen="true"] { border-radius: var(--radius-md); }
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+
+.bslib-sidebar-layout {
+  --_sidebar-bg: var(--cream-warm);
+  border-color: var(--sand);
+  border-radius: var(--radius-md);
+}
+.bslib-sidebar-layout > .sidebar {
+  background: var(--cream-warm);
+  border-right: 1px solid var(--sand);
+}
+.sidebar-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--warm-brown);
+}
+/* Control labels: small capitals in taupe, as in the reference. Option
+   labels -- a radio choice, a checkbox -- stay in sentence case. */
+.sidebar .control-label, .sidebar .form-label, .sidebar label.control-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--taupe);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.sidebar .radio label, .sidebar .checkbox label, .sidebar .form-check-label,
+.sidebar .shiny-options-group label {
+  font-size: .85rem;
+  font-weight: 400;
+  color: var(--charcoal);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sidebar .form-group, .sidebar .shiny-input-container { margin-bottom: .9rem; }
+.sidebar-label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--warm-brown);
+  margin: 1.1rem 0 .45rem;
+}
+.sidebar hr { margin: 1.1rem 0; border-color: var(--sand); opacity: .8; }
+/* Analysis labels are long; let them wrap clear of the dropdown arrow. */
+.sidebar select.form-select {
+  font-size: .875rem;
+  white-space: normal;
+  padding-right: 2rem;
+  height: auto;
 }
 
-/* Green header variant for secondary sections */
-.card-header-green,
-.card > .card-header.green {
-  background-color: #5c8f6f !important;
+/* ── Type ───────────────────────────────────────────────────────────────── */
+
+.hint { font-size: .85rem; color: var(--taupe); margin-bottom: .6rem; line-height: 1.6; }
+.num  { text-align: right; font-variant-numeric: tabular-nums; }
+.big-number {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin: .6rem 0 .2rem;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Muted / neutral header for utility/download cards */
-.card-header-muted {
-  background-color: #6c757d !important;
+/* ── Notes ──────────────────────────────────────────────────────────────── */
+/* Soft tinted panels with an accent rule at the left. The text stays in the
+   body colour, so it keeps its contrast on every tint. */
+
+.note {
+  border: 0;
+  border-left: 3px solid var(--sand);
+  border-radius: var(--radius-sm);
+  padding: .7rem .9rem;
+  margin-bottom: 1rem;
+  font-size: .87rem;
+  background: var(--cream-warm);
+  color: var(--charcoal);
 }
+.note-info    { border-left-color: var(--info-soft);    background: var(--info-bg); }
+.note-ok      { border-left-color: var(--success-soft); background: var(--success-bg); }
+.note-warning { border-left-color: var(--warning-soft); background: var(--warning-bg); }
+.note-error   { border-left-color: var(--danger-soft);  background: var(--danger-bg); }
 
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.alert { border-radius: var(--radius-sm); border: 0; font-size: .87rem; }
 
-.btn-primary {
-  background-color: #4f6f9f;
-  border-color: #4f6f9f;
+/* Shiny's notifications, in the same family. */
+.shiny-notification {
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hover);
+  background: var(--surface);
+  color: var(--charcoal);
+  font-family: var(--sans);
+  opacity: 1;
 }
-.btn-primary:hover {
-  background-color: #3d5880;
-  border-color: #3d5880;
+.shiny-notification-message { border-left: 3px solid var(--info-soft);    background: var(--info-bg); }
+.shiny-notification-warning { border-left: 3px solid var(--warning-soft); background: var(--warning-bg); }
+.shiny-notification-error   { border-left: 3px solid var(--danger-soft);  background: var(--danger-bg); }
+
+/* ── Disclosures ────────────────────────────────────────────────────────── */
+
+.disclosure { margin: .7rem 0; }
+.disclosure > summary {
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--warm-brown);
 }
-
-.btn-success {
-  background-color: #5c8f6f;
-  border-color: #5c8f6f;
+.disclosure > summary:hover { color: var(--blush-deep); }
+.disclosure-body {
+  padding: .6rem 0 0;
+  font-size: .85rem;
 }
-.btn-success:hover {
-  background-color: #4a7459;
-  border-color: #4a7459;
-}
+.disclosure-body p { margin-bottom: .5rem; }
 
-/* ── Alerts ──────────────────────────────────────────────────────────────── */
+/* ── Rows of controls and buttons ───────────────────────────────────────── */
 
-.alert {
-  border-radius: 5px;
-  font-size: 0.85rem;
-}
-
-/* ── Typography ──────────────────────────────────────────────────────────── */
-
-h4, h5 {
-  color: #1f2a44;
-  font-weight: 700;
-}
-
-h6, .fw-semibold {
-  color: #344055;
-}
-
-.text-muted {
-  color: #6b7280 !important;
-}
-
-/* ── Workflow steps (Home page) ──────────────────────────────────────────── */
-
-.workflow-steps {
+.control-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.6rem 0;
+  gap: 1rem;
+  align-items: flex-end;
 }
+.control-row > .shiny-input-container { flex: 1 1 10rem; margin-bottom: 0; }
+.btn-row { display: flex; flex-wrap: wrap; gap: .5rem; }
 
-.workflow-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  background: #f0f4fa;
-  border: 1px solid #dce3ef;
-  border-radius: 6px;
-  padding: 0.5rem 0.7rem;
-  flex: 1 1 calc(50% - 0.5rem);
-  min-width: 160px;
-}
+/* ── Saved results ──────────────────────────────────────────────────────── */
+/* A numbered, reorderable list; the number is the export position. */
 
-.workflow-step-num {
-  background-color: #4f6f9f;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  min-width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 0.05rem;
-}
-
-.workflow-step-body strong {
+.result-row {
   display: block;
-  font-size: 0.83rem;
-  color: #1f2a44;
+  padding: .65rem .5rem;
+  border-bottom: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
 }
-
-.workflow-step-body span {
-  font-size: 0.78rem;
-  color: #6b7280;
-}
-
-/* Quick start bullets */
-.qs-item {
+.result-row:last-of-type { border-bottom: 0; }
+.result-row-main { flex: 1 1 auto; min-width: 0; font-size: .88rem; }
+.result-row-controls {
   display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  font-size: 0.83rem;
-  color: #344055;
-  margin-bottom: 0.3rem;
+  gap: .2rem;
+  flex: 0 0 auto;
+}
+.result-row-controls .btn { padding: .15rem .4rem; line-height: 1.2; }
+.result-row-selected { background: var(--cream-warm); }
+.result-n {
+  display: inline-block;
+  min-width: 1.4em;
+  font-variant-numeric: tabular-nums;
+  color: var(--taupe);
 }
 
-.qs-dot {
-  color: #5fa3c7;
-  font-size: 0.7rem;
-  flex-shrink: 0;
-}
-
-/* ── Utility status message ──────────────────────────────────────────────── */
-
-.utility-status-banner {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 5px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.83rem;
-  color: #6d4c00;
-  margin-bottom: 0.75rem;
-}
-
-/* ── DT tables ───────────────────────────────────────────────────────────── */
-
-.dataTables_wrapper .dataTables_info,
-.dataTables_wrapper .dataTables_paginate {
-  font-size: 0.8rem;
-}
-
-/* ── Global footer ───────────────────────────────────────────────────────── */
-
-.mih-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #142036;
-  color: rgba(255, 255, 255, 0.55);
-  text-align: center;
-  padding: 5px 16px;
-  font-size: 0.72rem;
-  z-index: 1040;
-  border-top: 1px solid #142036;
+.export-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--sand);
+}
+.export-row:last-child { border-bottom: 0; }
+
+/* ── Small tables used for summaries ────────────────────────────────────── */
+
+.home-needs { width: 100%; font-size: .9rem; }
+.home-needs td { padding: .45rem .6rem .45rem 0; vertical-align: top; }
+.home-needs td:first-child { color: var(--warm-brown); }
+.home-needs tr + tr td { border-top: 1px solid var(--sand); }
+
+.map-summary { font-size: .85rem; margin: 0; }
+.map-summary dt { font-weight: 400; color: var(--taupe); float: left; clear: left; width: 45%; }
+.map-summary dd { margin-left: 45%; margin-bottom: .2rem; }
+
+/* ── Home ───────────────────────────────────────────────────────────────── */
+
+.home {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 3rem;
+}
+.home-title {
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--charcoal);
+  margin-bottom: .2rem;
+}
+.home-sub   { font-size: 1.1rem; color: var(--taupe); margin-bottom: 1.8rem; }
+.home-lede  { font-size: 1rem; line-height: 1.7; margin-bottom: 2.2rem; }
+.home-h2    { font-size: 1.2rem; font-weight: 600; color: var(--warm-brown); margin: 2rem 0 .8rem; }
+.home-start {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin: 2.2rem 0 1rem;
+}
+.home-start-example { flex: 1 1 18rem; }
+.home-start-example .hint { margin-top: .5rem; }
+.home-foot { font-size: .8rem; color: var(--taupe); }
+
+/* ── Figures ────────────────────────────────────────────────────────────── */
+/* Sized by aspect ratio, so a figure fills its card at any width and grows
+   when the card is opened full screen. */
+
+.plot-frame { width: 100%; aspect-ratio: 16 / 9; min-height: 320px; }
+.bslib-full-screen-enter ~ * .plot-frame,
+.card[data-full-screen="true"] .plot-frame { aspect-ratio: auto; height: 100%; }
+.plot-frame img { border-radius: var(--radius-sm); }
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+/* Only tables may scroll sideways, and only inside their own container.
+   Heads in small taupe capitals on the warm ground, striping in the warm
+   family rather than the default blue-grey. */
+
+.table { font-size: .85rem; border-color: var(--sand); }
+.table > :not(caption) > * > * { border-bottom-color: var(--sand); }
+.table thead th {
+  background: var(--cream-warm);
+  color: var(--taupe);
+  font-weight: 600;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 2px solid var(--sand);
+}
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-accent-bg: rgba(236, 229, 219, .25);
+  background-color: rgba(236, 229, 219, .25);
 }
 
-.mih-footer a {
-  color: rgba(255, 255, 255, 0.70);
-  text-decoration: none;
+.dataTables_wrapper { font-size: .85rem; }
+table.dataTable thead th {
+  font-family: var(--sans);
+  background: var(--cream-warm);
+  color: var(--taupe);
+  font-weight: 600;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 2px solid var(--sand) !important;
+}
+table.dataTable tbody tr.odd > * { background: rgba(236, 229, 219, .25); box-shadow: none !important; }
+table.dataTable tbody td { border-top-color: var(--sand); }
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-sm);
+  background-color: #fff;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button,
+.dataTables_wrapper .page-link {
+  border-radius: var(--radius-sm);
+  color: var(--warm-brown);
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .page-item.active .page-link {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
+.pagination { --bs-pagination-border-color: var(--sand); --bs-pagination-color: var(--warm-brown);
+  --bs-pagination-hover-bg: var(--cream-warm); --bs-pagination-hover-color: var(--warm-brown);
+  --bs-pagination-active-bg: var(--blush-deep); --bs-pagination-active-border-color: var(--blush-deep);
+  --bs-pagination-disabled-bg: var(--cream-warm); --bs-pagination-focus-box-shadow: 0 0 0 3px rgba(201,169,155,.35); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: .88rem;
+  letter-spacing: .02em;
+  transition: background-color .25s ease, box-shadow .25s ease, transform .25s ease,
+              color .25s ease, border-color .25s ease;
+}
+.btn:not(.btn-sm):not(.btn-lg):not(.btn-link) { padding: .55rem 1.1rem; }
+.btn-lg { font-size: 1rem; padding: .7rem 1.4rem; }
+.btn-sm { font-size: .8rem; }
+.btn-primary {
+  background: var(--blush-deep);
+  border-color: var(--blush-deep);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(168, 121, 104, .25);
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background: var(--warm-brown) !important;
+  border-color: var(--warm-brown) !important;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(107, 91, 80, .3);
+}
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-outline-primary {
+  color: var(--blush-deep);
+  border: 1.5px solid var(--blush);
+  background: var(--surface);
+}
+.btn-outline-primary:hover, .btn-outline-primary:active {
+  background: var(--blush-light) !important;
+  border-color: var(--blush-deep) !important;
+  color: var(--warm-brown) !important;
+}
+/* Shiny gives every action button .btn-default as well as its own class, so
+   the plain style is for buttons that have no other. */
+.btn-outline-secondary,
+.btn-default:not(.btn-primary):not(.btn-outline-primary):not(.btn-secondary):not(.btn-link) {
+  color: var(--charcoal);
+  border: 1.5px solid var(--sand);
+  background: var(--surface);
+}
+.btn-outline-secondary:hover,
+.btn-default:not(.btn-primary):not(.btn-outline-primary):not(.btn-secondary):not(.btn-link):hover {
+  background: var(--cream-warm);
+  color: var(--warm-brown);
+  border-color: var(--blush);
+}
+/* A visible ring for keyboard focus, on every button. */
+.btn:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--cream), 0 0 0 5px var(--blush-deep) !important;
 }
 
-.mih-footer a:hover {
-  color: #ffffff;
-  text-decoration: underline;
+/* ── Form controls ──────────────────────────────────────────────────────── */
+
+.form-control, .form-select, .selectize-input, .selectize-control.single .selectize-input {
+  background-color: #fff;
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+  color: var(--charcoal);
+  box-shadow: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.form-control, .form-select { padding: .5rem .75rem; }
+.form-select { padding-right: 2.25rem; }
+.selectize-input { padding: .5rem .75rem; min-height: 2.4rem; }
+.selectize-control.multi .selectize-input.has-items { padding: .35rem .5rem .2rem; }
+.selectize-control.multi .selectize-input > div {
+  background: var(--cream-warm);
+  color: var(--charcoal);
+  border-radius: 6px;
+}
+.form-control:focus, .form-select:focus, .selectize-input.focus {
+  border-color: var(--blush);
+  box-shadow: 0 0 0 3px rgba(201, 169, 155, .25);
+  outline: none;
+}
+.selectize-dropdown {
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hover);
+  font-size: .88rem;
+  overflow: hidden;
+}
+.selectize-dropdown .active { background: var(--cream-warm); color: var(--charcoal); }
+.selectize-dropdown .selected { background: var(--blush-light); color: var(--charcoal); }
+/* The file picker: its Browse half matches the buttons. */
+.input-group > .form-control, .input-group > .input-group-btn > .btn,
+.input-group .btn-file { border-radius: var(--radius-sm); }
+.input-group .btn-file, .input-group-btn .btn {
+  background: var(--surface);
+  color: var(--blush-deep);
+  border: 1.5px solid var(--sand);
+}
+.input-group > :not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.input-group > :not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1.5px; }
+.progress { border-radius: 999px; background: var(--sand); }
+.progress-bar { background: var(--blush-deep); }
+.form-check-input, input[type="checkbox"], input[type="radio"] { accent-color: var(--blush-deep); }
+.form-check-input:checked { background-color: var(--blush-deep); border-color: var(--blush-deep); }
+.form-check-input:focus { border-color: var(--blush); box-shadow: 0 0 0 3px rgba(201, 169, 155, .25); }
+
+/* ── Tabs inside a page (the catalogue) ─────────────────────────────────── */
+
+.nav-underline .nav-link, .nav-tabs .nav-link, .nav-pills .nav-link {
+  color: var(--taupe);
+  font-weight: 500;
+  font-size: .88rem;
+}
+.nav-underline .nav-link:hover { color: var(--warm-brown); }
+.nav-underline .nav-link.active {
+  color: var(--blush-deep);
+  border-bottom-color: var(--blush-deep);
+  font-weight: 600;
 }
 
-.mih-footer .mih-footer-sep {
-  opacity: 0.3;
+/* ── Modals ─────────────────────────────────────────────────────────────── */
+
+.modal-content {
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 48px rgba(58, 51, 48, .18);
+  background: var(--surface);
+  overflow: hidden;
 }
+.modal-header {
+  background: var(--cream-warm);
+  border-bottom: 1px solid var(--sand);
+  padding: 1rem 1.25rem;
+}
+.modal-title { font-weight: 600; font-size: 1.15rem; color: var(--warm-brown); }
+.modal-body { padding: 1.25rem; font-size: .9rem; line-height: 1.65; }
+.modal-footer { border-top: 1px solid var(--sand); background: var(--cream); }
+.modal-backdrop.show { opacity: .35; }
+
+/* Validation: "See details" under a finding. */
+.finding-details { margin-top: .4rem; }
+.finding-details > summary { cursor: pointer; font-size: .85rem; font-weight: 500; color: var(--blush-deep); }
+.finding-details[open] { background: rgba(255,255,255,.6); border-radius: var(--radius-sm); padding: .5rem .75rem .25rem; }
+.finding-details p { margin: .35rem 0; font-size: .875rem; }
+.details-table { font-size: .8rem; width: auto; margin: .4rem 0; }
+.details-label { font-weight: 600; margin-top: .6rem !important; }
+
+/* Analysis: the catalogue of available analyses.
+   One scroll area -- the modal body. Tables scroll sideways inside their own
+   box rather than dropping columns; nothing scrolls vertically inside it. */
+.catalogue .nav { margin-bottom: .25rem; position: sticky; top: -1.25rem; z-index: 2;
+  background: var(--surface); padding-top: .25rem; }
+.catalogue-count { display: inline-block; margin-left: .4rem; padding: 0 .5rem;
+  border-radius: 999px; font-size: .75rem; background: var(--cream-warm); color: var(--warm-brown); }
+.nav-link.active .catalogue-count { background: var(--blush-light); }
+.catalogue-item { padding: 1.1rem 0; border-top: 1px solid var(--sand); }
+.catalogue-item:first-child { border-top: 0; }
+.catalogue-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.catalogue-text { min-width: 0; }
+.catalogue-item h6 { margin: 0 0 .25rem; font-size: 1.02rem; font-weight: 600; color: var(--charcoal); }
+.catalogue-item p { margin: 0 0 .2rem; font-size: .9rem; }
+.catalogue-select { flex-shrink: 0; white-space: nowrap; }
+.catalogue-example { margin-top: .7rem; }
+.example-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; color: var(--taupe);
+  letter-spacing: .04em; margin-bottom: .3rem !important; }
+.example-label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.example-table-wrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--sand);
+  border-radius: var(--radius-sm); }
+.example-table-wrap:focus { outline: 2px solid var(--blush-deep); outline-offset: 2px; }
+.example-table { font-size: .85rem; margin: 0; white-space: nowrap; width: auto; }
+.example-table th { background: var(--cream-warm); color: var(--taupe); font-weight: 600; }
+.example-caption { font-size: .8rem !important; color: var(--taupe); margin-top: .3rem !important; }
+.example-full > summary { cursor: pointer; font-size: .85rem; color: var(--blush-deep); margin-top: .2rem; }
+.example-full > .example-table-wrap { margin-top: .4rem; }
+.example-plot { display: block; width: 100%; max-width: 560px; height: auto;
+  border: 1px solid var(--sand); border-radius: var(--radius-sm); }
+@media (max-width: 767.98px) {
+  .catalogue-head { flex-direction: column; gap: .5rem; }
+  .catalogue-select { width: 100%; }
+  .example-plot { max-width: 100%; }
+}
+
+/* Results and export: one entry per saved result. */
+.result-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; }
+.result-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .35rem; }
+.result-view { font-size: .85rem; margin-left: .35rem; }
+.result-row-controls { display: flex; gap: .25rem; flex-shrink: 0; }
+.result-row-open { background: var(--cream); }
+.result-preview { margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed var(--sand); }
+
+/* ── Small screens ──────────────────────────────────────────────────────── */
+
+@media (max-width: 575.98px) {
+  .navbar { padding: .5rem .9rem; }
+  .brand { font-size: 1.1rem; }
+  .navbar .nav-link { padding: .55rem .9rem; margin: .1rem 0; }
+  .home { padding: 1.75rem .75rem 2.5rem; }
+  .home-title { font-size: 2rem; }
+  :root { --pad: 1rem; }
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--blush); }

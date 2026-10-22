@@ -4,27 +4,52 @@
 \alias{eqvs_drop}
 \title{eqvs_drop}
 \usage{
-eqvs_drop(country = NULL, version = "5L", saveOption = 1, savePath = NULL)
+eqvs_drop(
+  country = NULL,
+  version = "5L",
+  saveOption = 1,
+  savePath = NULL,
+  ask = TRUE
+)
 }
 \arguments{
-\item{country}{Optional string. If NULL, a list of current user-defined value sets will be provided for selection. If set, and matching an existing user-defined value set, a prompt will be given as to whether the value set should be deleted.}
+\item{country}{A country code or value set code identifying the user-defined
+value set to remove, as listed by \code{eqvs_display()}. If more than one
+user-defined value set shares the country code, the value set code must be
+given; otherwise the function stops and lists the matching codes.}
 
-\item{version}{Version of the EQ-5D instrument. Can take values 5L (default) or 3L.}
+\item{version}{Version of the EQ-5D instrument. Can take values 5L (default), 3L or Y3L. Matching is case-insensitive.}
 
-\item{saveOption}{Integer indicating how the cache data should be saved. 1: Do not save (default), 2: Save in package folder, 3: Save in another path.}
+\item{saveOption}{Integer indicating how the cache data should be saved.
+1: Do not save (default).
+2: Save in this package's user cache directory, as returned by
+\code{tools::R_user_dir("eq5dsuite", "cache")}. It is read back
+automatically when the package is next loaded. Nothing is written inside
+the installed package, which CRAN does not permit.
+3: Save in the directory given by \code{savePath}, to be read back with
+\code{eqvs_load()}.}
 
 \item{savePath}{A path where the cache data should be saved when `saveOption` is 3. Please use `eqvs_load` to load it in your next session.}
+
+\item{ask}{Logical. Whether to ask for confirmation before removing the
+value set. Confirmation is only requested when \code{ask} is \code{TRUE}
+\emph{and} the session is interactive; with \code{ask = FALSE}, or in a
+non-interactive session, the value set is removed without prompting.
+Defaults to \code{TRUE}.}
 }
 \value{
-True/False, indicating success or error.
+Invisibly \code{TRUE} if a value set was removed, and \code{FALSE}
+  otherwise (for example if no matching value set exists, or the user
+  declined the confirmation).
 }
 \description{
 Drop user-defined EQ-5D value set to reverse crosswalk options.
 }
 \examples{
 \donttest{
-  # make nonsense value set
-  new_df <- data.frame(state = make_all_EQ_indexes(), TEST = runif(3125))
+  # Make a nonsense value set, without moving the random seed.
+  new_df <- data.frame(state = make_all_EQ_indexes(),
+                       TEST = seq(1, -0.5, length.out = 3125))
   # Add as value set for Fantasia
   eqvs_add(
    new_df,
@@ -36,7 +61,7 @@ Drop user-defined EQ-5D value set to reverse crosswalk options.
   )
   # Test the new value set
   eq5d5l(55555,country = "FAN")
-  # Drop value set for Fantasia
-  eqvs_drop(country = 'FAN', saveOption = 1)
+  # Drop value set for Fantasia, without asking for confirmation
+  eqvs_drop(country = 'FAN', saveOption = 1, ask = FALSE)
 }
 }

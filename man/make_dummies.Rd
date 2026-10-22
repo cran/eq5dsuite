@@ -19,7 +19,7 @@ make_dummies(
 \arguments{
 \item{df}{data.frame containing EQ-5D health states.}
 
-\item{version}{Either "3L" or "5L", to signify EQ-5D instrument version}
+\item{version}{EQ-5D instrument version: "3L", "5L" or "Y3L". Matching is case-insensitive.}
 
 \item{dim.names}{A vector of dimension names to be used as names for output columns.}
 
@@ -36,10 +36,15 @@ make_dummies(
 \item{return_df}{If set to TRUE, data.frame is returned, otherwise matrix. Defaults to TRUE.}
 }
 \value{
-A data.frame of dummy variables
+A data.frame of dummy variables, one row per row of \code{df}.
+  Levels are read as the value functions read them: text and factors
+  through their labels. A level the instrument does not have (fractional,
+  0, negative, non-finite or above the highest level) is not a level, so
+  that dimension's dummies are \code{NA}, with a warning; a missing level
+  gives \code{NA} dummies without one.
 }
 \description{
-Make a data.frame of all EQ-5D dummies relevant for e.g. regression modeling.
+Make a data.frame of all EQ-5D dummies relevant for e.g. regression modelling.
 }
 \examples{
 make_dummies(make_all_EQ_states('3L'), '3L')

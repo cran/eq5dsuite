@@ -12,7 +12,10 @@ toEQ5Ddims(x, dim.names = c("mo", "sc", "ua", "pd", "ad"))
 \item{dim.names}{A vector of dimension names to be used as names for output columns.}
 }
 \value{
-A data.frame with 5 columns, one for each EQ-5D dimension, with names from dim.names argument.
+A data.frame with 5 integer columns, one for each EQ-5D dimension,
+  with names from the dim.names argument; the same layout as the output of
+  \code{make_all_EQ_states()}. A code that is not a valid 5-digit state gives
+  \code{NA} in every column, with a warning.
 }
 \description{
 Generate dimension vectors based on state index

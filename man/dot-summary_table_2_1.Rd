@@ -17,9 +17,4 @@ A summarised data frame with groups defined by `eq5d` and `fu` variables, the co
 \description{
 This internal function summarises a data frame by grouping it based on the variables specified in the 'group_by' argument and calculates the frequency of each group. The output is used in Table 2.1
 }
-\examples{
-set.seed(1234)
-df <- data.frame(eq5d = rep(rnorm(5), 2),
-                 fu = rep(c(1, 0, 1, 0, 1), 2))
-.summary_table_2_1(df, c("eq5d", "fu"))
-}
+\keyword{internal}

@@ -48,8 +48,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -351,10 +352,17 @@ approaches:</p>
 EQ-5D-5L responses to EQ-5D-3L values (van Hout et al., 2012)</li>
 <li><strong>Reverse crosswalk</strong> (<code>eqxwr</code>) — maps
 EQ-5D-3L responses to EQ-5D-5L values (van Hout and Shaw, 2021)</li>
-<li><strong>UK-specific crosswalk</strong> (<code>eqxw_UK</code>) —
-NICE-recommended mapping for UK analyses (Hernandez Alava et al.,
-2023)</li>
+<li><strong>NICE DSU mapping, 5L to 3L</strong> (<code>eqxw_UK</code>) —
+maps EQ-5D-5L responses to values on the UK EQ-5D-3L value set
+(Hernández Alava et al., 2023)</li>
+<li><strong>NICE DSU mapping, 3L to 5L</strong> (<code>eqxwr_UK</code>)
+— maps EQ-5D-3L responses to values on the UK EQ-5D-5L value set
+(Hernández Alava et al., 2023)</li>
 </ul>
+<p>The two NICE DSU mappings are age- and sex-specific and cover the
+United Kingdom only. They are <em>not</em> the van Hout crosswalks:
+<code>eqxwr()</code> and <code>eqxwr_UK()</code> answer different
+questions and are not interchangeable.</p>
 </div>
 <div id="when-to-use-crosswalk-methods" class="section level2">
 <h2>When to use crosswalk methods</h2>
@@ -364,9 +372,28 @@ NICE-recommended mapping for UK analyses (Hernandez Alava et al.,
 country → use <code>eqxw()</code></li>
 <li>You have EQ-5D-3L data but only a 5L value set exists → use
 <code>eqxwr()</code></li>
-<li>You are conducting a NICE technology appraisal and have EQ-5D-5L
-data → use <code>eqxw_UK()</code> until a NICE-approved 5L value set is
-available</li>
+<li>You are conducting a NICE technology appraisal and have only
+EQ-5D-3L data → use <code>eqxwr_UK()</code></li>
+</ul>
+</div>
+<div id="the-current-nice-position" class="section level2">
+<h2>The current NICE position</h2>
+<p>NICE’s interim methods statement of 27 August 2026 (NICE, 2026;
+PMG51) takes the UK EQ-5D-5L value set (Rowen et al., 2026) as the
+reference case for topics started after that date – for technology
+appraisals, those whose invitation to participate was issued after it.
+Topics started earlier continue to map EQ-5D-5L data to EQ-5D-3L utility
+values (with <code>eqxw_UK()</code>). For new topics:</p>
+<ul>
+<li><strong>EQ-5D-5L data collected in the study</strong> should be
+valued directly, with <code>eq5d5l(x, country = &quot;GB&quot;)</code>. No mapping
+is needed.</li>
+<li><strong>Only EQ-5D-3L data available</strong> → map with
+<code>eqxwr_UK()</code>, the mapping the statement specifies in that
+situation (Hernández Alava et al., 2023).</li>
+<li><code>eqxw_UK()</code> maps in the other direction, to the older UK
+EQ-5D-3L value set. It remains for topics started before 27 August 2026
+and for reproducing earlier analyses.</li>
 </ul>
 </div>
 <div id="original-crosswalk-eqxw" class="section level2">
@@ -383,7 +410,7 @@ available</li>
 <span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co"># Apply crosswalk using UK 3L value set</span></span>
 <span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>eq5d5l_data<span class="sc">$</span>value_xw <span class="ot">&lt;-</span> <span class="fu">eqxw</span>(</span>
 <span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  eq5d5l_data,</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;UK&quot;</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;GB&quot;</span>,</span>
 <span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">dim.names =</span> <span class="fu">c</span>(<span class="st">&quot;mo&quot;</span>, <span class="st">&quot;sc&quot;</span>, <span class="st">&quot;ua&quot;</span>, <span class="st">&quot;pd&quot;</span>, <span class="st">&quot;ad&quot;</span>)</span>
 <span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>)</span>
 <span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
@@ -421,10 +448,12 @@ available</li>
 <span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; 4  4  3  2  3  3  2 -0.04655332</span></span>
 <span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; 5  5  2  1  2  3  1  0.54478451</span></span></code></pre></div>
 </div>
-<div id="uk-specific-crosswalk-eqxw_uk" class="section level2">
-<h2>UK-specific crosswalk: eqxw_UK()</h2>
-<p>The UK-specific crosswalk requires age and sex in addition to the
-five EQ-5D dimensions:</p>
+<div id="nice-dsu-mapping-5l-to-3l-eqxw_uk" class="section level2">
+<h2>NICE DSU mapping, 5L to 3L: eqxw_UK()</h2>
+<p>Both NICE DSU mappings require age and sex in addition to the five
+EQ-5D dimensions. Age is used in years and grouped into five bands
+(16–34, 35–44, 45–54, 55–64, 65 and over); sex is 1 for male and 0 for
+female.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>uk_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">id   =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">mo   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">2</span>),</span>
@@ -450,6 +479,50 @@ five EQ-5D dimensions:</p>
 <span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 4  4  3  2  3  3  2  71    0 0.5306411</span></span>
 <span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; 5  5  2  1  2  3  1  55    1 0.6685958</span></span></code></pre></div>
 </div>
+<div id="nice-dsu-mapping-3l-to-5l-eqxwr_uk" class="section level2">
+<h2>NICE DSU mapping, 3L to 5L: eqxwr_UK()</h2>
+<p>When only EQ-5D-3L data are available, <code>eqxwr_UK()</code> maps
+them so they can be valued on the UK EQ-5D-5L value set:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>uk3l <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">id   =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">mo   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">2</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">sc   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">ua   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">2</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">pd   =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">ad   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">age  =</span> <span class="fu">c</span>(<span class="dv">45</span>, <span class="dv">62</span>, <span class="dv">38</span>, <span class="dv">71</span>, <span class="dv">55</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">male =</span> <span class="fu">c</span>(<span class="dv">1</span>,  <span class="dv">0</span>,  <span class="dv">1</span>,  <span class="dv">0</span>,  <span class="dv">1</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>)</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>uk3l<span class="sc">$</span>value_uk5l <span class="ot">&lt;-</span> <span class="fu">eqxwr_UK</span>(uk3l, <span class="at">age =</span> <span class="st">&quot;age&quot;</span>, <span class="at">male =</span> <span class="st">&quot;male&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>uk3l</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;   id mo sc ua pd ad age male  value_uk5l</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 1  1  1  1  1  2  1  45    1  0.92506034</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; 2  2  2  1  2  2  1  62    0  0.79902655</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; 3  3  1  2  1  1  2  38    1  0.86239329</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; 4  4  3  2  3  3  2  71    0 -0.08121815</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; 5  5  2  1  2  3  1  55    1  0.56006048</span></span></code></pre></div>
+</div>
+<div id="mapping-a-mean-value" class="section level2">
+<h2>Mapping a mean value</h2>
+<p>Both functions also accept an EQ-5D <em>value</em> instead of a
+health state, for mapping a mean reported in a published study. There is
+no unique health state behind a mean, so the result is a kernel-weighted
+average of the mapped values of nearby states.
+<code>bwidth = &quot;default&quot;</code> applies the DSU’s recommended bandwidths
+for mean values: 0.1 for values above 0.6, and 0.4 for values at or
+below 0.6.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># a mean EQ-5D-3L value of 0.54 in women aged 35</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">eqxwr_UK</span>(<span class="fl">0.54</span>, <span class="at">age =</span> <span class="dv">35</span>, <span class="at">male =</span> <span class="dv">0</span>, <span class="at">bwidth =</span> <span class="st">&quot;default&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.7005354</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># the bandwidth matters: a narrower one weights fewer states</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">eqxwr_UK</span>(<span class="fl">0.54</span>, <span class="at">age =</span> <span class="dv">35</span>, <span class="at">male =</span> <span class="dv">0</span>, <span class="at">bwidth =</span> <span class="fl">0.1</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; [1] 0.746695</span></span></code></pre></div>
+<p>This input is <strong>not</strong> intended for individual-level
+data. Map individual respondents from their health states, as above.</p>
+</div>
 <div id="crosswalk-compatibility-with-custom-value-sets" class="section level2">
 <h2>Crosswalk compatibility with custom value sets</h2>
 <p>All crosswalk functions are compatible with custom value sets added
@@ -463,8 +536,14 @@ modification.</p>
 <em>Value in Health</em>, 15(5), 708–715.</p>
 <p>van Hout B, Shaw JW (2021). Mapping EQ-5D-3L to EQ-5D-5L. <em>Value
 in Health</em>, 24(9), 1285–1293.</p>
-<p>Hernandez Alava M, et al. (2023). Estimating the relationship between
-EQ-5D-5L and EQ-5D-3L. <em>PharmacoEconomics</em>, 41(2), 199–207.</p>
+<p>Hernández Alava M, Pudney S, Wailoo A (2023). Estimating the
+relationship between EQ-5D-5L and EQ-5D-3L: results from a UK population
+study. <em>PharmacoEconomics</em>, 41(2), 199–207.</p>
+<p>Rowen D, Mukuria C, Bray N, et al. (2026). A UK value set for the
+EQ-5D-5L. <em>Value in Health</em>, 29(5), 858–869.</p>
+<p>National Institute for Health and Care Excellence (2026). Interim
+methods statement: implementing the EQ-5D-5L value set (PMG51).
+Published 27 August 2026. <a href="https://www.nice.org.uk/process/pmg51" class="uri">https://www.nice.org.uk/process/pmg51</a></p>
 </div>
 
 

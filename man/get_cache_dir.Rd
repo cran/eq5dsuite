@@ -4,7 +4,13 @@
 \alias{get_cache_dir}
 \title{Get the eq5dsuite cache directory}
 \usage{
-get_cache_dir()
+get_cache_dir(create = TRUE)
+}
+\arguments{
+\item{create}{Create the directory if it does not exist. Only callers that
+are about to write pass \code{TRUE}: reading a file that is not there
+needs no directory, and creating one at load time would leave a trace in
+the user's home for nothing.}
 }
 \value{
 A character string giving the path to the cache directory.
@@ -12,6 +18,6 @@ A character string giving the path to the cache directory.
 \description{
 Returns the path to the user-specific cache directory used by
 eq5dsuite to store the date of the last value set check.
-The directory is created if it does not exist.
+The directory is created if it does not exist, unless \code{create = FALSE}.
 }
 \keyword{internal}

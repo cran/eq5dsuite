@@ -17,7 +17,4 @@ This function calculates the mode of a numeric or character vector.
 If there are multiple modes, the first one is returned. 
 The code is taken from an \href{https://www.tutorialspoint.com/r/r_mean_median_mode.htm}{R help page}.
 }
-\examples{
-.getmode(c(1, 2, 3, 3))
-.getmode(c("a", "b", "b", "c"))
-}
+\keyword{internal}

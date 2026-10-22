@@ -8,19 +8,24 @@ eqvs_display(version = "5L", return_df = FALSE, show_citation = FALSE)
 }
 \arguments{
 \item{version}{Version of the EQ-5D instrument. One of \code{"3L"},
-\code{"5L"} (default), or \code{"Y3L"}.}
+\code{"5L"} (default), or \code{"Y3L"}. Matching is case-insensitive.}
 
-\item{return_df}{Logical. If \code{TRUE}, returns a data.frame with
-all columns (including \code{citation} if present). Defaults to
-\code{FALSE}.}
+\item{return_df}{Logical. If \code{FALSE} (default), the summary table is
+printed to the console. If \code{TRUE}, nothing is printed and the value
+set information is returned as a data.frame instead, with all columns
+(including \code{citation} if present), so that it can be used in further
+code without cluttering scripts, reports or the console.}
 
 \item{show_citation}{Logical. If \code{TRUE}, prints the full AMA
 citation for each value set after the summary table. Defaults to
-\code{FALSE}.}
+\code{FALSE}. Applies only when \code{return_df = FALSE}: the returned
+data.frame always includes the \code{citation} column, so this argument
+is ignored when \code{return_df = TRUE}.}
 }
 \value{
-\code{NULL} invisibly (default), or a data.frame when
-  \code{return_df = TRUE}.
+When \code{return_df = FALSE}, \code{NULL} invisibly, called for the
+  printed output. When \code{return_df = TRUE}, a data.frame, returned
+  visibly so that it still prints when the call is made at the console.
 }
 \description{
 Display available value sets, which can also be used as
@@ -28,6 +33,10 @@ Display available value sets, which can also be used as
   by any user-defined value sets added via \code{eqvs_add()}.
 }
 \examples{
-# Display available EQ-5D-5L value sets.
+# Print the available EQ-5D-5L value sets.
 eqvs_display(version = "5L")
+
+# Get the same information as a data.frame, printing nothing.
+vs <- eqvs_display(version = "5L", return_df = TRUE)
+head(vs)
 }

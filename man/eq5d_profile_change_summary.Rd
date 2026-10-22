@@ -30,6 +30,21 @@ Summary data frame.
 \description{
 eq5d_profile_change_summary: Frequency of levels by dimensions, by follow-up
 }
+\details{
+Counts are made against the number of non-missing responses on each
+dimension at each follow-up. Where that number is positive, every level of
+the instrument has a row and every count is a number: a level, or a
+problem, that nobody reported is 0. Where it is zero -- nobody recorded at
+that follow-up, or everyone missing on that dimension -- the counts are
+\code{NA}, because the data say nothing about them.
+
+The change in the number reporting problems is between consecutive levels
+of \code{levels_fu}, and is \code{NA} where either count is. The relative
+change is \code{NA} where the earlier count is 0. These are counts at each
+follow-up, not changes within respondents; for those, see
+\code{\link{eq5d_profile_pchc_table}} and
+\code{\link{eq5d_profile_dimension_change_table}}.
+}
 \examples{
 eq5d_profile_change_summary(
   df = example_data,

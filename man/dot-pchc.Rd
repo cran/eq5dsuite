@@ -7,7 +7,15 @@
 .pchc(df, level_fu_1, add_noprobs = FALSE)
 }
 \arguments{
-\item{df}{A data frame with EQ-5D states and follow-up variable. The dataset is assumed to be have been ordered correctly.}
+\item{df}{A data frame with EQ-5D dimension columns (`mo`, `sc`, `ua`,
+`pd`, `ad`), a factorised follow-up column `fu`, and an `id` column
+identifying the respondent. The change score is a lag over the rows of
+`df`, so `df` must already be sorted with each respondent's records
+together and in follow-up order. Rows that start a new respondent are
+given a missing change score, so a respondent whose first record is not
+the first follow-up is excluded rather than compared against the
+preceding respondent. So are rows with no \code{id} and rows whose
+\code{fu} is missing.}
 
 \item{level_fu_1}{Value of the first (i.e. earliest) follow-up. Would normally be defined as levels_fu[1].}
 
@@ -23,13 +31,4 @@ It is used in the code for eq5d_profile_pchc_table, eq5d_profile_pchc_with_no_pr
 An EQ-5D health state is deemed to be `better` than another if it is better on at least one dimension and is no worse on any other dimension.
 An EQ-5D health state is deemed to be `worse` than another if it is worse in at least one dimension and is no better in any other dimension.
 }
-\examples{
-df <- data.frame(id = c(1, 1, 2, 2),
-                 fu = c(1, 2, 1, 2),
-                 mo = c(1, 1, 1, 1),
-                 sc = c(1, 1, 5, 1),
-                 ua = c(1, 1, 4, 3),
-                 pd = c(1, 1, 1, 3),
-                 ad = c(1, 1, 1, 1))
-.pchc(df, level_fu_1 = 1, add_noprobs = TRUE)
-}
+\keyword{internal}

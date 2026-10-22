@@ -1,9 +1,8 @@
-# eq5dsuite <img src="man/figures/logo.png" align="right" height="139" alt="" />
+# eq5dsuite 
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/eq5dsuite)](https://CRAN.R-project.org/package=eq5dsuite)
-[![R-CMD-check](https://github.com/MathsInHealth/eq5dsuite-r/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/MathsInHealth/eq5dsuite-r/actions/workflows/R-CMD-check.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20(%3E%3D%202)-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 <!-- badges: end -->
 
 R implementation of [eq5dsuite](https://github.com/MathsInHealth/eq5dsuite) 
@@ -24,7 +23,7 @@ recommendations of Devlin et al. (2020).
 - Support for **user-defined custom value sets**
 - **Automatic value set updates** via `update_value_sets()` — install 
   newly published value sets without waiting for a CRAN update
-- **35+ analysis functions** for profile analysis, EQ-5D value 
+- **32 analysis functions** for profile analysis, EQ-5D value 
   analysis, and EQ-VAS analysis
 - An interactive **Shiny application** for point-and-click access 
   to the same analytical workflow
@@ -55,7 +54,7 @@ library(eq5dsuite)
 # Calculate EQ-5D-3L values using the UK value set
 eq5d3l(
   data.frame(mo = 1, sc = 2, ua = 3, pd = 2, ad = 1),
-  country   = "UK",
+  country   = "GB",
   dim.names = c("mo", "sc", "ua", "pd", "ad")
 )
 

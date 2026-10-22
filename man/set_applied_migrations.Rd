@@ -10,7 +10,8 @@ set_applied_migrations(migrations)
 \item{migrations}{Character vector of migration IDs to save.}
 }
 \value{
-Invisibly returns the saved migrations.
+Invisibly, \code{TRUE} if the list was saved and reads back as
+  saved, \code{FALSE} (with a warning) otherwise.
 }
 \description{
 Save the list of applied migrations to cache

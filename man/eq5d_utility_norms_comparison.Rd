@@ -6,33 +6,31 @@
 \usage{
 eq5d_utility_norms_comparison(
   df,
-  names_eq5d = NULL,
+  name_utility = NULL,
   name_fu = NULL,
   levels_fu = NULL,
   name_groupvar = NULL,
-  name_age,
-  eq5d_version = NULL,
-  country
+  name_age
 )
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D, age, follow-up and grouping columns}
+\item{df}{Data frame with the EQ-5D value, age, follow-up and grouping columns}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_utility}{Character string naming the column of pre-calculated
+EQ-5D values. If \code{NULL} (default), the column \code{"utility"} is
+used. The values are analysed as they stand; see
+\code{\link{eq5d}} for calculating them from the dimensions.}
 
 \item{name_fu}{Character string for the follow-up column}
 
 \item{levels_fu}{Character vector containing the order of the values in the follow-up column.
-If NULL (default value), the levels will be ordered in the order of appearance in df.}
+If NULL (default value), the levels will be ordered in the order of appearance in df.
+The first level is the baseline, and only records at the baseline are
+summarised.}
 
 \item{name_groupvar}{Character string for the grouping column. If NULL (default), the analysis is performed on the full population.}
 
 \item{name_age}{Character string for the age column}
-
-\item{eq5d_version}{Version of the EQ-5D instrument}
-
-\item{country}{A character string representing the name of the country. 
-This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
 }
 \value{
 Summary data frame
@@ -40,20 +38,27 @@ Summary data frame
 \description{
 eq5d_utility_norms_comparison:EQ-5D values: by age and groupvar
 }
+\details{
+The comparison with population norms describes the sample at
+  baseline: only records at the first timepoint in \code{levels_fu} are
+  used, so each respondent counts once, and a message says which timepoint
+  that is. Records at other timepoints, or with a missing timepoint, are
+  not included.
+}
 \examples{
 example_data$ageband <- factor(
   example_data$ageband,
   levels = c("20 to 29", "30 to 39", "40 to 49", "50 to 59", "60 to 69", "70 to 79", "80 to 89")
 )
 example_data <- example_data[example_data$gender \%in\% c("Male", "Female"),]
+example_data$value <- eq5d3l(example_data[, c("mo", "sc", "ua", "pd", "ad")],
+                             country = "GB")
 eq5d_utility_norms_comparison(
   example_data,
-  names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+  name_utility = "value",
   name_fu = "time",
   levels_fu = c('Pre-op', 'Post-op'),
   name_groupvar = "gender",
-  name_age = "ageband",
-  eq5d_version = "3L",
-  country = "UK"
+  name_age = "ageband"
 )
 }

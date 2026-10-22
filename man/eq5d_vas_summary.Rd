@@ -16,10 +16,26 @@ eq5d_vas_summary(df, name_vas = NULL, name_fu = NULL, levels_fu = NULL)
 \item{levels_fu}{Character vector containing the order of the values in the follow-up column.}
 }
 \value{
-Summary data frame
+Summary data frame with one row per statistic and one column per
+  follow-up level, in the order given by \code{levels_fu}.
+  \code{"Missing (\%)"} is a percentage, from 0 to 100, of the rows at
+  that follow-up (the \code{"Total sample"} row) with no usable
+  value; it is \code{NA} for a follow-up with no rows. Before 2.1.0
+  it was a proportion.
 }
 \description{
 eq5d_vas_summary: EQ VAS Score by timepoints
+}
+\details{
+Skewness and kurtosis are the population (biased) estimators
+\eqn{m_3 / m_2^{3/2}} and \eqn{m_4 / m_2^2}, as returned by
+\code{moments::skewness()} and \code{moments::kurtosis()}.
+
+The kurtosis is **non-excess**: a normal distribution gives 3, not 0. The
+row is labelled "Kurtosis (non-excess)" so that the output says which
+convention it uses. Stata's \code{summarize, detail} reports the same
+quantity. Excel's \code{KURT()} reports *excess* kurtosis with a
+sample-bias correction, so it is roughly 3 lower for the same data.
 }
 \examples{
 eq5d_vas_summary(

@@ -11,8 +11,14 @@ apply_pending_migrations(ask = TRUE)
 applying migrations. Defaults to TRUE.}
 }
 \value{
-Invisibly returns a character vector of migration IDs
-  that were applied in this session.
+Invisibly, a list: \code{status} (\code{"ok"}, \code{"conflict"},
+  \code{"failed"}, \code{"unrecorded"} or \code{"postponed"}),
+  \code{applied} (migration ids whose outcome holds now), \code{recorded}
+  (those of them saved as applied), \code{conflicts} and \code{failed}
+  (ids left pending),
+  and \code{reason} (why the whole step failed, or \code{NULL}). A list
+  that could not be downloaded, or is malformed, is \code{"failed"}; an
+  empty list is \code{"ok"}.
 }
 \description{
 Fetches the migrations index from the repository and applies
@@ -25,5 +31,17 @@ be disambiguated with a year suffix.
 Migrations are applied before checking for new value sets in
 \code{update_value_sets()}, ensuring the local state is
 consistent before any new installations.
+
+A migration is recorded as applied only when its outcome is verified: the
+old code is gone and the new one is there, or there was nothing to rename.
+When both codes are installed -- the target already exists -- nothing is
+renamed or deleted, the migration is a conflict, and it stays pending: two
+different value sets cannot be merged without a policy that says how.
+Codes are compared without regard to case, as lookups are.
+
+A rename that was made but whose record (\code{applied_migrations.rds})
+could not be saved is kept, and the status is \code{"unrecorded"}. The
+migration stays pending; on the next run its old code is gone, so it is
+recorded without renaming anything again.
 }
 \keyword{internal}

@@ -11,14 +11,14 @@ make_all_EQ_states(
 )
 }
 \arguments{
-\item{version}{Either "3L" or "5L", to signify whether 243 or 3125 states should be generated}
+\item{version}{"3L", "5L" or "Y3L", to signify whether 243 or 3125 states should be generated. The EQ-5D-Y-3L has the same 243 states as the EQ-5D-3L. Matching is case-insensitive.}
 
 \item{dim.names}{A vector of dimension names to be used as names for output columns.}
 
 \item{append_index}{Boolean to indicate whether a column of 5-digit EQ-5D health state indexes should be added to output.}
 }
 \value{
-A data.frame with 5 columns and 243 (-3L) or 3125 (-5L) health states
+A data.frame with 5 columns and 243 (-3L, -Y-3L) or 3125 (-5L) health states
 }
 \description{
 Make a data.frame with all health states defined by dimensions

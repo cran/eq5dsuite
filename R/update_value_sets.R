@@ -4,14 +4,16 @@
   "MathsInHealth/eq5dsuite-value-sets/main/"
 )
 
-# Map instrument version to folder name
-.vs_folder <- function(version) {
-  switch(version,
-    "3L"  = "EQ-5D-3L",
-    "5L"  = "EQ-5D-5L",
-    "Y3L" = "EQ-5D-Y-3L",
-    stop("Unknown version: ", version)
-  )
+# Map instrument version to folder name. The folders are named after the
+# instrument, so this is the instrument name; see .eq5d_instrument().
+.vs_folder <- function(version) .eq5d_instrument(version)
+
+# Read a CSV file from the value sets repository. Every download goes through
+# here, with time limits, so a stalled connection cannot hang the session;
+# read.csv() opens the connection and closes it again (review AI02).
+.remote_csv <- function(url) {
+  h <- curl::new_handle(connecttimeout = 15, timeout = 60)
+  utils::read.csv(curl::curl(url, handle = h), stringsAsFactors = FALSE)
 }
 
 #' Fetch the index of available value sets from GitHub
@@ -26,17 +28,54 @@ fetch_available_value_sets <- function(version) {
     .vs_folder(version),
     "/value_sets.csv"
   )
-  tryCatch({
-    utils::read.csv(
-      curl::curl(url),
-      stringsAsFactors = FALSE
-    )
-  },
+  tryCatch(.remote_csv(url),
   error = function(e) {
     message("eq5dsuite: Could not fetch value set index for ",
             version, ": ", conditionMessage(e))
     NULL
   })
+}
+
+# Whether there is a connection at all. A function of the package's own, so
+# the tests can replace it without touching curl.
+.has_internet <- function() curl::has_internet()
+
+# Read one instrument's index, and say whether it can be relied on.
+#
+# A download that fails, or an index without the columns the installer uses,
+# or without a usable VS_code for every row, is a failed check -- never an
+# empty list of value sets. An index with the right columns and no rows is a
+# valid answer: nothing is published.
+#
+# Returns list(ok, data, reason).
+.check_vs_index <- function(version) {
+  idx <- tryCatch(fetch_available_value_sets(version),
+                  error = function(e) structure(conditionMessage(e),
+                                                class = "vs_fetch_error"))
+  if (inherits(idx, "vs_fetch_error"))
+    return(list(ok = FALSE, data = NULL,
+                reason = paste0("the index could not be downloaded (",
+                                unclass(idx), ")")))
+  if (is.null(idx))
+    return(list(ok = FALSE, data = NULL,
+                reason = "the index could not be downloaded"))
+  if (!is.data.frame(idx))
+    return(list(ok = FALSE, data = NULL,
+                reason = "malformed index: not a table"))
+  need <- c("Name", "Country_code", "VS_code", "doi")
+  miss <- setdiff(need, names(idx))
+  if (length(miss))
+    return(list(ok = FALSE, data = NULL,
+                reason = paste0("malformed index: no ",
+                                paste(miss, collapse = ", "), " column")))
+  code <- as.character(idx$VS_code)
+  if (anyNA(code) || any(!nzchar(trimws(code))))
+    return(list(ok = FALSE, data = NULL,
+                reason = "malformed index: a value set without a VS_code"))
+  if (anyDuplicated(toupper(code)))
+    return(list(ok = FALSE, data = NULL,
+                reason = "malformed index: a VS_code listed twice"))
+  list(ok = TRUE, data = idx, reason = NULL)
 }
 
 #' Get the VS_codes currently installed for a given instrument
@@ -90,12 +129,7 @@ install_value_set <- function(vs_code, version, meta_row) {
     .vs_folder(version), "/",
     vs_code, ".csv"
   )
-  vs_data <- tryCatch({
-    utils::read.csv(
-      curl::curl(url),
-      stringsAsFactors = FALSE
-    )
-  },
+  vs_data <- tryCatch(.remote_csv(url),
   error = function(e) {
     message("eq5dsuite: Could not download ", vs_code,
             ": ", conditionMessage(e))
@@ -123,7 +157,7 @@ install_value_set <- function(vs_code, version, meta_row) {
   }
   
   tryCatch({
-    eqvs_add(
+    res <- eqvs_add(
       vs_data,
       version     = version,
       country     = meta_row$Name,
@@ -132,6 +166,14 @@ install_value_set <- function(vs_code, version, meta_row) {
       description = paste0("doi:", meta_row$doi),
       saveOption  = 2
     )
+    # eqvs_add() returns 0, with a warning, when the code is already one of
+    # the user's own value sets, and adds nothing. That was counted as an
+    # installation (review AI02).
+    if (identical(res, 0)) {
+      message("eq5dsuite: Could not install ", vs_code, ": the code is ",
+              "already used by one of your own value sets.")
+      return(FALSE)
+    }
     TRUE
   },
   error = function(e) {
@@ -173,15 +215,21 @@ drop_value_set <- function(vs_code, version, ask = TRUE) {
   }
 
   tryCatch({
-    suppressMessages(
+    # ask = FALSE: confirmation, if any, has already been obtained above.
+    removed <- suppressMessages(
       eqvs_drop(
         country    = vs_code,
         version    = version,
-        saveOption = 2
+        saveOption = 2,
+        ask        = FALSE
       )
     )
-    message("\u2705 ", vs_code, " removed successfully.")
-    TRUE
+    if (isTRUE(removed)) {
+      message("\u2705 ", vs_code, " removed successfully.")
+    } else {
+      message("\u274c ", vs_code, " could not be removed.")
+    }
+    isTRUE(removed)
   },
   error = function(e) {
     message("\u274c Could not remove ", vs_code,
@@ -192,9 +240,19 @@ drop_value_set <- function(vs_code, version, ask = TRUE) {
 
 #' Rename a value set
 #'
-#' Renames a value set by dropping the old VS_code and
-#' reinstalling under the new VS_code. The value data is
-#' preserved — only the identifier changes.
+#' Renames a \emph{user-defined} value set, preserving its values and its
+#' metadata: only the identifier changes. The two tables are rebuilt as
+#' locals, checked, and committed together, so a rename that cannot complete
+#' leaves the session and the cache exactly as they were.
+#'
+#' A \strong{built-in} code is not renamed at runtime. It is part of the
+#' installed package's data, and changing it in one session would mean two
+#' installations of the same version disagreeing about what a code means. A
+#' built-in code change ships in a release; where backward compatibility is
+#' needed the old code is kept as a deprecated alias in
+#' \code{.fixCountries()}, as \code{"UK"} is for \code{"GB"}. Asked to
+#' rename a built-in, this function explains that and returns \code{FALSE}
+#' without changing anything.
 #'
 #' @param old_vs_code Character. The current VS_code.
 #' @param new_vs_code Character. The new VS_code to use.
@@ -208,6 +266,11 @@ rename_value_set <- function(old_vs_code,
                              version,
                              ask = TRUE) {
 
+  pkgenv <- getOption("eq.env")
+  version_upper    <- toupper(version)
+  uservsets_str    <- paste0("uservsets", version_upper)
+  user_defined_str <- paste0("user_defined_", version_upper)
+
   installed <- get_installed_vs_codes(version)
 
   if (!old_vs_code %in% installed) {
@@ -215,9 +278,36 @@ rename_value_set <- function(old_vs_code,
     return(FALSE)
   }
 
-  if (new_vs_code %in% installed) {
+  # Case-insensitively, as a lookup is: renaming to a code that differs from
+  # an existing one only in case would make both unusable.
+  if (any(toupper(installed) == toupper(new_vs_code))) {
     message("eq5dsuite: ", new_vs_code,
-            " already exists. Drop it first.")
+            " already exists (codes differing only in case count as the ",
+            "same). Drop it first.")
+    return(FALSE)
+  }
+
+  # Which kind of value set is this?
+  #
+  # The two halves used to be incompatible: the values were read from the
+  # namespace's built-in tables, so a user-defined set's data could never be
+  # found, while the removal went through eqvs_drop(), which only removes
+  # user-defined sets. No value set could satisfy both, so every rename
+  # returned FALSE.
+  user_codes <- if (NROW(pkgenv[[user_defined_str]]) > 0L)
+    pkgenv[[user_defined_str]]$VS_code else character(0)
+  is_user <- old_vs_code %in% user_codes
+
+  if (!is_user) {
+    # A built-in code is part of the installed package's data. It is not
+    # renamed at runtime: the change ships in a release, so that every
+    # installation of a given version agrees on what a code means. Where
+    # backward compatibility is needed, .fixCountries() accepts the old code
+    # as a deprecated alias, as it does for "UK" -> "GB".
+    message("eq5dsuite: ", old_vs_code, " is a built-in value set for EQ-5D-",
+            version, ". Built-in codes are changed by a package release, not ",
+            "at runtime, so that every installation of a version agrees on ",
+            "what a code means. Nothing has been changed.")
     return(FALSE)
   }
 
@@ -233,68 +323,58 @@ rename_value_set <- function(old_vs_code,
     }
   }
 
-  vsets_obj <- switch(version,
-    "3L"  = ".vsets3L",
-    "5L"  = ".vsets5L",
-    "Y3L" = ".vsetsY3L"
-  )
+  # Transactional: both tables are built as locals, checked, and only then
+  # committed together. On any failure the snapshot is put back, so a failed
+  # rename leaves the session exactly as it was.
+  before_vs   <- pkgenv[[uservsets_str]]
+  before_meta <- pkgenv[[user_defined_str]]
 
-  vsets <- tryCatch(
-    get(vsets_obj, envir = asNamespace("eq5dsuite")),
-    error = function(e) NULL
-  )
-
-  if (is.null(vsets) || !old_vs_code %in% colnames(vsets)) {
-    message("eq5dsuite: Could not extract data for ",
-            old_vs_code)
+  if (is.null(before_vs) || !old_vs_code %in% colnames(before_vs)) {
+    message("eq5dsuite: Could not extract data for ", old_vs_code)
     return(FALSE)
   }
 
-  cc <- get(".cntrcodes", envir = asNamespace("eq5dsuite"))
-  old_meta <- cc[cc$VS_code == old_vs_code &
-                 cc$Version  == version, ]
+  after_vs <- before_vs
+  colnames(after_vs)[colnames(after_vs) == old_vs_code] <- new_vs_code
 
-  if (nrow(old_meta) == 0) {
-    message("eq5dsuite: No metadata found for ", old_vs_code)
+  after_meta <- before_meta
+  row <- after_meta$VS_code == old_vs_code
+  after_meta$VS_code[row]    <- new_vs_code
+  after_meta$Name[row]       <- gsub(old_vs_code, new_vs_code,
+                                     after_meta$Name[row], fixed = TRUE)
+  after_meta$Name_short[row] <- gsub(old_vs_code, new_vs_code,
+                                     after_meta$Name_short[row], fixed = TRUE)
+
+  clash <- .colliding_vs_codes(new_vs_code)
+  if (length(clash)) {
+    message("eq5dsuite: ", new_vs_code,
+            " is already used by a built-in value set. Nothing has been ",
+            "changed.")
     return(FALSE)
   }
 
-  vs_data <- data.frame(
-    state = vsets$state,
-    value = vsets[[old_vs_code]],
-    stringsAsFactors = FALSE
-  )
-  colnames(vs_data)[2] <- new_vs_code
-
-  message("Removing ", old_vs_code, "...")
-  dropped <- drop_value_set(old_vs_code, version, ask = FALSE)
-  if (!dropped) return(FALSE)
-
-  message("Installing as ", new_vs_code, "...")
-  new_meta            <- old_meta
-  new_meta$VS_code    <- new_vs_code
-  new_meta$Name       <- gsub(old_vs_code, new_vs_code,
-                               old_meta$Name)
-  new_meta$Name_short <- gsub(old_vs_code, new_vs_code,
-                               old_meta$Name_short)
-
-  tryCatch({
-    eqvs_add(
-      vs_data,
-      version     = version,
-      country     = new_meta$Name,
-      countryCode = new_meta$Country_code,
-      VSCode      = new_vs_code,
-      description = paste0("doi:", new_meta$doi),
-      saveOption  = 2
-    )
+  ok <- tryCatch({
+    assign(uservsets_str,    after_vs,   envir = pkgenv)
+    assign(user_defined_str, after_meta, envir = pkgenv)
+    filePath <- file.path(pkgenv$cache_path, .cache_basename)
+    saved <- .fixPkgEnv(saveCache = TRUE, filePath = filePath)
+    if (!isTRUE(saved))
+      stop("the value set cache could not be written to ", filePath,
+           call. = FALSE)
     TRUE
-  },
-  error = function(e) {
-    message("\u274c Could not install ", new_vs_code,
-            ": ", conditionMessage(e))
+  }, error = function(e) {
+    # Put the session back as it was, including the derived tables.
+    assign(uservsets_str,    before_vs,   envir = pkgenv)
+    assign(user_defined_str, before_meta, envir = pkgenv)
+    suppressMessages(.fixPkgEnv(saveCache = FALSE))
+    message("\u274c Could not rename ", old_vs_code, " to ", new_vs_code,
+            ": ", conditionMessage(e), ". Nothing has been changed.")
     FALSE
   })
+
+  if (isTRUE(ok))
+    message("\u2705 ", old_vs_code, " renamed to ", new_vs_code)
+  ok
 }
 
 #' Check for conflicts between user-defined and built-in value sets
@@ -373,7 +453,10 @@ check_builtin_conflicts <- function(version) {
 #' and installing new value sets. Drop and rename operations
 #' work offline.
 #'
-#' @param versions Character vector. Which instruments to check.
+#' @param versions Character vector. Which instruments to check: any of
+#'   \code{"3L"}, \code{"5L"} and \code{"Y3L"}, in any case. The date of the
+#'   last check, which decides when you are reminded to check again, moves only
+#'   when all three are checked.
 #'   Defaults to c("3L", "5L", "Y3L").
 #' @param ask Logical. Whether to ask for confirmation before
 #'   installing, dropping, or renaming. Defaults to TRUE.
@@ -383,9 +466,27 @@ check_builtin_conflicts <- function(version) {
 #' @param rename Named character vector of renames in the format
 #'   c("old_VS_code:version" = "new_VS_code") e.g.
 #'   c("NL:3L" = "NL_2006"). Defaults to NULL (no renames).
+#' @details
+#' An instrument counts as checked only when its index was downloaded and is
+#' valid. One that could not be downloaded, or whose index is malformed, is
+#' reported as failed, with the reason, and is not reported as up to date.
+#' The date of the last check, which the reminder on loading the package
+#' uses, is moved on only when every requested instrument was checked and
+#' every new value set installed; otherwise the reminder stays due.
 #' @return Invisibly returns a list with elements
-#'   \code{checked}, \code{new}, \code{installed},
-#'   \code{dropped}, and \code{renamed}.
+#'   \code{checked} (the instruments whose index was read and valid),
+#'   \code{failed} (a named character vector: for each instrument that
+#'   could not be checked, the reason), \code{new}, \code{installed},
+#'   \code{install_failed} (new value sets that could not be installed),
+#'   \code{migration_conflicts} (renames not applied because both codes are
+#'   installed; both value sets are kept), \code{migrations_unrecorded}
+#'   (renames made, and kept, whose record could not be saved),
+#'   \code{dropped}, and \code{renamed}. A list of renames that could not be
+#'   downloaded, or is malformed, or renames that could not be recorded,
+#'   appear in \code{failed} as \code{"migrations"}; that, or a conflict,
+#'   leaves the check incomplete, so the date of the last check is not moved
+#'   on. A rename made but not recorded is recorded by the next run, without
+#'   being made again.
 #' @export
 #' @examples
 #' \dontrun{
@@ -415,15 +516,43 @@ update_value_sets <- function(versions = c("3L", "5L", "Y3L"),
                               drop     = NULL,
                               rename   = NULL) {
 
+  # Value sets live in an environment shared by the whole R process, and the
+  # cache they are written to is shared by every session on the server. An app
+  # on a public server must not change either, so this refuses there. See
+  # DEPLOY.md.
+  if (.online_now())
+    stop("update_value_sets() is disabled while the app is running online. ",
+         "Value sets are shared by every session on the server, so they are ",
+         "updated by whoever maintains the deployment, not from the app.",
+         call. = FALSE)
+
+  # Normalised here, as everywhere else: "5l" was not recognised, and an
+  # unknown version was only noticed deep in the installer (review AI02).
+  if (!is.character(versions) || !length(versions))
+    stop("Argument 'versions' must name at least one instrument: ",
+         paste(.cache_versions, collapse = ", "), ".", call. = FALSE)
+  versions <- unique(vapply(versions, .norm_version, character(1L),
+                            arg = "versions", USE.NAMES = FALSE))
+
   dropped  <- character(0)
   renamed  <- character(0)
 
   # --------------------------------------------------------
   # 0. Apply any pending migrations from the repository
   # --------------------------------------------------------
-  if (curl::has_internet()) {
-    apply_pending_migrations(ask = ask)
+  # Its outcome counts towards whether the check completed: a renames list
+  # that could not be downloaded used to pass for an empty one, and the
+  # last-checked date moved on (review Q11).
+  migrations <- NULL
+  if (.has_internet()) {
+    migrations <- apply_pending_migrations(ask = ask)
   }
+  mig_conflicts <- if (is.list(migrations)) migrations$conflicts else character(0)
+  # Renames made whose record could not be saved (verification V02): kept,
+  # but the migration step is not complete.
+  mig_unrecorded <- if (is.list(migrations) &&
+                        identical(migrations$status, "unrecorded"))
+    migrations$applied else character(0)
 
   # --------------------------------------------------------
   # 1. Handle drops first
@@ -469,30 +598,73 @@ update_value_sets <- function(versions = c("3L", "5L", "Y3L"),
   # --------------------------------------------------------
   # 3. Check for new value sets
   # --------------------------------------------------------
-  if (!curl::has_internet()) {
-    message("eq5dsuite: No internet connection available.")
-    return(invisible(list(
-      checked   = versions,
-      new       = character(0),
-      installed = character(0),
-      dropped   = dropped,
-      renamed   = renamed
-    )))
+  # An instrument is "checked" only when its index was read and is valid;
+  # anything else is "failed", with the reason. A failed download used to be
+  # skipped, which left nothing new and so reported everything up to date --
+  # and moved the date of the last check on, silencing the reminder.
+  result <- function(checked, failed, new = character(0),
+                     installed = character(0),
+                     install_failed = character(0))
+    invisible(list(checked = checked, failed = failed, new = new,
+                   installed = installed, install_failed = install_failed,
+                   migration_conflicts = mig_conflicts,
+                   migrations_unrecorded = mig_unrecorded,
+                   dropped = dropped, renamed = renamed))
+  # What could not be checked, in words.
+  what <- function(n) ifelse(n == "migrations",
+                             if (length(mig_unrecorded))
+                               "the value set renames (made, but not recorded)"
+                             else "the value set renames",
+                             paste0("EQ-5D-", n))
+  not_recorded <- paste0(
+    "eq5dsuite: The date of the last check was not updated, so you will ",
+    "be reminded again. Run update_value_sets() later to try again.")
+
+  # The reminder date is one date for every instrument, so it moves only
+  # when every instrument was checked: a check of the EQ-5D-5L alone used to
+  # silence the reminder for the EQ-5D-3L and EQ-5D-Y-3L too (review AI02).
+  all_checked_versions <- function() all(.cache_versions %in% checked)
+  partial_note <- paste0(
+    "eq5dsuite: Only ", paste0("EQ-5D-", versions, collapse = ", "),
+    if (length(versions) == 1L) " was" else " were",
+    " checked, so the date of the last check was not updated. Run ",
+    "update_value_sets() without `versions` to check every instrument.")
+
+  if (!.has_internet()) {
+    message("eq5dsuite: No internet connection available. ",
+            "No value sets were checked.")
+    return(result(character(0),
+                  stats::setNames(rep("no internet connection",
+                                      length(versions)), versions)))
   }
 
   all_new       <- list()
   all_installed <- character(0)
+  checked       <- character(0)
+  failed        <- stats::setNames(character(0), character(0))
+  if (is.list(migrations) && !migrations$status %in% c("ok", "conflict"))
+    failed[["migrations"]] <- if (!is.null(migrations$reason)) migrations$reason
+      else paste0("renames not applied: ", paste(migrations$failed, collapse = ", "))
 
   for (version in versions) {
     message("eq5dsuite: Checking EQ-5D-", version,
             " value sets...")
 
-    available <- fetch_available_value_sets(version)
-    if (is.null(available)) next
+    idx <- .check_vs_index(version)
+    if (!isTRUE(idx$ok)) {
+      failed[[version]] <- idx$reason
+      message("eq5dsuite: EQ-5D-", version, " could not be checked: ",
+              idx$reason, ".")
+      next
+    }
+    checked   <- c(checked, version)
+    available <- idx$data
 
     installed_codes <- get_installed_vs_codes(version)
-    new_codes       <- setdiff(available$VS_code,
-                               installed_codes)
+    # Compared without regard to case, as codes are looked up: an installed
+    # "GB" listed as "gb" is not new (review AI02).
+    new_codes <- unique(available$VS_code[
+      !toupper(available$VS_code) %in% toupper(installed_codes)])
 
     if (length(new_codes) == 0) {
       message("eq5dsuite: EQ-5D-", version,
@@ -511,16 +683,30 @@ update_value_sets <- function(versions = c("3L", "5L", "Y3L"),
     all_new[[version]] <- new_rows
   }
 
+  all_checked <- all_checked_versions()
+
+  conflict_note <- if (length(mig_conflicts))
+    paste0(" ", length(mig_conflicts), " value set rename(s) could not be ",
+           "applied because both codes are installed: ",
+           paste(mig_conflicts, collapse = ", "), ".")
+
   if (length(all_new) == 0) {
-    message("\neq5dsuite: All value sets are up to date.")
-    set_last_checked()
-    return(invisible(list(
-      checked   = versions,
-      new       = character(0),
-      installed = character(0),
-      dropped   = dropped,
-      renamed   = renamed
-    )))
+    if (length(failed) == 0L && !length(mig_conflicts)) {
+      message("\neq5dsuite: All value sets are up to date.",
+              if (!all_checked) paste0("\n", partial_note))
+      if (all_checked) set_last_checked()
+    } else if (length(failed) == 0L) {
+      message("\neq5dsuite: No new value sets.", conflict_note, "\n",
+              not_recorded)
+    } else {
+      message("\neq5dsuite: Could not check ",
+              paste(what(names(failed)), collapse = ", "), ".",
+              if (length(checked))
+                paste0(" No new value sets for ",
+                       paste0("EQ-5D-", checked, collapse = ", "), "."),
+              "\n", not_recorded)
+    }
+    return(result(checked, failed))
   }
 
   # Ask for confirmation
@@ -533,17 +719,13 @@ update_value_sets <- function(versions = c("3L", "5L", "Y3L"),
     )
     if (tolower(trimws(response)) != "y") {
       message("eq5dsuite: Update cancelled.")
-      return(invisible(list(
-        checked   = versions,
-        new       = unlist(lapply(all_new, `[[`, "VS_code")),
-        installed = character(0),
-        dropped   = dropped,
-        renamed   = renamed
-      )))
+      return(result(checked, failed,
+                    new = unname(unlist(lapply(all_new, `[[`, "VS_code")))))
     }
   }
 
   # Install new value sets
+  install_failed <- character(0)
   for (version in names(all_new)) {
     new_rows <- all_new[[version]]
     for (i in seq_len(nrow(new_rows))) {
@@ -556,25 +738,33 @@ update_value_sets <- function(versions = c("3L", "5L", "Y3L"),
         message("\u2705 ", vs_code, " installed successfully")
       } else {
         message("\u274c ", vs_code, " could not be installed")
+        install_failed <- c(install_failed, vs_code)
       }
     }
   }
 
-  set_last_checked()
-
   # Check for conflicts between built-in and user-defined
-  for (v in versions) {
+  for (v in checked) {
     check_builtin_conflicts(v)
   }
 
-  message("\neq5dsuite: Update complete. ",
-          length(all_installed), " value set(s) installed.")
+  complete <- length(failed) == 0L && length(install_failed) == 0L &&
+    !length(mig_conflicts)
+  if (complete && all_checked) set_last_checked()
+  if (complete && !all_checked) message(partial_note)
+  message("\neq5dsuite: ",
+          if (complete) "Update complete. " else "Update incomplete. ",
+          length(all_installed), " value set(s) installed.",
+          if (length(install_failed))
+            paste0(" Could not install: ",
+                   paste(install_failed, collapse = ", "), "."),
+          if (length(failed))
+            paste0(" Could not check: ",
+                   paste(what(names(failed)), collapse = ", "), "."),
+          conflict_note,
+          if (!complete) paste0("\n", not_recorded))
 
-  invisible(list(
-    checked   = versions,
-    new       = unlist(lapply(all_new, `[[`, "VS_code")),
-    installed = all_installed,
-    dropped   = dropped,
-    renamed   = renamed
-  ))
+  result(checked, failed,
+         new = unname(unlist(lapply(all_new, `[[`, "VS_code"))),
+         installed = all_installed, install_failed = install_failed)
 }

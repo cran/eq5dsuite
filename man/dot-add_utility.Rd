@@ -9,17 +9,20 @@
 \arguments{
 \item{df}{A data frame containing the state data. The state must be included in the data frame as a character vector under the column named `state`.}
 
-\item{eq5d_version}{A character string specifying the version of EQ-5D, i.e. 3L or 5L.}
+\item{eq5d_version}{A character string specifying the version of EQ-5D:
+"3L", "5L" or "Y3L". Matching is case-insensitive.}
 
-\item{country}{A character string representing the name of the country. This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
+\item{country}{A country code or value set code identifying the value set
+to use, as listed by \code{eqvs_display()}. Matching is case-insensitive.
+For countries with more than one value set (for example Germany, with
+\code{"DE_TTO"} and \code{"DE_VAS"}), the value set code must be
+given; supplying the country code alone raises an error listing the
+available codes.}
 }
 \value{
-A data frame with an additional column named `utility` containing the calculated utility values. If the input country name is not found in the country_codes dataset, a list of available codes is printed, and subsequentyl an error message is displayed and the function stops.
+A data frame with an additional column named `utility` containing the calculated utility values. If the input country name is not found in the country_codes dataset, a list of available codes is printed, and subsequently an error message is displayed and the function stops.
 }
 \description{
 This function adds utility values to a data frame based on a specified version of EQ-5D and a country name.
 }
-\examples{
-df <- data.frame(state = c("11111", "11123", "32541"))
-.add_utility(df, "5L", "DK")
-}
+\keyword{internal}

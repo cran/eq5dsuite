@@ -19,9 +19,4 @@ This internal function generates a vector of colours based on the specified base
 Currently only green and orange colours are implemented. 
 The wrapper is used in Figures 2.2-2.4.
 }
-\examples{
-# generate 10 colours for base colour "green"
-.gen_colours("green", 10)
-# generate 7 colours for base colour "orange"
-.gen_colours("orange", 7)
-}
+\keyword{internal}

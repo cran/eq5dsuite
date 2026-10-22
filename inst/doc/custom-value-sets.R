@@ -47,8 +47,19 @@ head(custom_vs)
 #   saveOption  = 2  # saves to user cache
 # )
 
+## ----save-vs-path, eval = FALSE-----------------------------------------------
+# eqvs_add(
+#   custom_vs,
+#   version     = "3L",
+#   country     = "My Country",
+#   countryCode = "MC",
+#   VSCode      = "MY_VS",
+#   saveOption  = 3,
+#   savePath    = "~/my-eq5d-value-sets"
+# )
+
 ## ----load-vs, eval = FALSE----------------------------------------------------
-# eqvs_load(country = "MY_VS", version = "3L")
+# eqvs_load(loadPath = "~/my-eq5d-value-sets")
 
 ## ----drop-vs, eval = FALSE----------------------------------------------------
 # eqvs_drop(

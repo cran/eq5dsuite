@@ -12,7 +12,10 @@ update_value_sets(
 )
 }
 \arguments{
-\item{versions}{Character vector. Which instruments to check.
+\item{versions}{Character vector. Which instruments to check: any of
+\code{"3L"}, \code{"5L"} and \code{"Y3L"}, in any case. The date of the
+last check, which decides when you are reminded to check again, moves only
+when all three are checked.
 Defaults to c("3L", "5L", "Y3L").}
 
 \item{ask}{Logical. Whether to ask for confirmation before
@@ -28,8 +31,19 @@ c("NL:3L" = "NL_2006"). Defaults to NULL (no renames).}
 }
 \value{
 Invisibly returns a list with elements
-  \code{checked}, \code{new}, \code{installed},
-  \code{dropped}, and \code{renamed}.
+  \code{checked} (the instruments whose index was read and valid),
+  \code{failed} (a named character vector: for each instrument that
+  could not be checked, the reason), \code{new}, \code{installed},
+  \code{install_failed} (new value sets that could not be installed),
+  \code{migration_conflicts} (renames not applied because both codes are
+  installed; both value sets are kept), \code{migrations_unrecorded}
+  (renames made, and kept, whose record could not be saved),
+  \code{dropped}, and \code{renamed}. A list of renames that could not be
+  downloaded, or is malformed, or renames that could not be recorded,
+  appear in \code{failed} as \code{"migrations"}; that, or a conflict,
+  leaves the check incomplete, so the date of the last check is not moved
+  on. A rename made but not recorded is recorded by the next run, without
+  being made again.
 }
 \description{
 Connects to the eq5dsuite value sets repository and checks
@@ -41,6 +55,14 @@ sets before checking for updates.
 This function requires an internet connection for checking
 and installing new value sets. Drop and rename operations
 work offline.
+
+
+An instrument counts as checked only when its index was downloaded and is
+valid. One that could not be downloaded, or whose index is malformed, is
+reported as failed, with the reason, and is not reported as up to date.
+The date of the last check, which the reminder on loading the package
+uses, is moved on only when every requested instrument was checked and
+every new value set installed; otherwise the reminder stays due.
 }
 \examples{
 \dontrun{

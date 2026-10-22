@@ -15,53 +15,127 @@ dir.create2 <- function(path, ...) {
   }
 }
 
-# .fixCountries <- function(countries, EQvariant = '5L') {
-#   pkgenv <- getOption("eq.env")
-#   cntrs <- rbind(pkgenv$country_codes[[EQvariant]], pkgenv[[paste0("user_defined_", EQvariant)]])
-#   
-#   sapply(countries, function(country) {
-#     tmp <- which(toupper(as.matrix(cntrs)) == toupper(country), arr.ind = T)
-#     if(nrow(tmp))  return(cntrs$ISO3166Alpha2[tmp[1,1]])
-#     NA
-#   })
-# }
+# Normalise an EQ-5D version argument.
+#
+# Version arguments are documented as accepting either case, and several
+# functions validated them with toupper() but then branched on an upper-case
+# literal, so a lower-case version reached the wrong branch: "3l" admitted
+# levels 4 and 5 for a three-level instrument, and .get_lfs("12345", "5l")
+# returned a three-digit Level Frequency Score. This is the single place where
+# a version argument is checked, so that a canonical value reaches every
+# branch that depends on it.
+#
+# `allowed` is the set of canonical versions the calling function accepts;
+# `arg` names the argument in the error message.
+.norm_version <- function(version, allowed = .cache_versions,
+                          arg = "version") {
+  if (!is.character(version) || length(version) != 1L || is.na(version))
+    stop("Argument '", arg, "' must be a single string, one of: ",
+         paste(allowed, collapse = ", "), ".", call. = FALSE)
+  out <- toupper(trimws(version))
+  if (!out %in% allowed)
+    stop("Unknown EQ-5D version '", version, "'. Expected one of: ",
+         paste(allowed, collapse = ", "), ".", call. = FALSE)
+  out
+}
 
 .fixCountries <- function(countries, EQvariant = '5L') {
   pkgenv <- getOption("eq.env")
+
+  EQvariant <- .norm_version(EQvariant, arg = "EQvariant")
+
+  # Fail loudly and specifically on a malformed country table. Previously any
+  # structural problem here produced NA, which callers reported as "No valid
+  # countries listed" -- pointing the user at their `country` argument rather
+  # than at the real fault.
   cc <- pkgenv$country_codes[[EQvariant]]
+  problem <- .validate_vs_meta(
+    cc, paste0("The built-in value set table for EQ-5D-", EQvariant))
+  if (length(problem))
+    stop(problem,
+         "\n  This indicates a corrupted eq5dsuite installation or package ",
+         "environment. Try restarting R and reinstalling eq5dsuite.",
+         call. = FALSE)
+
   ud <- pkgenv[[paste0("user_defined_", EQvariant)]]
+  if (!is.null(ud)) {
+    problem <- .validate_vs_meta(
+      ud, paste0("The user-defined value set table for EQ-5D-", EQvariant))
+    if (length(problem)) {
+      warning(problem,
+              "\n  These user-defined value sets will be ignored for now. ",
+              "Re-add them with eqvs_add().", call. = FALSE)
+      ud <- NULL
+    }
+  }
+
   if (!is.null(ud) && nrow(ud) > 0) {
-    common_cols <- intersect(colnames(cc), colnames(ud))
-    cntrs <- rbind(cc[, common_cols, drop = FALSE],
-                   ud[, common_cols, drop = FALSE])
+    # Both tables share the same schema, so no column reconciliation is needed.
+    cntrs <- rbind(cc, ud)
+    rownames(cntrs) <- NULL
   } else {
     cntrs <- cc
   }
-  
+
+  match_one <- function(country) {
+    # An exact value set code always wins over a country code match. Without
+    # this, adding a user-defined set that reuses a built-in country code (say
+    # countryCode = "GB") would make the built-in "GB" value set unreachable,
+    # because every way of naming it would look ambiguous.
+    exact_vs <- which(toupper(cntrs$VS_code) == toupper(country))
+    if (length(exact_vs) == 1L) {
+      return(cntrs$VS_code[exact_vs])
+    }
+
+    which(toupper(cntrs$Country_code) == toupper(country) |
+            toupper(cntrs$VS_code) == toupper(country), arr.ind = TRUE)
+  }
+
   result <- sapply(countries, function(country) {
-    matched_rows <- which(toupper(cntrs$Country_code) == toupper(country) | 
-                            toupper(cntrs$VS_code) == toupper(country), arr.ind = TRUE)
-    
-    if (length(matched_rows) == 0) {
-      return(NA)
-    } else if (length(matched_rows) == 1) {
-      return(cntrs$VS_code[matched_rows])
-    } else {
-      # If multiple value sets exist for the country, ask the user to specify
-      message(paste0("There are ", length(matched_rows), " value sets available for country code '", country, "'."))
-      options_table <- cntrs[matched_rows, c("Version", "Name", "Country_code", "VS_code", "doi")]
-      print(options_table)
-      
-      # Ask user to input the VS_code
-      repeat {
-        user_input <- readline(prompt = "Please enter the VS_code you would like to use: ")
-        if (user_input %in% cntrs$VS_code[matched_rows]) {
-          return(user_input)
-        } else {
-          message("Invalid VS_code. Please enter one from the table above.")
-        }
+    matched_rows <- match_one(country)
+    if (is.character(matched_rows)) return(matched_rows)
+
+    # Deprecated alias: the United Kingdom used to be coded "UK"; it is now
+    # "GB", the ISO 3166-1 alpha-2 code. Only fall back to "GB" when "UK"
+    # matched nothing, so a user-defined value set still coded "UK" keeps
+    # working and is never silently redirected.
+    if (length(matched_rows) == 0L &&
+        is.character(country) && toupper(country) == "UK") {
+      gb <- match_one("GB")
+      if (length(gb) > 0L) {
+        rlang::inform(
+          paste0(
+            "eq5dsuite: the value set code \"UK\" is deprecated; ",
+            "use \"GB\" instead.\n",
+            "  The United Kingdom value sets now use the ISO 3166-1 alpha-2 ",
+            "code \"GB\".\n",
+            "  \"UK\" still works for now and selects the same value set."
+          ),
+          .frequency    = "once",
+          .frequency_id = "eq5dsuite_uk_to_gb"
+        )
+        if (is.character(gb)) return(gb)
+        matched_rows <- gb
       }
     }
+
+    if (length(matched_rows) == 0) {
+      return(NA)
+    }
+    if (length(matched_rows) == 1) {
+      return(cntrs$VS_code[matched_rows])
+    }
+
+    # More than one value set shares this country code. This used to prompt
+    # with readline() in a repeat loop, which never terminates in a
+    # non-interactive session and makes the result depend on console input
+    # rather than on the call. Fail with an actionable error instead, in every
+    # kind of session.
+    stop("Multiple value sets are available for country code '", country,
+         "': ", paste(cntrs$VS_code[matched_rows], collapse = ", "),
+         ". Please specify one of these value set codes. See ",
+         "eqvs_display(version = \"", EQvariant, "\") for the full list.",
+         call. = FALSE)
   }, USE.NAMES = TRUE)
   
   return(result)

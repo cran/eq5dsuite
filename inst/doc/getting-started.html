@@ -48,8 +48,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -373,37 +374,37 @@ see all available sets:</p>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;       3L              Canada           CA      CA</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;       3L               Chile           CL      CL</span></span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;       3L               China           CN      CN</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;       3L             Germany           DE  DE_TTO</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;       3L       Germany (VAS)           DE  DE_VAS</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;       3L             Denmark           DK      DK</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;       3L               Spain           ES      ES</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;       3L       Finland (VAS)           FI  FI_VAS</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;       3L              France           FR      FR</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;       3L             Hungary           HU      HU</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;       3L                Iran           IR      IR</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;       3L               Italy           IT      IT</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;       3L             Denmark           DK      DK</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;       3L       Finland (VAS)           FI  FI_VAS</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;       3L              France           FR      FR</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;       3L             Germany           DE  DE_TTO</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;       3L       Germany (VAS)           DE  DE_VAS</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;       3L             Hungary           HU      HU</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;       3L                Iran           IR      IR</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;       3L               Italy           IT      IT</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;       3L               Japan           JP      JP</span></span>
 <span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;       3L              Jordan           JO      JO</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;       3L               Japan           JP      JP</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;       3L               Korea           KR      KR</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;       3L           Sri Lanka           LK      LK</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;       3L      Malaysia (VAS)           MY  MY_VAS</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;       3L    Netherlands_2006           NL NL_2006</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;       3L   New Zealand (VAS)           NZ  NZ_VAS</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;       3L            Pakistan           PK      PK</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;       3L              Poland           PL      PL</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;       3L            Portugal           PT      PT</span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;       3L              Sweden           SE      SE</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;       3L           Singapore           SG      SG</span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;       3L            Slovenia           SI  SI_TTO</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;       3L      Slovenia (VAS)           SI  SI_VAS</span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;       3L            Thailand           TH      TH</span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;       3L             Tunisia           TN      TN</span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;       3L Trinidad and Tobago           TT      TT</span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;       3L              Taiwan           TW      TW</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;       3L      United Kingdom           UK      UK</span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;       3L                 USA           US      US</span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;       3L            Zimbabwe           ZW      ZW</span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;       3L    Netherlands_2026           NL NL_2026</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;       3L      Malaysia (VAS)           MY  MY_VAS</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;       3L  Netherlands (2006)           NL NL_2006</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;       3L  Netherlands (2026)           NL NL_2026</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;       3L   New Zealand (VAS)           NZ  NZ_VAS</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;       3L            Pakistan           PK      PK</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;       3L              Poland           PL      PL</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;       3L            Portugal           PT      PT</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;       3L           Singapore           SG      SG</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;       3L            Slovenia           SI  SI_TTO</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;       3L      Slovenia (VAS)           SI  SI_VAS</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;       3L         South Korea           KR      KR</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;       3L               Spain           ES      ES</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;       3L           Sri Lanka           LK      LK</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;       3L              Sweden           SE      SE</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;       3L              Taiwan           TW      TW</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;       3L            Thailand           TH      TH</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;       3L Trinidad and Tobago           TT      TT</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;       3L             Tunisia           TN      TN</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;       3L      United Kingdom           GB      GB</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;       3L       United States           US      US</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;       3L            Zimbabwe           ZW      ZW</span></span>
 <span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;                                  doi</span></span>
 <span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2008.00468.x</span></span>
 <span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2008.00468.x</span></span>
@@ -412,39 +413,39 @@ see all available sets:</p>
 <span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt;           10.1007/s10198-024-01701-2</span></span>
 <span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt;             10.1177/0272989X15613521</span></span>
 <span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt;         10.1371/journal.pone.0031115</span></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;          10.1016/j.jval.2011.09.002.</span></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2011.09.002</span></span>
 <span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2014.05.007</span></span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;            10.1007/s10198-004-0264-z</span></span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;             10.1177/1403494809105287</span></span>
 <span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;  https://eq-5dpublications.euroqol.o</span></span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;             10.1177/1403494809105287</span></span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;           10.1177/0272989X0102100102</span></span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;            10.1007/s10198-011-0351-x</span></span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;            10.1007/s10198-004-0264-z</span></span>
 <span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;  https://eq-5dpublications.euroqol.o</span></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;            10.1007/s10198-011-0351-x</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2020.03.019</span></span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;                  10.5812/ircmj.21584</span></span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2013.04.008</span></span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2020.03.019</span></span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;                  10.5812/ircmj.21584</span></span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2013.04.008</span></span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;                      10.1002/hec.673</span></span>
 <span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt;           10.1007/s10198-024-01712-z</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;                      10.1002/hec.673</span></span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2009.00579.x</span></span>
-<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-014-0906-2</span></span>
-<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2011.11.024</span></span>
-<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;                     10.1002/hec.1124</span></span>
-<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;                      10.1002/hec.741</span></span>
-<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;           10.1007/s41669-023-00437-8</span></span>
-<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2009.00596.x</span></span>
-<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-013-0448-z</span></span>
-<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-013-0496-4</span></span>
-<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;            10.1007/s40273-014-0142-1</span></span>
-<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;               10.2478/sjph-2020-0002</span></span>
-<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;               10.2478/sjph-2020-0003</span></span>
-<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2011.06.005</span></span>
-<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;           10.1007/s11136-020-02730-z</span></span>
-<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.vhri.2016.07.010</span></span>
-<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jfma.2012.12.015</span></span>
-<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;     10.1097/00005650-199711000-00002</span></span>
-<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;     10.1097/00005650-200503000-00003</span></span>
-<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;               10.1186/1478-7954-1-11</span></span>
-<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt;           10.1007/s10198-025-01892-2</span></span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2011.11.024</span></span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;                     10.1002/hec.1124</span></span>
+<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;           10.1007/s10198-025-01892-2</span></span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;                      10.1002/hec.741</span></span>
+<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;           10.1007/s41669-023-00437-8</span></span>
+<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2009.00596.x</span></span>
+<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-013-0448-z</span></span>
+<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;            10.1007/s40273-014-0142-1</span></span>
+<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;               10.2478/sjph-2020-0002</span></span>
+<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;               10.2478/sjph-2020-0003</span></span>
+<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;     10.1111/j.1524-4733.2009.00579.x</span></span>
+<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;           10.1177/0272989X0102100102</span></span>
+<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-014-0906-2</span></span>
+<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;            10.1007/s11136-013-0496-4</span></span>
+<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jfma.2012.12.015</span></span>
+<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.jval.2011.06.005</span></span>
+<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;           10.1016/j.vhri.2016.07.010</span></span>
+<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;           10.1007/s11136-020-02730-z</span></span>
+<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;     10.1097/00005650-199711000-00002</span></span>
+<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;     10.1097/00005650-200503000-00003</span></span>
+<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt;               10.1186/1478-7954-1-11</span></span>
 <span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a><span class="co">#&gt; No user-defined value sets available.</span></span></code></pre></div>
 </div>
 <div id="calculating-eq-5d-values" class="section level2">
@@ -468,7 +469,7 @@ activities, pain/discomfort, anxiety/depression):</p>
 <span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># Calculate EQ-5D-3L values using the UK value set</span></span>
 <span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>eq5d3l_data<span class="sc">$</span>value <span class="ot">&lt;-</span> <span class="fu">eq5d3l</span>(</span>
 <span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  eq5d3l_data,</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;UK&quot;</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;GB&quot;</span>,</span>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>  <span class="at">dim.names =</span> <span class="fu">c</span>(<span class="st">&quot;mo&quot;</span>, <span class="st">&quot;sc&quot;</span>, <span class="st">&quot;ua&quot;</span>, <span class="st">&quot;pd&quot;</span>, <span class="st">&quot;ad&quot;</span>)</span>
 <span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>)</span>
 <span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a></span>

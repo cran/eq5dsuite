@@ -3,13 +3,10 @@
 #' This function takes in a list of parameters, which would be column names of the input data frame, and checks if they are null. Any nulls are replaced with default values, and the updated list of parameters is returned.
 #'
 #' @param df a data frame; only used/supplied if levels_fu needs to be defined
-#' @param ... a list of parameters consisting of any/all of `names_eq5d`, `name_fu`, `levels_fu`, `eq5d_version`, and `name_vas`.
+#' @param ... a list of parameters consisting of any/all of `names_eq5d`, `name_fu`, `levels_fu`, `eq5d_version`, `name_vas`, and `name_utility`.
 #' @return a list of parameters with null entries replaced with default values.
-#' @examples
-#' .get_names(names_eq5d = c("mo", "sc", "ua", "pd", "ad"))
-#' .get_names(names_eq5d = NULL, eq5d_version = NULL, name_vas = NULL)
-#' @export
 #' 
+#' @keywords internal
 .get_names <- function(df = NULL, ...) {
   
   # read off input parameters and their supplied names
@@ -37,7 +34,7 @@
     args[["name_fu"]] <- name_fu
     # check also levels of fu
     if (is.null(levels_fu)) {
-      message("No ordering of time suppled. The time variable will be factorised according to the order in the data frame.")
+      message("No ordering of time supplied. The time variable will be factorised according to the order in the data frame.")
       levels_fu <- unique(df[[name_fu]])
     }
     args[["levels_fu"]] <- levels_fu
@@ -46,10 +43,34 @@
   if ("eq5d_version" %in% names_list) {
     eq5d_version <- args$eq5d_version
     if (is.null(eq5d_version)) {
-      message("No EQ-5D version was provided. 5L version will be used.")
+      # The default matters more than a message suggests. EQ-5D-3L levels are a
+      # subset of the EQ-5D-5L levels, so 3L responses valued on a 5L value set
+      # look perfectly in range and come back with a different number: state
+      # 33333 is -0.594 as 3L and 0.604 as 5L. The bundled example_data is 3L,
+      # so the default disagrees with the package's own example dataset.
+      hint <- ""
+      nm <- args$names_eq5d
+      if (!is.null(df) && !is.null(nm) && all(nm %in% names(df))) {
+        lv <- suppressWarnings(
+          as.integer(as.matrix(as.data.frame(df)[, nm, drop = FALSE])))
+        # Only values that are EQ-5D levels at all carry information here.
+        # Anything else -- a missing-data code such as the 9 in example_data --
+        # is coerced to NA by .prep_eq5d() whichever instrument this is.
+        lv <- lv[!is.na(lv) & lv %in% 1:5]
+        if (length(lv) && all(lv %in% 1:3))
+          hint <- paste0(" All observed levels are between 1 and 3, so this ",
+                         "may be EQ-5D-3L data.")
+      }
+      warning("No EQ-5D version was provided; the EQ-5D-5L is assumed.", hint,
+              " Specify the instrument explicitly, for example ",
+              "eq5d_version = \"3L\".", call. = FALSE)
       eq5d_version <- "5L"
     }
-    args[["eq5d_version"]] <- eq5d_version
+    # Canonicalise the case here, so that every downstream branch on the
+    # version -- the level-range check in .prep_eq5d(), the Level Frequency
+    # Score in .get_lfs(), the worst-state label, the "any problems" row label
+    # -- sees the same upper-case form. See .norm_version().
+    args[["eq5d_version"]] <- .norm_version(eq5d_version, arg = "eq5d_version")
   }
   # check name_vas
   if ("name_vas" %in% names_list) {
@@ -59,6 +80,15 @@
       name_vas <- "vas"
     }
     args[["name_vas"]] <- name_vas
+  }
+  # check name_utility
+  if ("name_utility" %in% names_list) {
+    name_utility <- args$name_utility
+    if (is.null(name_utility)) {
+      message("Argument `name_utility` not supplied. Default column name will be used: utility")
+      name_utility <- "utility"
+    }
+    args[["name_utility"]] <- name_utility
   }
   
   return(args)
@@ -70,16 +100,18 @@
 #' If at least one domain contains a missing entry, the whole LFS is set to be NA.
 #'
 #' @param s A character vector representing the EQ-5D state, e.g. 11123.
-#' @param eq5d_version A character string specifying the version of EQ-5D, i.e. 3L or 5L.
+#' @param eq5d_version A character string specifying the version of EQ-5D:
+#'   "3L", "5L" or "Y3L". Matching is case-insensitive.
 #' @return A character vector representing the calculated LFS.
-#' @examples
-#' .get_lfs("333", "3L") # returns 003
-#' .get_lfs("333", "5L") # returns 00300
-#' .get_lfs("12345", "5L") # returns 11111
-#' @export
 #' 
+#' @keywords internal
 .get_lfs <- function(s, eq5d_version) {
-  
+
+  # "5l" must select the five-level branch just as "5L" does. Without this the
+  # level-4 and level-5 counts were dropped and a three-digit LFS was returned
+  # for a five-level instrument.
+  eq5d_version <- .norm_version(eq5d_version, arg = "eq5d_version")
+
   # count occurrences of each digit; nchar(s) - nchar(gsub(...)) preserves NAs
   cnt <- function(s, ch) nchar(s) - nchar(gsub(ch, "", s, fixed = TRUE))
   # for any eq5d version need to count 1s, 2s and 3s
@@ -99,14 +131,17 @@
 #' This function adds utility values to a data frame based on a specified version of EQ-5D and a country name.
 #'
 #' @param df A data frame containing the state data. The state must be included in the data frame as a character vector under the column named `state`.
-#' @param eq5d_version A character string specifying the version of EQ-5D, i.e. 3L or 5L.
-#' @param country A character string representing the name of the country. This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.
-#' @return A data frame with an additional column named `utility` containing the calculated utility values. If the input country name is not found in the country_codes dataset, a list of available codes is printed, and subsequentyl an error message is displayed and the function stops.
-#' @examples
-#' df <- data.frame(state = c("11111", "11123", "32541"))
-#' .add_utility(df, "5L", "DK")
-#' @export
+#' @param eq5d_version A character string specifying the version of EQ-5D:
+#'   "3L", "5L" or "Y3L". Matching is case-insensitive.
+#' @param country A country code or value set code identifying the value set
+#'   to use, as listed by \code{eqvs_display()}. Matching is case-insensitive.
+#'   For countries with more than one value set (for example Germany, with
+#'   \code{"DE_TTO"} and \code{"DE_VAS"}), the value set code must be
+#'   given; supplying the country code alone raises an error listing the
+#'   available codes.
+#' @return A data frame with an additional column named `utility` containing the calculated utility values. If the input country name is not found in the country_codes dataset, a list of available codes is printed, and subsequently an error message is displayed and the function stops.
 #' 
+#' @keywords internal
 .add_utility <- function(df, eq5d_version, country) {
   
   pkgenv <- getOption("eq.env")
@@ -116,19 +151,11 @@
   if (is.na(country_code)) {
     message('No valid countries listed. These value sets are currently available.')
     eqvs_display(version = eq5d_version)
-    stop('Stopping.')
+    stop("No value set was found for country '", country, "'.", call. = FALSE)
   }
-  
+
   df$utility <- eq5d(x = df$state, country = country_code, version = eq5d_version)
-  # 
-  # # country identifiable; proceed to extract the data
-  # vs <- pkgenv[[paste0("vsets", eq5d_version, "_combined")]] %>%
-  #   select(state, !!(sym(country_code))) %>%
-  #   rename(utility = !!quo_name(country_code))
-  # 
-  # # merge with df
-  # df <- merge(df, vs, all.x = TRUE) 
-  
+
   return(df)
 }
 
@@ -142,19 +169,18 @@
 #' @param add_lss logical indicating whether the LSS (Level Sum Score) should be added
 #' @param add_lfs logical indicating whether the LFS (Level Frequency Score) should be added
 #' @param add_utility logical indicating whether the utility should be added
-#' @param eq5d_version character indicating the version of the EQ-5D questionnaire to use (either "3L" or "5L")
-#' @param country character indicating the country to retrieve the quality of life score for
+#' @param eq5d_version character indicating the version of the EQ-5D
+#'   questionnaire to use: "3L", "5L" or "Y3L". Matching is case-insensitive. \code{NULL}
+#'   leaves the instrument unspecified, in which case levels 1 to 5 are
+#'   accepted.
+#' @param country A country code or value set code identifying the value set
+#'   to use, as listed by \code{eqvs_display()}. Matching is case-insensitive.
+#'   For countries with more than one value set (for example Germany, with
+#'   \code{"DE_TTO"} and \code{"DE_VAS"}), the value set code must be
+#'   given; supplying the country code alone raises an error listing the
+#'   available codes.
 #' @return a modified data frame with EQ-5D domain columns renamed to default names, and, if necessary, with added columns for state, LSS, LFS, and/or utility. If any of the checks fail (e.g. EQ-5D columns are not in an integer format), an error message is displayed and the function is stopping.
-#' @examples
-#' set.seed(1234)
-#' df <- data.frame(mo = sample(1:5, 3), sc = sample(1:5, 3), 
-#'   ua = sample(1:5, 3), pd = sample(1:5, 3), ad = sample(1:5, 3))
-#' .prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"), 
-#'   add_state = TRUE, add_lss = TRUE)
-#' .prep_eq5d(df, names = c("mo", "sc", "ua", "pd", "ad"),
-#'   add_state = TRUE, add_lss = TRUE, add_lfs = TRUE, add_utility = TRUE,
-#'   eq5d_version = "5L", country = "ES")
-#' @export
+#' @keywords internal
 
 .prep_eq5d <- function(df, names,
                        add_state = FALSE,
@@ -166,31 +192,69 @@
 
   # confirm correct length
   if (length(names) != 5)
-    stop("Argument dim_names not of length 5. Stopping.")
+    stop("Argument dim_names not of length 5.", call. = FALSE)
+
+  # Validate and canonicalise the version before it is used. The range check
+  # below used to run first and compare against upper-case literals, so "3l"
+  # and "y3l" -- both documented as valid -- fell through to the five-level
+  # branch and levels 4 and 5 were accepted for a three-level instrument. The
+  # check that rejected an unknown version ran afterwards, so a bad version
+  # also produced a coercion warning before erroring.
+  if (!is.null(eq5d_version))
+    eq5d_version <- .norm_version(eq5d_version, arg = "eq5d_version")
 
   # confirm numeric format
   df_eq5d <- df[, names, drop = FALSE]
 
-  x <- as.matrix(df_eq5d)
-  xorig <- x
-  x[,] <- as.integer(x)
-  if(c(eq5d_version %in% c('3L', 'Y3L', 'XWR'),0)[1]) {
-    x[!x %in% 1:3] <- NA
-  } else {
-    x[!x %in% 1:5] <- NA
-  }
-  if(sum(is.na(as.vector(x)))>sum(is.na(as.vector(xorig)))) warning(paste0(sum(is.na(as.vector(x)))-sum(is.na(as.vector(xorig))), " observations were coerced to NAs as they were not interpretable as integer values in the range allowed by the EQ-5D descriptive system."))
-  df_eq5d[,] <- x
-
-  # confirm EQ-5D version if required
-  if (!is.null(eq5d_version))
-    if (!(tolower(eq5d_version) %in% c("3l", "5l", 'y3l')))
-      stop("EQ-5D version can only be 3L, 3l, Y3L, y3l, 5L or 5l. Stopping.")
+  # A NULL version leaves the instrument unknown; keep the wider range, as
+  # before, rather than discarding levels that may well be valid.
+  n_levels <- if (!is.null(eq5d_version) && eq5d_version %in% c("3L", "Y3L")) 3L else 5L
+  # Validation happens on the values as supplied, not on as.integer() of them:
+  # the old order truncated 1.9 to 1, which then passed the range check and
+  # was analysed as level 1. .clean_dim_matrix() rejects fractional and
+  # non-finite values as well as out-of-range ones, and reports all of them in
+  # one warning. See R/validate_dims.R.
+  x <- .clean_dim_matrix(df_eq5d, max_level = n_levels, what = "observation")
+  # Column-wise, not `df_eq5d[,] <- x`: the latter is a subscript error on a
+  # zero-row data frame.
+  for (k in seq_along(names)) df_eq5d[[k]] <- x[, k]
 
   df[, names] <- df_eq5d
 
+  # M-9: with nothing usable left there is no analysis to do, and the
+  # functions downstream failed on an empty frame with aggregate()'s "no rows
+  # to aggregate" or "incorrect number of dimensions". Say what happened.
+  if (nrow(df) > 0L && all(is.na(x)))
+    stop("None of the ", nrow(df), " observations hold a usable EQ-5D ",
+         "health state: every dimension is missing or outside the range ",
+         "allowed by the ",
+         if (is.null(eq5d_version)) "EQ-5D" else .eq5d_instrument(eq5d_version),
+         ".\n  Check `eq5d_version`, and check that missing values are coded ",
+         "as NA or as a value outside 1 to ",
+         if (!is.null(eq5d_version) && eq5d_version %in% c("3L", "Y3L")) 3 else 5,
+         ".", call. = FALSE)
+
   # rename EQ-5D columns to standard names
   std_names <- c("mo", "sc", "ua", "pd", "ad")
+
+  # M-17: the rename is positional, so reordering or renaming among the five
+  # is fine -- but a column that already carries a standard name and is not
+  # one of the five would be duplicated, and `df$mo` would then silently pick
+  # whichever came first. The analysis functions subset to the columns they
+  # need before calling, so this only fires when one of those columns really
+  # is called `mo`, `sc`, `ua`, `pd` or `ad`: a follow-up or ID column, say.
+  # There is no way to keep both, since the five standard names are what every
+  # function downstream reads.
+  clash <- setdiff(intersect(names(df), std_names), names)
+  if (length(clash))
+    stop("The data frame has ", if (length(clash) > 1L) "columns" else "a column",
+         " named ", paste0("\"", clash, "\"", collapse = ", "),
+         " that ", if (length(clash) > 1L) "are" else "is",
+         " not among the EQ-5D dimension columns given in `names_eq5d`.\n",
+         "  The analysis functions use \"mo\", \"sc\", \"ua\", \"pd\" and ",
+         "\"ad\" for the five dimensions, so such a column would be ",
+         "overwritten.\n  Please rename it before calling.", call. = FALSE)
+
   names(df)[match(names, names(df))] <- std_names
 
   # add additional columns if required
@@ -215,17 +279,32 @@
 #'
 #' @param df A data frame.
 #' @param name Column name in the data frame that contains follow-up information.
-#' @param levels Levels to factorise the FU variable into.
+#' @param levels Levels to factorise the FU variable into. Any value not among
+#'   them becomes \code{NA} and is excluded from the analysis, with a warning
+#'   naming the values responsible.
 #' @return A data frame with the follow-up variable renamed as "fu" and factorised.
-#' @examples
-#' df <- data.frame(id = c(1, 1, 2, 2),
-#'   visit = c("baseline", "follow-up", "baseline", "follow-up"))
-#' .prep_fu(df = df, name = "visit", levels = c("baseline", "follow-up"))
-#' @export
+#' @keywords internal
 
 .prep_fu <- function(df, name = NULL, levels = NULL) {
 
   names(df)[names(df) == name] <- "fu"
+
+  # factor() turns anything not in `levels` into NA, and the analysis functions
+  # then drop those rows. A misspelled or forgotten level used to remove
+  # respondents in silence, so say what is being lost and why. Values that were
+  # already NA are not the caller's mistake and are not counted.
+  unlisted <- !is.na(df$fu) & !as.character(df$fu) %in% as.character(levels)
+  if (any(unlisted)) {
+    bad <- unique(as.character(df$fu)[unlisted])
+    shown <- utils::head(bad, 10L)
+    warning(sum(unlisted), " row(s) will be excluded because their follow-up ",
+            "value is not one of the levels given in `levels_fu`: ",
+            paste0("\"", shown, "\"", collapse = ", "),
+            if (length(bad) > length(shown))
+              paste0(", and ", length(bad) - length(shown), " more"),
+            ".", call. = FALSE)
+  }
+
   df$fu <- factor(df$fu, levels = levels)
 
   return(df = df)
@@ -236,35 +315,59 @@
 #' The function prepares the data for VAS (Visual Analogue Scale) analyses. 
 #' 
 #' @param df A data frame.
-#' @param name Column name in the data frame that holds the VAS score. The column can only contain integers or NAs
-#' @return A modified data frame with the VAS score renamed to "vas". If any checks fail (e.g. column is not numeric), an error message is displayed and the function is stopping.
-#' @examples
-#' df <- data.frame(vas_score = c(20, 50, 80, NA, 100))
-#' .prep_vas(df = df, name = "vas_score")
-#' df <- data.frame(vas_score = c(20.5, 50, 80, NA, 100))
-#' .prep_vas(df = df, name = "vas_score")
-#' @export
+#' @param name Column name in the data frame that holds the VAS score. The EQ
+#'   VAS is recorded on a 0 to 100 integer scale. Values that are not whole
+#'   numbers are rounded to the nearest integer, with a warning; values outside
+#'   0 to 100, and anything that is not a number, become \code{NA}, also with a
+#'   warning.
+#' @return A modified data frame with the VAS score renamed to "vas", held as
+#'   an integer vector. The function does not stop on invalid input; it coerces
+#'   and warns.
 #' 
+#' @keywords internal
 .prep_vas <- function(df, name) {
   
   # extract data
   x <- as.vector(as.data.frame(df)[, name])
-  
-  
-  xorig <- x <- as.integer(x)
-  x[!x %in% 0:100] <- NA
-  if(sum(is.na(x))>sum(is.na(xorig))) warning(paste0(sum(is.na(x))>sum(is.na(xorig)), " observations were coerced to NAs as they were not interpretable as integer values in the range allowed by the EQ-5D descriptive system."))
-  df[,name] <- x
-  
-  # # remove NAs
-  # v <- v[!is.na(v)]
-  # # confirm numeric format
-  # if (!is.numeric(v))
-  #   stop("VAS column must be in a numeric format. Stopping.")
-  # # confirm integers only
-  # if (!all(floor(v) == v))
-  #   stop("VAS column can only contain integers or NAs. Stopping.")
-  
+
+  # Work from the numeric values. The previous version did
+  # `xorig <- x <- as.integer(x)`, which truncated -- a VAS of 20.5 silently
+  # became 20 -- and then compared the truncated vector against itself, so
+  # neither the rounding nor the out-of-range coercion could ever be counted.
+  # That is why the warning below used to report `TRUE` as its count.
+  #
+  # A factor is converted through its labels: as.numeric() on a factor returns
+  # the level codes, which for a VAS column would be silent nonsense.
+  if (is.factor(x)) x <- as.character(x)
+  xnum <- suppressWarnings(as.numeric(x))
+
+  # Out of range, or not a number at all, becomes NA. The range is checked on
+  # the value as recorded, before rounding: rounding first turned -0.4 and
+  # 100.4 into 0 and 100, scores the Validation page had reported as out of
+  # range and missing (review A13). It also runs before as.integer() so that
+  # a value too large for an integer cannot raise a second, redundant
+  # coercion warning from R itself.
+  xnum[!is.na(xnum) & !(is.finite(xnum) & xnum >= 0 & xnum <= 100)] <- NA_real_
+
+  # The EQ VAS is recorded as a whole number, so a value within the range that
+  # is not one is rounded rather than discarded -- but not silently. round()
+  # is R's usual rounding, which takes a half to the nearest even number.
+  rounded <- !is.na(xnum) & xnum != round(xnum)
+  if (any(rounded))
+    warning(sum(rounded), " VAS value(s) were not whole numbers and have been ",
+            "rounded to the nearest integer, as the EQ VAS is recorded on a ",
+            "0 to 100 integer scale.", call. = FALSE)
+  xnum <- round(xnum)
+  v <- as.integer(xnum)
+
+  coerced <- sum(is.na(v)) - sum(is.na(x))
+  if (coerced > 0)
+    warning(coerced, " VAS observation(s) were coerced to NAs as they were ",
+            "not interpretable as values in the range allowed by the EQ VAS ",
+            "(0 to 100).", call. = FALSE)
+
+  df[, name] <- v
+
   # all checks passed; rename column
   names(df)[names(df) == name] <- "vas"
 
@@ -272,26 +375,199 @@
   return(df)
 }
 
-#' Check the uniqueness of groups
-#' This function takes a data frame `df` and a vector of columns `group_by`, and checks whether the combinations of values in the columns specified by `group_by` are unique. If the combinations are not unique, a warning message is printed.
+#' Data checking/preparation: EQ-5D value variable
+#'
+#' Prepares a column of pre-calculated EQ-5D values for the
+#' \code{eq5d_utility_*} analyses. Those functions take the values as they
+#' are: nothing here recalculates them from the dimensions, and no value set
+#' is involved.
+#'
 #' @param df A data frame.
-#' @param group_by A character vector of column names in `df` that specify the groups to check for uniqueness.
-#' @return No return value, called for side effects: it will stop with an error if any group combinations are not unique.
-#' @examples
-#' df <- data.frame(id = c(1, 1, 1, 1, 2, 2),
-#'                  fu = rep(c("baseline", "follow-up"), 3),
-#'                  value = rnorm(6))
-#' .check_uniqueness(df, c("id", "fu"))
-#' @export
-.check_uniqueness <- function(df, group_by) {
+#' @param name Column name in the data frame that holds the EQ-5D values.
+#'   Anything that is not a number becomes \code{NA}, with a warning. A factor
+#'   is read through its labels, not its level codes.
+#' @return A modified data frame with the EQ-5D value column renamed to
+#'   "utility", held as a numeric vector. The function does not stop on
+#'   invalid input; it coerces and warns.
+#'
+#' @details
+#' No range check is applied at the lower end: EQ-5D values are negative for
+#' states regarded as worse than dead, and how negative depends on the value
+#' set. The upper end is fixed, though -- full health is 1 by construction --
+#' so values above 1 are reported as a warning. They are kept rather than
+#' discarded, because the likeliest cause is the wrong column, which the user
+#' should see and fix rather than have silently emptied.
+#'
+#' @keywords internal
+.prep_utility <- function(df, name) {
 
-  keys <- do.call(paste, c(df[group_by], list(sep = "\001")))
-  counts <- tabulate(match(keys, unique(keys)))
+  # extract data
+  x <- as.vector(as.data.frame(df)[, name])
 
-  if (!all(counts == 1L))
-    message(paste0("Warning: there are non-unique ",
-                   paste(group_by, collapse = "-"),
-                   " combinations."))
+  # A factor is converted through its labels: as.numeric() on a factor returns
+  # the level codes, which for a value column would be silent nonsense.
+  if (is.factor(x)) x <- as.character(x)
+  v <- suppressWarnings(as.numeric(x))
+
+  coerced <- sum(is.na(v)) - sum(is.na(x))
+  if (coerced > 0)
+    warning(coerced, " EQ-5D value(s) were coerced to NAs as they were not ",
+            "interpretable as numbers.", call. = FALSE)
+
+  # Inf and -Inf are not EQ-5D values (NaN is already NA). Kept, -Inf made
+  # the mean -Inf and the standard error NaN, and was counted as an
+  # observation (review AI06). Finite negative values are valid and kept.
+  nonfinite <- is.infinite(v)
+  if (any(nonfinite)) {
+    warning(sum(nonfinite), " EQ-5D value(s) were not finite numbers (Inf ",
+            "or -Inf) and have been set to NA.", call. = FALSE)
+    v[nonfinite] <- NA_real_
+  }
+
+  too_high <- sum(!is.na(v) & v > 1)
+  if (too_high > 0)
+    warning(too_high, " EQ-5D value(s) are greater than 1. EQ-5D values are ",
+            "at most 1, for full health, so check that `name_utility` names ",
+            "the column of EQ-5D values. They have been left unchanged.",
+            call. = FALSE)
+
+  df[, name] <- v
+
+  # all checks passed; rename column
+  names(df)[names(df) == name] <- "utility"
+
+  # return value
+  return(df)
+}
+
+#' Check that the columns an analysis function needs are present
+#'
+#' Every analysis function resolves its column arguments -- filling any left
+#' \code{NULL} with a default -- and then checks that the named columns exist.
+#' That check used to say only "Provided column names not in dataframe",
+#' naming neither the missing column nor the argument it came from. Since the
+#' defaults are supplied silently, the commonest cause was a default the caller
+#' never chose: a frame with the five EQ-5D columns and nothing else fails
+#' because \code{name_fu} defaulted to \code{"fu"}.
+#'
+#' @param df The data frame the columns must be in.
+#' @param ... Column names, each named by the argument that supplied it, for
+#'   example \code{.check_columns(df, names_eq5d = names_eq5d,
+#'   name_fu = name_fu)}. \code{NULL} arguments are skipped, as are arguments
+#'   the caller did not use.
+#' @return Invisibly \code{TRUE}. Called for its side effect of stopping when a
+#'   column is missing.
+#' @keywords internal
+.check_columns <- function(df, ...) {
+  args <- list(...)
+  args <- args[!vapply(args, function(a) is.null(a) || !length(a), logical(1L))]
+  have <- colnames(df)
+
+  problems <- character(0)
+  for (arg in names(args)) {
+    cols <- as.character(args[[arg]])
+    gone <- unique(cols[!cols %in% have])
+    if (length(gone))
+      problems <- c(problems,
+                    paste0("  ", paste0("\"", gone, "\"", collapse = ", "),
+                           " (from `", arg, "`)"))
+  }
+  if (!length(problems)) return(invisible(TRUE))
+
+  shown <- utils::head(have, 15L)
+  stop("These columns were not found in the data frame:\n",
+       paste(problems, collapse = "\n"),
+       "\n  The data frame has: ",
+       paste0("\"", shown, "\"", collapse = ", "),
+       if (length(have) > length(shown))
+         paste0(", and ", length(have) - length(shown), " more"),
+       ".\n  Column arguments left NULL are filled with defaults; see the ",
+       "messages above.",
+       call. = FALSE)
+}
+
+#' Shannon's indices for one categorical variable
+#'
+#' Computes Shannon's index H', its maximum, and Shannon's evenness index J',
+#' as described in chapter 4 of Devlin et al. (2020).
+#'
+#' \deqn{H' = -\sum_{i} p_i \log_2 p_i}
+#'
+#' summed over the categories that occur, where \eqn{p_i} is the proportion of
+#' observations in category \eqn{i}. Categories with no observations
+#' contribute nothing, since \eqn{0 \log_2 0 = 0}.
+#'
+#' \eqn{H'_{max} = \log_2 L}, where \eqn{L} is the number of categories the
+#' instrument allows -- not the number observed. \eqn{J' = H' / H'_{max}}
+#' therefore runs from 0, when every observation falls in one category, to 1,
+#' when they are spread evenly over all \eqn{L}.
+#'
+#' @param x A vector of observed categories. \code{NA}s are dropped.
+#' @param n_categories The number \eqn{L} of categories the instrument allows.
+#' @return A numeric vector of three elements, \code{H}, \code{Hmax} and
+#'   \code{J}. All three are \code{NA} when there is no observation to
+#'   summarise.
+#' @keywords internal
+.shannon <- function(x, n_categories) {
+  x <- x[!is.na(x)]
+  if (!length(x))
+    return(c(H = NA_real_, Hmax = NA_real_, J = NA_real_))
+
+  p <- table(x) / length(x)
+  p <- p[p > 0]
+  h <- -sum(p * log2(p))
+  hmax <- log2(n_categories)
+  c(H = h, Hmax = hmax, J = if (hmax > 0) h / hmax else NA_real_)
+}
+
+# Check that records can be paired, and stop if they cannot.
+#
+# The paired analyses compare each respondent's consecutive records. Two
+# records of one respondent at the same timepoint were compared with each
+# other, as if the second were a later visit, and counted as a further change
+# (review A03); a message prefixed "Warning:" was all the caller saw. They now
+# stop, naming the respondents: which record is right is the analyst's call.
+#
+# With `by_group`, a respondent must also be in the same group at every
+# timepoint. The records used to be sorted by group before time, so a
+# respondent whose group changed had their visits put out of order and
+# compared with the wrong one (review A04). A missing group at one timepoint
+# and a group at another is a change.
+#
+# Only records that take part are checked: those with an ID and a timepoint
+# in `levels_fu` (fu is NA for the rest after .prep_fu()).
+.check_pairs <- function(df, by_group = FALSE) {
+  use <- !is.na(df$id) & !is.na(df$fu)
+  id <- df$id[use]
+  fu <- as.character(df$fu[use])
+  shown <- function(ids) {
+    u <- unique(ids)
+    paste0(paste0("id ", utils::head(u, 5L), collapse = ", "),
+           if (length(u) > 5L) paste0(" and ", length(u) - 5L, " more") else "")
+  }
+
+  dup <- duplicated(data.frame(id = id, fu = fu, stringsAsFactors = FALSE))
+  if (any(dup)) {
+    ids <- id[dup]
+    stop(length(unique(ids)), " respondent(s) have more than one record at the ",
+         "same timepoint (", shown(ids), "). A paired analysis needs one ",
+         "record per respondent and timepoint, so it cannot tell which to ",
+         "compare. Remove or combine the duplicates first.", call. = FALSE)
+  }
+
+  if (isTRUE(by_group) && "groupvar" %in% names(df)) {
+    g <- as.character(df$groupvar[use])
+    g[is.na(g)] <- "\001NA"
+    n_g <- tapply(g, as.character(id), function(x) length(unique(x)))
+    moved <- names(n_g)[n_g > 1L]
+    if (length(moved))
+      stop(length(moved), " respondent(s) are not in the same group at every ",
+           "timepoint (", shown(moved), "). A paired analysis by group ",
+           "needs each respondent to stay in one group, so that their change ",
+           "belongs to it; check the group variable for these respondents.",
+           call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 #' Get the mode of a vector.
@@ -302,11 +578,8 @@
 #'
 #' @param v A numeric or character vector.
 #' @return The mode of `v`.
-#' @examples
-#' .getmode(c(1, 2, 3, 3))
-#' .getmode(c("a", "b", "b", "c"))
-#' @export
 #' 
+#' @keywords internal
 .getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
@@ -319,12 +592,7 @@
 #' @param df A data frame
 #' @param group_by A character vector of variables in `df` to group by. Should contain 'eq5d' and 'fu'.
 #' @return A summarised data frame with groups defined by `eq5d` and `fu` variables, the count of observations in each group, and the frequency of each group.
-#' @examples
-#' set.seed(1234)
-#' df <- data.frame(eq5d = rep(rnorm(5), 2),
-#'                  fu = rep(c(1, 0, 1, 0, 1), 2))
-#' .summary_table_2_1(df, c("eq5d", "fu"))
-#' @export
+#' @keywords internal
 
 .summary_table_2_1 <- function(df, group_by) {
 
@@ -348,7 +616,8 @@
 #' @param levels_fu Character vector containing the order of the values in the follow-up column. 
 #' If NULL (default value), the levels will be ordered in the order of appearance in df.
 #' @param add_summary_problems_change If set to false, the resulting dataframe does not include a row on problems change.
-#' @param eq5d_version Version of the EQ-5D instrument
+#' @param eq5d_version Version of the EQ-5D instrument: "3L", "5L" or
+#'   "Y3L". Matching is case-insensitive.
 #' @return Summary data frame.
 
 .freqtab<- function(df,
@@ -360,9 +629,13 @@
   
   ### data preparation ###
   
+  # With no follow-up column the whole sample is one group. Its one level is
+  # given too: without it, .get_names() announced "No ordering of time
+  # supplied" for analyses that take no time variable at all.
   if(is.null(name_fu)) {
     df$`_all` <- "All"
     name_fu <- "_all"
+    levels_fu <- "All"
   }
   
   # replace NULL names with defaults
@@ -376,8 +649,7 @@
   eq5d_version <- temp$eq5d_version
   # check existence of columns 
   names_all <- c(names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
-    stop("Provided column names not in dataframe. Stopping.")
+  .check_columns(df, names_eq5d = names_eq5d, name_fu = name_fu)
   # all columns defined and exist; only leave relevant columns now
   df <- df[, names_all, drop = FALSE]
   # further checks and data preparation
@@ -392,48 +664,67 @@
     data.frame(fu = df$fu, eq5d = d, value = df[[d]], stringsAsFactors = FALSE)
   }))
 
-  # complete case dataset: remove NA values
-  df_cc <- df_long[!is.na(df_long$value), , drop = FALSE]
+  # Every cell of dimension x follow-up x level is counted, including those
+  # nobody reported. Counting with aggregate() returned only the cells that
+  # occurred, so a level or a dimension with no problems came out as NA after
+  # widening, and so did the change in the number reporting problems: one
+  # respondent going from mo = 2 to mo = 1 gave NA and NA, not 0 and -1.
+  #
+  # The denominator is the number of non-missing responses on a dimension at
+  # a follow-up. Where it is positive every count is a number, 0 when nobody
+  # gave that response. Where it is zero -- nobody recorded at that follow-up,
+  # or everyone missing on that dimension -- the counts are NA: the data say
+  # nothing about how many had a problem, and a 0 there would read as
+  # everyone having recovered.
+  fu_levels    <- levels(df_long$fu)
+  level_values <- seq_len(if (eq5d_version == "5L") 5L else 3L)
+  df_cc <- df_long[!is.na(df_long$value) & !is.na(df_long$fu), , drop = FALSE]
+
+  count_by <- function(keep) {
+    tab <- table(factor(df_cc$eq5d[keep], levels = levels_eq5d),
+                 factor(df_cc$fu[keep], levels = fu_levels))
+    tab
+  }
+  denom <- count_by(rep(TRUE, nrow(df_cc)))
+  # Long data frame of one count per (eq5d, fu), NA where there is no
+  # denominator.
+  as_cells <- function(tab, level) {
+    n <- as.integer(tab)
+    d <- as.integer(denom)
+    n[d == 0] <- NA_integer_
+    data.frame(eq5d = rep(levels_eq5d, times = length(fu_levels)),
+               fu = rep(fu_levels, each = length(levels_eq5d)),
+               n = n, freq = ifelse(d > 0, n / d, NA_real_),
+               level = level, stringsAsFactors = FALSE)
+  }
 
   # summary: individual levels
-  summary_dim <- .summary_table_2_1(df = df_cc, group_by = c("eq5d", "value", "fu"))
-  names(summary_dim)[names(summary_dim) == "value"] <- "level"
-  summary_dim$level <- as.character(summary_dim$level)
+  summary_dim <- do.call(rbind, lapply(level_values, function(lv)
+    as_cells(count_by(df_cc$value == lv), as.character(lv))))
 
-  # summary: total
-  summary_total <- .summary_table_2_1(df = df_cc, group_by = c("eq5d", "fu"))
-  summary_total$level <- "Total"
+  # summary: total -- the denominator itself, 0 where there is none
+  summary_total <- as_cells(denom, "Total")
+  summary_total$n <- as.integer(denom)
+  summary_total$freq <- ifelse(summary_total$n > 0, 1, NA_real_)
 
-  # summary: some problems and change
-  df_probs <- df_cc[df_cc$value != 1, , drop = FALSE]
-  summary_problems <- aggregate(rep(1L, nrow(df_probs)),
-                                by = list(eq5d = df_probs$eq5d, fu = df_probs$fu),
-                                FUN = sum)
-  names(summary_problems)[names(summary_problems) == "x"] <- "n"
-  # merge with totals
-  summary_problems <- merge(summary_problems,
-                            summary_total[, c("eq5d", "fu", "n")],
-                            by = c("eq5d", "fu"), suffixes = c("", "_total"))
-  summary_problems$freq <- summary_problems$n / summary_problems$n_total
-  summary_problems$n_total <- NULL
-  suffix <- if (eq5d_version == "3L") "2+3" else "2+3+4+5"
-  summary_problems$level <- paste0("Number reporting any problems (levels ", suffix, ")")
+  # summary: some problems
+  suffix <- paste(level_values[-1L], collapse = "+")
+  summary_problems <- as_cells(
+    count_by(df_cc$value != 1),
+    paste0("Number reporting any problems (levels ", suffix, ")"))
 
-  # change in numbers reporting problems since previous time point
-  # sort by (eq5d, fu) with fu ordered by levels_fu
+  # change in numbers reporting problems since the previous follow-up, in
+  # the order of levels_fu. NA where either count is unavailable; the
+  # relative change is NA where the previous count is 0.
   sp_sub <- summary_problems[, c("eq5d", "fu", "n")]
-  sp_sub$fu_ord <- match(as.character(sp_sub$fu), as.character(levels_fu))
+  sp_sub$fu_ord <- match(sp_sub$fu, as.character(levels_fu))
   sp_sub <- sp_sub[order(sp_sub$eq5d, sp_sub$fu_ord), ]
   sp_sub$fu_ord <- NULL
-  # lag n within each eq5d group
   sp_split <- split(sp_sub, sp_sub$eq5d)
   change_list <- lapply(sp_split, function(g) {
-    g$n_prev <- c(NA_real_, head(g$n, -1))
-    g$n_change <- g$n - g$n_prev
-    g$freq <- g$n_change / g$n_prev
-    g$n <- g$n_change
-    g$n_prev <- NULL
-    g$n_change <- NULL
+    n_prev <- c(NA_real_, head(g$n, -1))
+    g$n <- g$n - n_prev
+    g$freq <- ifelse(!is.na(n_prev) & n_prev > 0, g$n / n_prev, NA_real_)
     g
   })
   summary_problems_change <- do.call(rbind, change_list)
@@ -526,134 +817,25 @@
   return(retval)
 }
 
-#' .pchctab: Changes in health according to the PCHC (Paretian Classification of Health Change)
-#' 
-#' @param df Data frame with the EQ-5D, grouping, id and follow-up columns
-#' @param name_id Character string for the patient id column
-#' @param name_groupvar Character string for the grouping column
-#' @param names_eq5d Character vector of column names for the EQ-5D dimensions
-#' @param name_fu Character string for the follow-up column
-#' @param levels_fu Character vector containing the order of the values in the follow-up column. 
-#' If NULL (default value), the levels will be ordered in the order of appearance in df.
-#' @param add_noprobs if set to TRUE, level corresponding to "no problems" will be added to the table
-#' @return Summary data frame
-#' @examples
-#' .pchctab(df = example_data,
-#'   name_id = "id",
-#'   name_groupvar = "procedure",
-#'   name_fu = "time",
-#'   levels_fu = c('Pre-op', 'Post-op')
-#' )
-#' @export
-.pchctab <- function(df,
-                  name_id,
-                  name_groupvar,
-                  names_eq5d = NULL,
-                  name_fu = NULL, 
-                  levels_fu = NULL,
-                  add_noprobs = FALSE) {
-  
-  ### data preparation ###
-  
-  # replace NULL names with defaults
-  temp <- .get_names(df = df, 
-                     names_eq5d = names_eq5d, 
-                     name_fu = name_fu, levels_fu = levels_fu)
-  names_eq5d <- temp$names_eq5d
-  name_fu <- temp$name_fu
-  levels_fu <- temp$levels_fu
-  # check existence of columns 
-  names_all <- c(name_groupvar, name_id, names_eq5d, name_fu)
-  if (!all(names_all %in% colnames(df)))
-    stop("Provided column names not in dataframe. Stopping.")
-  
-  
-  # Enforce EQ-5D levels
-  tmp <- as.matrix(df[, names_eq5d])
-  tmp[,] <- as.integer(tmp)
-  tmp[!tmp %in% 1:5] <- NA
-  df[, names_eq5d] <- tmp
-  rm(tmp)
-  
-  # all columns defined and exist; only leave relevant columns now
-  df <- df[, names_all, drop = FALSE]
-  # further checks and data preparation
-  names(df)[names(df) == name_id]       <- "id"
-  names(df)[names(df) == name_groupvar] <- "groupvar"
-  df <- .prep_eq5d(df = df, names = names_eq5d)
-  df <- .prep_fu(df = df, name = name_fu, levels = levels_fu)
-  # sort by id - groupvar - time
-  df <- df[order(df$id, df$groupvar, df$fu), , drop = FALSE]
-  # check uniqueness of id-groupvar-fu combinations
-  .check_uniqueness(df, group_by = c("id", "groupvar", "fu"))
-  
-  
-  ### analysis ###
-  
-  uids <- data.frame(id = unique(df$id))
-  uids$groupvar <- df$groupvar[match(uids$id, df$id)]
-  lvls <- structure(.Data = levels(df$fu), .Names = levels(df$fu))
-  grps <- structure(.Data = unique(df$groupvar), .Names = unique(df$groupvar))
-  grpr <- lapply(grps, function(grp) which(uids$groupvar == grp))
-  
-  idstates <- lapply(lvls, FUN = function(thisfu) {
-    tmp <- df[df$fu == thisfu, c("id", names_eq5d)]
-    as.matrix(tmp[match(uids$id, tmp$id),2:6])
-  })
-  
-  progress <- as.data.frame(lapply(structure(.Data = 1:length(lvls), .Names = lvls), FUN = function(thisfu) {
-    if(thisfu == 1) return(rep(NA, NROW(uids)))
-    tmp <- sign(idstates[[thisfu]]-idstates[[thisfu-1]])
-    factor(1*(rowSums(1*(tmp == 1))>0)-1*(rowSums(1*(tmp == -1))>0)+2*(rowSums(tmp == 0)==5), levels = c(2, -1, 1, 0), labels = c("No change", "Improve", "Worsen", "Mixed change"))   
-    
-  }))
-  
-  
-  problems <- as.data.frame(lapply(idstates, function(idstate) {
-    factor(2-1*(rowSums(idstate>1)>0), labels = c("Total with problems", "No problems"))
-  }))
-  
-  colnames(progress) <- colnames(problems)<- lvls
-  
-  tmp <- do.call(rbind,lapply(grps, FUN = function(grp) {
-    cbind(groupvar = grp, do.call(rbind, lapply(lvls[-1], function(lvl) {
-      tmp <- cbind(fu = lvl, 
-                   rbind(as.data.frame(table(progress[grpr[[grp]],lvl], useNA = 'always')),
-                         if(add_noprobs) as.data.frame(table(problems[grpr[[grp]],lvl], useNA = 'no'))))
-      colnames(tmp) <- c('fu', 'state', 'n')
-      
-      tmp$p <- c(tmp$n/sum(tmp$n[-which(is.na(tmp$state))]))
-      tmp$p[which(is.na(tmp$state))] <- NA
-      tmp <- rbind(tmp, data.frame(fu = lvl, state = 'Grand total', n = sum(tmp$n[1:4]), p = 1))
-      tmp
-    })))
-  }))
-  
-  tmp$state <- factor(tmp$state, levels = c(levels(tmp$state), "Missing/NA"))
-  tmp$state[is.na(tmp$state)] <- 'Missing/NA'
-  
-  
-  # combine & tidy up: spread (groupvar, fu, n/p) into wide columns
-  all_states <- levels(tmp$state)
-  retval <- data.frame(state = all_states, stringsAsFactors = FALSE)
 
-  # build column names in order: for each (groupvar, fu), add _n and _p columns
-  for (grp in unique(tmp$groupvar)) {
-    for (f in levels_fu[-1]) {
-      sub <- tmp[tmp$groupvar == grp & tmp$fu == f, , drop = FALSE]
-      vals_n <- setNames(as.numeric(sub$n), as.character(sub$state))
-      vals_p <- setNames(as.numeric(sub$p), as.character(sub$state))
-      cn <- paste(grp, f, "n", sep = "_")
-      cp <- paste(grp, f, "p", sep = "_")
-      retval[[cn]] <- ifelse(is.na(vals_n[retval$state]), 0, vals_n[retval$state])
-      retval[[cp]] <- ifelse(is.na(vals_p[retval$state]), 0, vals_p[retval$state])
-    }
-  }
-
-  rownames(retval) <- NULL
-  return(retval)
+# Which rows start a respondent's records, in rows sorted by respondent and
+# then follow-up: the first row, any row whose ID differs from the row
+# before, and every row with no ID. A record that cannot be attributed to
+# anyone cannot be paired with anything -- comparing IDs with `!=` gave NA
+# there, and an NA index in an assignment is skipped, so such a record used to
+# be paired with the previous respondent's last one.
+#
+# The PCHC analyses and eq5d_profile_dimension_change_table() both use this,
+# so they agree about which records form a pair: consecutive records of one
+# respondent, in follow-up order.
+.first_of_subject <- function(id) {
+  n <- length(id)
+  if (n == 0L) return(logical(0))
+  prev <- c(NA, id[-n])
+  out <- is.na(id) | is.na(prev) | id != prev
+  out[1L] <- TRUE
+  out
 }
-
 
 #' Wrapper to determine Paretian Classification of Health Change
 #' 
@@ -661,25 +843,39 @@
 #' It is used in the code for eq5d_profile_pchc_table, eq5d_profile_pchc_with_no_problems_table, eq5d_profile_dimension_change_table, and the eq5d_profile_*_by_group_plot functions.
 #' An EQ-5D health state is deemed to be `better` than another if it is better on at least one dimension and is no worse on any other dimension.
 #' An EQ-5D health state is deemed to be `worse` than another if it is worse in at least one dimension and is no better in any other dimension.
-#' @param df A data frame with EQ-5D states and follow-up variable. The dataset is assumed to be have been ordered correctly.
+#' @param df A data frame with EQ-5D dimension columns (`mo`, `sc`, `ua`,
+#'   `pd`, `ad`), a factorised follow-up column `fu`, and an `id` column
+#'   identifying the respondent. The change score is a lag over the rows of
+#'   `df`, so `df` must already be sorted with each respondent's records
+#'   together and in follow-up order. Rows that start a new respondent are
+#'   given a missing change score, so a respondent whose first record is not
+#'   the first follow-up is excluded rather than compared against the
+#'   preceding respondent. So are rows with no \code{id} and rows whose
+#'   \code{fu} is missing.
 #' @param level_fu_1 Value of the first (i.e. earliest) follow-up. Would normally be defined as levels_fu[1].
 #' @param add_noprobs Logical value indicating whether to include a separate classification for those without problems (default is FALSE)
 #' @return A data frame with PCHC value for each combination of the grouping variables. 
 #' If 'add_noprobs' is TRUE, a separate classification for those without problems is also included.
-#' @examples
-#' df <- data.frame(id = c(1, 1, 2, 2),
-#'                  fu = c(1, 2, 1, 2),
-#'                  mo = c(1, 1, 1, 1),
-#'                  sc = c(1, 1, 5, 1),
-#'                  ua = c(1, 1, 4, 3),
-#'                  pd = c(1, 1, 1, 3),
-#'                  ad = c(1, 1, 1, 1))
-#' .pchc(df, level_fu_1 = 1, add_noprobs = TRUE)
-#' @export
+#' @keywords internal
 
 .pchc <- function(df, level_fu_1, add_noprobs = FALSE) {
 
   levels_eq5d <- c("mo", "sc", "ua", "pd", "ad")
+
+  # The change score is a lag over the rows of df, so df must be sorted with
+  # each respondent's records together and in follow-up order; every caller
+  # does that before calling here.
+  #
+  # Blanking the first follow-up level is not enough on its own: a respondent
+  # whose first record is a later follow-up (no baseline recorded) would
+  # otherwise be differenced against the previous respondent's last record,
+  # inventing a change for someone who cannot have one. `first_of_subject`
+  # marks those rows so they are blanked too.
+  if (!"id" %in% names(df))
+    stop("[.pchc] `df` must contain an `id` column identifying the respondent.",
+         call. = FALSE)
+
+  first_of_subject <- .first_of_subject(df$id)
 
   # initialise positive, negative & zero difference counts
   df$better <- 0L
@@ -690,8 +886,13 @@
 
     # lag shift: previous row's value minus current (dplyr::lag equivalent)
     df[[dom_diff]] <- c(NA_real_, head(df[[dom]], -1)) - df[[dom]]
-    # baseline rows: set diff to NA
-    df[[dom_diff]][df$fu == level_fu_1] <- NA_real_
+    # baseline rows, any row that starts a new respondent, and any row whose
+    # follow-up is not one of levels_fu (NA after .prep_fu()): diff is NA.
+    # The last were warned about as excluded, but still paired.
+    no_prev <- first_of_subject | is.na(df$fu) |
+      as.character(df$fu) == as.character(level_fu_1)
+    no_prev[is.na(no_prev)] <- TRUE
+    df[[dom_diff]][no_prev] <- NA_real_
 
     # accumulate improvement/worsening counts (NA propagates for baseline rows)
     df$better <- df$better + (df[[dom_diff]] > 0)
@@ -727,16 +928,23 @@
 #' The name of the continuous variable must be specified using `name_v`. 
 #' The wrapper is used in Table 3.1 (for VAS) or Table 4.2 (for EQ-5D utility)
 #'
+#' @details
+#' Skewness and kurtosis are the population (biased) estimators
+#' \eqn{m_3 / m_2^{3/2}} and \eqn{m_4 / m_2^2}, as returned by
+#' \code{moments::skewness()} and \code{moments::kurtosis()}.
+#'
+#' The kurtosis is **non-excess**: a normal distribution gives 3, not 0. The
+#' row is labelled "Kurtosis (non-excess)" so that the output says which
+#' convention it uses. Stata's \code{summarize, detail} reports the same
+#' quantity. Excel's \code{KURT()} reports *excess* kurtosis with a
+#' sample-bias correction, so it is roughly 3 lower for the same data.
+#'
 #' @param df A data frame containing the FU and continuous variable of interest. The dataset must contain an ordered `fu` variable.
 #' @param name_v A character string with the name of the continuous variable in `df` to be summarised.
 #' @return Data frame with one row for each statistic and one column for each FU. 
-#' @examples
-#' df <- data.frame(fu = c(1,1,2,2,3,3), 
-#'                  vas = c(7,8,9,NA,7,6))
-#' .summary_cts_by_fu(df, name_v = "vas")
 #' @importFrom stats median quantile sd
 #' @importFrom moments kurtosis
-#' @export
+#' @keywords internal
 
 .summary_cts_by_fu <- function(df, name_v) {
 
@@ -746,9 +954,35 @@
 
   fu_levels <- if (is.factor(df$fu)) levels(df$fu) else sort(unique(df$fu))
 
+  # A level listed in levels_fu but absent from the data used to be summarised
+  # anyway: mean(numeric(0)) is NaN, and min()/max() are Inf and -Inf with a
+  # warning of their own, so the column read NaN / Inf / -Inf and a Range of
+  # -Inf. Report the empty levels once and give them NA.
+  # in_level() excludes rows whose follow-up is NA -- a value not listed in
+  # levels_fu, which .prep_fu() has already warned about. Without that, the
+  # logical index carries NAs, and the subset picks up NA elements that inflate
+  # Observations and turn every statistic NA.
+  in_level <- function(f) !is.na(df$fu) & df$fu == f
+  empty <- vapply(fu_levels, function(f) !any(in_level(f) & !is.na(df$v)),
+                  logical(1L))
+  if (any(empty))
+    warning("No non-missing ", name_v, " values for follow-up level",
+            if (sum(empty) > 1L) "s" else "", " ",
+            paste0("\"", fu_levels[empty], "\"", collapse = ", "),
+            ". Their summary statistics are NA.", call. = FALSE)
+
   # summarise non-NA values per fu level
   stats_list <- lapply(fu_levels, function(f) {
-    v <- df$v[df$fu == f & !is.na(df$v)]
+    v <- df$v[in_level(f) & !is.na(df$v)]
+    if (!length(v))
+      return(data.frame(
+        fu = f,
+        Mean = NA_real_, `Standard error` = NA_real_, Median = NA_real_,
+        Mode = NA_real_, `Standard deviation` = NA_real_,
+        `Kurtosis (non-excess)` = NA_real_,
+        Skewness = NA_real_, Minimum = NA_real_, Maximum = NA_real_,
+        Range = NA_real_, Observations = 0L,
+        check.names = FALSE, stringsAsFactors = FALSE))
     data.frame(
       fu = f,
       Mean = mean(v),
@@ -756,7 +990,7 @@
       Median = median(v),
       Mode = .getmode(v),
       `Standard deviation` = sd(v),
-      Kurtosis = kurtosis(v),
+      `Kurtosis (non-excess)` = kurtosis(v),
       Skewness = skewness(v),
       Minimum = min(v),
       Maximum = max(v),
@@ -770,14 +1004,17 @@
 
   # summarise total and NA values per fu level
   total_na_list <- lapply(fu_levels, function(f) {
-    v <- df$v[df$fu == f]
+    v <- df$v[in_level(f)]
     miss_n <- sum(is.na(v))
     tot <- length(v)
     data.frame(
       fu = f,
       `Missing (n)` = miss_n,
       `Total sample` = tot,
-      `Missing (%)` = miss_n / tot,
+      # 0 / 0 is NaN; a level with no rows has no missing percentage.
+      # A percentage, 0 to 100, as its name says; it was a proportion
+      # (0.33 for one missing of three, review Q10).
+      `Missing (%)` = if (tot == 0L) NA_real_ else 100 * miss_n / tot,
       check.names = FALSE,
       stringsAsFactors = FALSE
     )
@@ -786,6 +1023,16 @@
 
   # combine
   combined <- merge(summary, summary_total_na, by = "fu")
+
+  # merge() sorts its result by the `by` column, which discards the requested
+  # order of the follow-up levels: with levels_fu = c("Pre-op", "Post-op") the
+  # rows came back alphabetically, as Post-op then Pre-op. Those rows become
+  # the columns of the returned table two lines down, so this is what decides
+  # whether the caller reads baseline or follow-up first -- and nothing in the
+  # output says which is which. Reindex against fu_levels, which is the order
+  # the caller asked for.
+  combined <- combined[match(as.character(fu_levels), as.character(combined$fu)), ,
+                       drop = FALSE]
 
   # transpose: rows become stat names, columns become fu levels
   stat_cols <- setdiff(names(combined), "fu")
@@ -801,6 +1048,89 @@
   return(retval)
 }
 
+# Stop, saying why, when an analysis has no records left to work on. Analyses
+# that need a complete profile filter to complete ones first, and with none
+# left they failed inside aggregate() with "no rows to aggregate", or with
+# "incorrect number of dimensions" (review A09). Data with some dimensions
+# missing in every row still has usable dimensions, so this is checked per
+# analysis, after its own filtering, never for the data as a whole.
+.stop_if_no_records <- function(n, fn, paired = FALSE, with_value = FALSE) {
+  if (n > 0L) return(invisible(TRUE))
+  what <- if (paired)
+    "no respondent has complete, valid EQ-5D profiles at two of the timepoints in `levels_fu`"
+  else if (with_value)
+    "no record has both a complete, valid EQ-5D profile and an EQ-5D value"
+  else
+    "no record has a complete, valid EQ-5D profile"
+  stop(fn, "(): ", what, ", so there is nothing to summarise. A profile ",
+       "needs all five dimensions, each a level the instrument allows; ",
+       "eq5d_profile_level_summary() reports the dimensions that are there.",
+       call. = FALSE)
+}
+
+# Keep the first two timepoints of `fu`. The PCHC figures by group show one
+# change per respondent and have no timepoint axis; with three timepoints
+# they pooled the a->b and b->c changes into one bar while documenting a
+# comparison of two (review AI06). A third or later timepoint is set to NA,
+# with a message, and fewer than two is an error.
+.first_two_timepoints <- function(df, fn) {
+  lv <- levels(df$fu)
+  if (length(lv) < 2L)
+    stop(fn, "(): needs two timepoints in `levels_fu`, the first compared ",
+         "with the second; found ", length(lv), ".", call. = FALSE)
+  if (length(lv) > 2L) {
+    message(fn, "(): comparing \"", lv[1L], "\" and \"", lv[2L], "\" only, ",
+            "the first two timepoints in `levels_fu`; the figure shows one ",
+            "change per respondent.")
+    df$fu <- factor(as.character(df$fu), levels = lv[1:2])
+  }
+  df
+}
+
+# Rows of each group, for the summary helpers below.
+#
+# Groups are told apart by their values, not by pasting the values into one
+# string: paste() turned a missing group into the text "NA", so a real group
+# called "NA" and the missing one were summarised together, and a separator
+# inside a value could join two different groups (review A06). match() keeps
+# NA and "NA" apart. The groups come out in the order the pasted text sorted
+# them before, so outputs that had no such clash are unchanged.
+.group_rows <- function(df, group_by) {
+  codes <- lapply(df[group_by], function(x) match(x, unique(x)))
+  key <- do.call(paste, c(codes, list(sep = ".")))
+  rows <- split(seq_len(nrow(df)), factor(key, levels = unique(key)))
+  if (!length(rows)) return(rows)
+  legacy <- vapply(rows, function(r)
+    do.call(paste, c(lapply(df[r[1L], group_by, drop = FALSE], as.character),
+                     list(sep = "\001"))), character(1L))
+  unname(rows[order(legacy)])
+}
+
+# Display labels for the values of a grouping column. A missing group is
+# labelled "NA", as the by-group tables have labelled it -- unless a real
+# group is called "NA", when the missing one is "NA (missing)": the two used to
+# be summarised together (review A06). Any other coincidence is made distinct.
+.group_labels <- function(x, missing = "NA") {
+  u <- unique(x)
+  lab <- as.character(u)
+  if (anyNA(u))
+    lab[is.na(u)] <- if (missing %in% lab[!is.na(u)])
+      paste0(missing, " (missing)") else missing
+  lab <- make.unique(lab, sep = " ")
+  lab[match(x, u)]
+}
+
+# The label of a total, made distinct from the groups' labels. A group that
+# happened to be called "All groups" or "Total" took the total's place, and
+# the column that looked like the total held that group (review A07).
+.total_label <- function(label, taken) {
+  taken <- as.character(taken)
+  if (!label %in% taken) return(label)
+  out <- paste0(label, " (total)")
+  while (out %in% taken) out <- paste0(out, " ")
+  out
+}
+
 #' Summary wrapper for Table 4.3
 #' 
 #' This internal function creates a summary of the data frame for Table 4.3. 
@@ -809,20 +1139,15 @@
 #' @param df A data frame.
 #' @param group_by A character vector of names of variables by which to group the data.
 #' @return A data frame with the summary statistics.
-#' @examples
-#' df <- data.frame(group = c("A", "A", "B", "B"), 
-#'                  utility = c(0.5, 0.7, 0.8, 0.9))
-#' .summary_table_4_3(df, group_by = "group")
-#' @export
+#' @keywords internal
 
 .summary_table_4_3 <- function(df, group_by) {
 
-  grp_key <- do.call(paste, c(df[group_by], list(sep = "\001")))
-  parts <- split(df$utility, grp_key)
+  rows <- .group_rows(df, group_by)
 
-  result_list <- lapply(names(parts), function(k) {
-    u <- parts[[k]]
-    group_vals <- df[match(k, grp_key), group_by, drop = FALSE]
+  result_list <- lapply(rows, function(r) {
+    u <- df$utility[r]
+    group_vals <- df[r[1L], group_by, drop = FALSE]
     row.names(group_vals) <- NULL
     cbind(group_vals, data.frame(
       Mean = mean(u, na.rm = TRUE),
@@ -850,20 +1175,15 @@
 #' @param df A data frame.
 #' @param group_by A character vector of names of variables by which to group the data.
 #' @return A data frame with the summary statistics.
-#' @examples
-#' df <- data.frame(group = c("A", "A", "B", "B"), 
-#'                  utility = c(0.5, 0.7, 0.8, 0.9))
-#' .summary_table_4_4(df, group_by = "group")
-#' @export
+#' @keywords internal
 
 .summary_table_4_4 <- function(df, group_by) {
 
-  grp_key <- do.call(paste, c(df[group_by], list(sep = "\001")))
-  parts <- split(df$utility, grp_key)
+  rows <- .group_rows(df, group_by)
 
-  result_list <- lapply(names(parts), function(k) {
-    u <- parts[[k]]
-    group_vals <- df[match(k, grp_key), group_by, drop = FALSE]
+  result_list <- lapply(rows, function(r) {
+    u <- df$utility[r]
+    group_vals <- df[r[1L], group_by, drop = FALSE]
     row.names(group_vals) <- NULL
     cbind(group_vals, data.frame(
       Mean = mean(u, na.rm = TRUE),
@@ -891,12 +1211,8 @@
 #' @param df A data frame containing a `utility` column.
 #' @param group_by A character vector of column names to group by.
 #' @return A data frame with the mean, lower bound, and upper bound of the 95% confidence interval of `utility` grouped by the `group_by` variables.
-#' @examples
-#' df <- data.frame(group = c("A", "A", "B", "B"), 
-#'                  utility = c(0.5, 0.7, 0.8, 0.9))
-#' .summary_mean_ci(df, group_by = "group")
-#' @export
 #'
+#' @keywords internal
 .summary_mean_ci <- function(df, group_by) {
 
   df <- df[!is.na(df$utility), , drop = FALSE]
@@ -914,12 +1230,11 @@
     return(retval)
   }
 
-  grp_key <- do.call(paste, c(df[group_by], list(sep = "\001")))
-  parts <- split(df$utility, grp_key)
+  rows <- .group_rows(df, group_by)
 
-  result_list <- lapply(names(parts), function(k) {
-    u <- parts[[k]]
-    group_vals <- df[match(k, grp_key), group_by, drop = FALSE]
+  result_list <- lapply(rows, function(r) {
+    u <- df$utility[r]
+    group_vals <- df[r[1L], group_by, drop = FALSE]
     row.names(group_vals) <- NULL
     m <- mean(u)
     se <- sd(u) / sqrt(length(u))
@@ -945,14 +1260,9 @@
 #' @param col A character string specifying the base colour. Only "green" or "orange" is accepted.
 #' @param n A positive integer specifying the number of colours to generate.
 #' @return A vector of colours generated based on the specified base colour and number of colours.
-#' @examples
-#' # generate 10 colours for base colour "green"
-#' .gen_colours("green", 10)
-#' # generate 7 colours for base colour "orange"
-#' .gen_colours("orange", 7)
 #' @importFrom grDevices colorRampPalette
-#' @export
 #'
+#' @keywords internal
 .gen_colours <- function(col, n) {
   retval <- if (col == "green")
     colorRampPalette(c("#99FF99", "#006600"))(n) else 
@@ -966,7 +1276,7 @@
 #'
 #' @param p ggplot2 plot
 #' @return ggplot2 plot with modified theme
-#' @export
+#' @keywords internal
 .modify_ggplot_theme <- function(p) {
   # set ggplot2 theme
   p <- p + theme_bw() + theme(
@@ -998,18 +1308,10 @@ return(p)
 #' @param plot_data A data frame containing information to plot, with columns for name (the dimensions to plot), p (the proportion of the total data falling into each dimension), and fu (the follow-up).
 #' @param ylab The label for the y-axis.
 #' @param title The plot title.
-#' @param cols A vector of colors to use for the bars.
+#' @param cols A vector of colours to use for the bars.
 #' @param text_rotate A logical indicating whether to rotate the text labels for the bars.
 #' @return A ggplot object containing the PCHC plot.
-#' @examples
-#' df <- data.frame(
-#'   name = rep(c("Dim1", "Dim2"), each = 2),
-#'   p = c(0.6, 0.4, 0.7, 0.3),
-#'   groupvar = rep(c("Group A", "Group B"), 2)
-#' )
-#' colors <- c("Group A" = "#1b9e77", "Group B" = "#d95f02")
-#' .pchc_plot_by_dim(df, ylab = "Proportion", title = "Example Plot", cols = colors)
-#' @export
+#' @keywords internal
 
 .pchc_plot_by_dim <- function(plot_data, ylab, title, cols, text_rotate = FALSE) {
   

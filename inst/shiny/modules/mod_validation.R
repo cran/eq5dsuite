@@ -4,8 +4,10 @@
 
 mod_validation_ui <- function(id) {
   ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::uiOutput(ns("main_ui"))
+  page_shell(
+    sidebar_title = "Validation",
+    sidebar = shiny::uiOutput(ns("sidebar")),
+    shiny::uiOutput(ns("main"))
   )
 }
 
@@ -18,49 +20,48 @@ mod_validation_server <- function(id, rv) {
     # ── Reactive: run validation when mapping is confirmed ───────────────────
     validation <- shiny::reactive({
       shiny::req(rv$raw_data, rv$mapping)
-      run_validation(rv$raw_data, rv$mapping)
+      # The checks come back as plain text; the markup is the app's.
+      eq5dsuite:::eq5d_validate(rv$raw_data, rv$mapping, quiet = TRUE)
     })
 
     # ── Render: main UI (shown only when mapping exists) ─────────────────────
-    output$main_ui <- shiny::renderUI({
+    output$sidebar <- shiny::renderUI({
       if (is.null(rv$mapping)) {
-        return(bslib::card(
-          bslib::card_body(shiny::p(
-            shiny::icon("circle-info"),
-            " Please upload data and confirm mapping on the Data tab first.",
-            class = "text-muted"
-          ))
+        return(shiny::tagList(
+          hint("Upload data and confirm its variables first."),
+          shiny::actionButton(ns("goto_data"), "Go to Data",
+                              class = "btn-primary w-100",
+                              icon = shiny::icon("arrow-right"))
         ))
       }
+      shiny::tagList(
+        shiny::tags$p("Variables", class = "sidebar-label"),
+        shiny::uiOutput(ns("mapping_summary")),
+        shiny::hr(),
+        shiny::actionButton(ns("proceed"), "Proceed",
+                            class = "btn-primary w-100",
+                            icon = shiny::icon("arrow-right"))
+      )
+    })
 
-      bslib::layout_columns(
-        col_widths = c(5, 7),
+    shiny::observeEvent(input$goto_data, goto_page(session, "data"))
 
-        # Left: validation summary
+    output$main <- shiny::renderUI({
+      if (is.null(rv$mapping)) {
+        return(bslib::card(fill = FALSE, bslib::card_body(fillable = FALSE, hint(
+          "Nothing to check yet. Select your EQ-5D variables on the Data page and ",
+          "the checks will appear here."))))
+      }
+      shiny::tagList(
         bslib::card(
-          bslib::card_header(
-            shiny::tags$span(shiny::icon("clipboard-check"), " Validation Summary")
-          ),
-          bslib::card_body(
-            shiny::uiOutput(ns("validation_msgs")),
-            shiny::hr(),
-            shiny::h6("Mapping confirmed"),
-            shiny::uiOutput(ns("mapping_summary")),
-            shiny::hr(),
-            shiny::actionButton(
-              ns("proceed"), "Proceed to Analysis",
-              class = "btn-success w-100",
-              icon  = shiny::icon("arrow-right")
-            )
-          )
+          fill = FALSE,
+          bslib::card_header("Data checks"),
+          bslib::card_body(fillable = FALSE, shiny::uiOutput(ns("validation_msgs")))
         ),
-
-        # Right: processed data preview
         bslib::card(
-          bslib::card_header(
-            shiny::tags$span(shiny::icon("table"), " Processed Data Preview")
-          ),
-          bslib::card_body(
+          full_screen = TRUE, fill = FALSE,
+          bslib::card_header("Processed data"),
+          bslib::card_body(fillable = FALSE,
             shiny::uiOutput(ns("processed_info")),
             DT::DTOutput(ns("processed_table"))
           )
@@ -69,19 +70,46 @@ mod_validation_server <- function(id, rv) {
     })
 
     # ── Render: validation messages ───────────────────────────────────────────
+    # Each finding is one short line. Where eq5d_validate() has more to say --
+    # the values found, the records affected, what a percentage is of -- a
+    # "See details" toggle reveals it on demand. The details come from the
+    # same checks the analyses use, and nothing here changes the data.
+    details <- shiny::reactive(attr(validation(), "details"))
+
     output$validation_msgs <- shiny::renderUI({
       v <- validation()
-      shiny::tagList(
-        lapply(v$messages, function(msg) {
-          cls <- switch(msg$type,
-            ok      = "alert alert-success",
-            warning = "alert alert-warning",
-            error   = "alert alert-danger",
-            "alert alert-info"
-          )
-          shiny::div(class = cls, role = "alert", shiny::HTML(msg$text))
-        })
-      )
+      d <- details()
+      shiny::tagList(lapply(seq_len(nrow(v)), function(i) {
+        cls <- switch(v$type[i],
+          ok      = "note note-ok",
+          warning = "note note-warning",
+          error   = "note note-error",
+          "note note-info"
+        )
+        icon <- switch(v$type[i],
+          ok = "circle-check", warning = "triangle-exclamation",
+          error = "circle-exclamation", "circle-info"
+        )
+        shiny::div(class = cls, role = "alert",
+                   shiny::icon(icon), " ", v$message[i],
+                   finding_details(ns, i, d[[i]]))
+      }))
+    })
+
+    # The tables behind each finding: long lists are searchable and paged.
+    shiny::observe({
+      d <- details()
+      for (i in seq_along(d)) local({
+        ii <- i
+        dd <- d[[ii]]
+        if (is.null(dd)) return()
+        if (!is.null(dd$summary) && nrow(dd$summary) > SMALL_TABLE_ROWS)
+          output[[paste0("det_", ii, "_summary")]] <-
+            DT::renderDT(details_table(dd$summary))
+        if (!is.null(dd$records))
+          output[[paste0("det_", ii, "_records")]] <-
+            DT::renderDT(details_table(dd$records))
+      })
     })
 
     # ── Render: mapping summary ───────────────────────────────────────────────
@@ -91,19 +119,20 @@ mod_validation_server <- function(id, rv) {
       items <- list(
         list("EQ-5D version", m$eq5d_version),
         list("Dimensions",    paste(m$names_eq5d, collapse = ", ")),
-        list("Timepoint",     m$name_fu       %||% "(not mapped)"),
-        list("Group",         m$name_groupvar %||% "(not mapped)"),
-        list("Patient ID",    m$name_id       %||% "(not mapped)"),
-        list("EQ-VAS",        m$name_vas      %||% "(not mapped)"),
-        list("Utility",       m$name_utility  %||% "(not mapped)"),
-        list("Country",       if (nzchar(m$country)) m$country else "(not selected)")
+        list("Timepoint",     m$name_fu       %||% "(not selected)"),
+        list("Group",         m$name_groupvar %||% "(not selected)"),
+        list("Patient ID",    m$name_id       %||% "(not selected)"),
+        list("EQ VAS",        m$name_vas      %||% "(not selected)"),
+        list("Age",           m$name_age      %||% "(not selected)"),
+        list("Sex",           m$name_sex      %||% "(not selected)"),
+        list("EQ-5D value",   m$name_utility  %||% "(not selected)")
       )
       shiny::tags$dl(
-        class = "row small mb-0",
+        class = "map-summary",
         lapply(items, function(x) {
           shiny::tagList(
-            shiny::tags$dt(class = "col-sm-5 text-muted", x[[1]]),
-            shiny::tags$dd(class = "col-sm-7", x[[2]])
+            shiny::tags$dt(x[[1]]),
+            shiny::tags$dd(x[[2]])
           )
         })
       )
@@ -112,7 +141,7 @@ mod_validation_server <- function(id, rv) {
     # ── Reactive: apply mapping to produce processed_data preview ─────────────
     preview_data <- shiny::reactive({
       shiny::req(rv$raw_data, rv$mapping)
-      apply_mapping(rv$raw_data, rv$mapping)
+      eq5dsuite:::eq5d_apply_mapping(rv$raw_data, rv$mapping)
     })
 
     # Use rv$processed_data when available (preserves utility columns added on
@@ -123,11 +152,9 @@ mod_validation_server <- function(id, rv) {
 
     output$processed_info <- shiny::renderUI({
       df <- current_data()
-      shiny::p(
-        shiny::strong(format(nrow(df), big.mark = ",")), " rows \u00d7 ",
-        shiny::strong(ncol(df)), " columns",
-        class = "text-muted small mb-2"
-      )
+      hint(shiny::strong(format(nrow(df), big.mark = ",")), " rows \u00d7 ",
+           shiny::strong(ncol(df)), " columns",
+           if (nrow(df) > 200L) " \u2014 first 200 shown" else "")
     })
 
     output$processed_table <- DT::renderDT({
@@ -144,7 +171,7 @@ mod_validation_server <- function(id, rv) {
     # ── Proceed: finalise processed_data and store in rv ──────────────────────
     shiny::observeEvent(input$proceed, {
       v <- validation()
-      has_error <- any(vapply(v$messages, function(m) m$type == "error", logical(1L)))
+      has_error <- any(v$type == "error")
       if (has_error) {
         shiny::showNotification(
           "Please resolve data errors before proceeding.",
@@ -156,122 +183,62 @@ mod_validation_server <- function(id, rv) {
       # Only set from raw mapping if processed_data not yet initialised.
       if (is.null(rv$processed_data)) {
         rv$processed_data <- preview_data()
+        next_revision(rv)
       }
       shiny::showNotification(
-        "Dataset validated. You can now run analyses.",
-        type = "message", duration = 4
+        "Dataset validated.", type = "message", duration = 3
       )
+      # Next in the workflow is calculating EQ-5D values. The profile and EQ
+      # VAS analyses do not need them, so the page says so rather than this
+      # being a required step.
+      goto_page(session, "values")
     })
   })
 }
 
-# Null-coalescing operator
-`%||%` <- function(a, b) if (!is.null(a) && length(a) > 0L) a else b
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-# ── Validation logic (pure function, not reactive) ────────────────────────────
+# Up to this many rows a summary is a plain table; beyond it, a paged one.
+SMALL_TABLE_ROWS <- 12L
 
-run_validation <- function(df, mapping) {
-  msgs <- list()
-
-  add_msg <- function(type, text) {
-    msgs[[length(msgs) + 1L]] <<- list(type = type, text = text)
-  }
-
-  n_rows <- nrow(df)
-  add_msg("ok", paste0("<strong>", format(n_rows, big.mark = ","),
-                       "</strong> rows loaded."))
-
-  # Check EQ-5D column existence
-  eq5d_cols   <- mapping$names_eq5d
-  missing_cols <- eq5d_cols[!eq5d_cols %in% names(df)]
-  if (length(missing_cols) > 0L) {
-    add_msg("error",
-            paste("EQ-5D columns not found in data:",
-                  paste(missing_cols, collapse = ", ")))
-  } else {
-    # Check value range
-    max_level <- if (mapping$eq5d_version == "3L") 3L else 5L
-    out_of_range <- vapply(eq5d_cols, function(col) {
-      vals <- suppressWarnings(as.integer(df[[col]]))
-      any(!is.na(vals) & (vals < 1L | vals > max_level))
-    }, logical(1L))
-
-    if (any(out_of_range)) {
-      add_msg("warning",
-              paste0(
-                "Some values in [",
-                paste(eq5d_cols[out_of_range], collapse = ", "),
-                "] are outside the expected range (1\u2013", max_level,
-                ") and will be set to NA."
-              ))
-    } else {
-      add_msg("ok", paste0(
-        "All EQ-5D values within expected range (1\u2013", max_level, ")."
-      ))
-    }
-
-    # Missing EQ-5D values
-    n_complete <- sum(complete.cases(
-      lapply(eq5d_cols, function(col) suppressWarnings(as.integer(df[[col]])))
-    ))
-    n_miss <- n_rows - n_complete
-    if (n_miss > 0L) {
-      pct <- round(100 * n_miss / n_rows, 1)
-      add_msg("warning",
-              paste0("<strong>", n_miss, "</strong> rows (",
-                     pct, "%) have missing EQ-5D values."))
-    } else {
-      add_msg("ok", "No missing EQ-5D values.")
-    }
-  }
-
-  # Duplicate ID check
-  if (!is.null(mapping$name_id) && nzchar(mapping$name_id)) {
-    if (mapping$name_id %in% names(df)) {
-      ids   <- df[[mapping$name_id]]
-      n_dup <- sum(duplicated(ids))
-      if (n_dup == 0L) {
-        add_msg("ok", "No duplicate patient IDs.")
-      } else {
-        has_fu  <- !is.null(mapping$name_fu) && nzchar(mapping$name_fu) &&
-                   mapping$name_fu %in% names(df)
-        if (has_fu) {
-          fu_vals  <- df[[mapping$name_fu]]
-          pairs    <- paste(ids, fu_vals, sep = "\u00b7")
-          n_dup_pairs <- sum(duplicated(pairs))
-          n_tp     <- length(unique(fu_vals))
-          if (n_dup_pairs == 0L) {
-            add_msg("ok",
-                    paste0("Repeated patient IDs detected across ",
-                           "<strong>", n_tp, "</strong> timepoints \u2014 ",
-                           "this is expected for longitudinal data. ",
-                           "All ID\u2013timepoint combinations are unique."))
-          } else {
-            add_msg("warning",
-                    paste0("<strong>", n_dup_pairs, "</strong> ID\u2013timepoint ",
-                           "combinations are duplicated. Check for duplicate records."))
-          }
-        } else {
-          add_msg("warning",
-                  paste0("<strong>", n_dup, "</strong> repeated patient IDs. ",
-                         "For cross-sectional data each row should have a unique ID. ",
-                         "If this is longitudinal data, map a Timepoint variable."))
-        }
-      }
-    }
-  }
-
-  # VAS range check
-  if (!is.null(mapping$name_vas) && nzchar(mapping$name_vas) &&
-      mapping$name_vas %in% names(df)) {
-    vas_vals <- suppressWarnings(as.numeric(df[[mapping$name_vas]]))
-    out_vas  <- any(!is.na(vas_vals) & (vas_vals < 0 | vas_vals > 100))
-    if (out_vas) {
-      add_msg("warning", "Some VAS values are outside the expected range (0\u2013100).")
-    } else {
-      add_msg("ok", "VAS values within expected range (0\u2013100).")
-    }
-  }
-
-  list(messages = msgs)
+# The "See details" part of one finding, collapsed until asked for.
+finding_details <- function(ns, i, d) {
+  if (is.null(d)) return(NULL)
+  shiny::tags$details(
+    class = "finding-details",
+    shiny::tags$summary("See details"),
+    if (length(d$emphasis))
+      lapply(d$emphasis, function(x) shiny::p(shiny::strong(x))),
+    lapply(d$notes, shiny::p),
+    if (!is.null(d$denominator))
+      shiny::p(class = "hint", d$denominator),
+    if (!is.null(d$summary)) {
+      if (nrow(d$summary) > SMALL_TABLE_ROWS)
+        DT::DTOutput(ns(paste0("det_", i, "_summary")))
+      else small_table(d$summary)
+    },
+    if (!is.null(d$records)) shiny::tagList(
+      shiny::p(class = "details-label",
+               sprintf("Records affected (%s)",
+                       format(nrow(d$records), big.mark = ","))),
+      DT::DTOutput(ns(paste0("det_", i, "_records"))))
+  )
 }
+
+# A short table as plain HTML.
+small_table <- function(df) {
+  shiny::tags$table(
+    class = "table table-sm details-table",
+    shiny::tags$thead(shiny::tags$tr(lapply(names(df), shiny::tags$th))),
+    shiny::tags$tbody(lapply(seq_len(nrow(df)), function(r)
+      shiny::tags$tr(lapply(df[r, , drop = TRUE], function(x)
+        shiny::tags$td(format(x, big.mark = ",")))))))
+}
+
+# A long table: searchable and paged.
+details_table <- function(df) {
+  DT::datatable(df, rownames = FALSE, class = "table-sm table-striped",
+                options = list(pageLength = 10L, scrollX = TRUE,
+                               dom = "ftip"))
+}
+

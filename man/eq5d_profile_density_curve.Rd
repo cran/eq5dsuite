@@ -16,16 +16,64 @@ eq5d_profile_density_curve(df, names_eq5d, eq5d_version)
 \value{
 A list containing:
   \item{plot_data}{A data frame with the cumulative distribution of profiles}
-  \item{p}{A ggplot2 object showing the Health State Density Index}
+  \item{hsdi}{The Health State Density Index, unrounded. The plot subtitle
+    shows it rounded to three decimal places.}
+  \item{p}{A ggplot2 object showing the Health State Density Curve}
 }
 \description{
-This function calculates and plots the Health State Density Curve (HSDC) for a given
-EQ-5D dataset. It concatenates dimension values to form health state profiles, filters
-out invalid states based on the specified EQ-5D version, then computes the cumulative
-distribution of profiles (profiles vs. observations). A diagonal reference line
-indicates a perfectly even distribution. The function also calculates the Health State
-Density Index (HSDI), representing how sharply the observed distribution deviates from
-the diagonal.
+Calculates and plots the Health State Density Curve (HSDC) and the Health
+State Density Index (HSDI) of Zamora et al. (2018), which describe how
+evenly the observations are spread over the health state profiles that
+occur in the data. Profiles are formed from the five dimensions; a row
+whose profile is not valid for the instrument is excluded with a warning.
+}
+\details{
+\strong{The curve.} The \eqn{S} distinct profiles observed are ranked from the
+most to the least frequent. For \eqn{i = 1, \dots, S}{i = 1, ..., S}, \eqn{x_i} is the
+cumulative proportion of observations in the first \eqn{i} profiles and
+\eqn{y_i = i / S} the cumulative proportion of profiles. The HSDC plots
+\eqn{y} against \eqn{x}, from \eqn{(0, 0)} to \eqn{(1, 1)}. The diagonal
+is perfect evenness, every profile equally frequent; the further the curve
+lies below it, the more the observations are concentrated in a few
+profiles.
+
+\strong{The index.} Following Zamora et al. (2018, equation 1),
+\deqn{HSDI = \sum_{i=1}^{S} (x_i - x_{i-1})(y_i + y_{i-1}),}{HSDI = sum over i of (x[i] - x[i-1]) (y[i] + y[i-1]),}
+with \eqn{x_0 = y_0 = 0}: twice the area under the curve. It is analogous
+to the Gini coefficient, but runs the other way: the HSDI is
+\eqn{1 - G}, where \eqn{G} is twice the area between the curve and the
+diagonal.
+
+\strong{Direction.} Higher is more even. The HSDI is 1 when every observed
+profile is equally frequent, including the case of a single profile, and
+falls as the observations concentrate in fewer of the observed profiles.
+Profiles of equal frequency may be ranked in either order without changing
+it.
+
+\strong{Attainable bounds.} With \eqn{N} observations over \eqn{S} observed
+profiles, the HSDI lies in
+\deqn{1/S + (S - 1)/N \le HSDI \le 1.}{1/S + (S - 1)/N <= HSDI <= 1.}
+The lower bound is reached when one profile holds \eqn{N - S + 1}
+observations and each of the others one. The HSDI is therefore never
+below \eqn{1/S}, and never 0: the 0 of "total inequality" in Zamora et al.
+is a limit, approached only as \eqn{S} and \eqn{N/S} both grow. With two
+profiles it cannot fall below 0.5.
+
+\strong{What it is relative to.} Only the profiles that occur in these data
+count: \eqn{y_i} is \eqn{i / S} for the \eqn{S} profiles observed, not
+for the 243 (EQ-5D-3L, EQ-5D-Y-3L) or 3,125 (EQ-5D-5L) the instrument
+allows, and a profile nobody reported does not enter. The index describes
+how evenly observations are spread over the profiles that appear. Because
+its attainable range depends on \eqn{S} and \eqn{N}, compare it between
+samples with care. Repeating a whole distribution over more profiles
+leaves it exactly unchanged (Zamora et al.'s independence of \eqn{S}),
+but samples whose distributions differ in shape are not on a common scale.
+
+\strong{Worked values.} Two profiles observed equally often: 1. Frequencies
+9 and 1: \eqn{0.9 \times 0.5 + 0.1 \times 1.5 = 0.6}{0.9 x 0.5 + 0.1 x 1.5 = 0.6}. Frequencies 999
+and 1: 0.501, the paper's "0.5" for this case. Frequencies 2, 1 and 1:
+\eqn{(0.5 \times 1 + 0.25 \times 3 + 0.25 \times 5) / 3 = 5/6}{(0.5 x 1 + 0.25 x 3 + 0.25 x 5) / 3 = 5/6},
+the lower bound for \eqn{N = 4}, \eqn{S = 3}.
 }
 \examples{
 figure <- eq5d_profile_density_curve(
@@ -34,5 +82,15 @@ figure <- eq5d_profile_density_curve(
             eq5d_version = "3L"
           )
 figure$plot_data
+figure$hsdi
 figure$p
+}
+\references{
+Zamora B, Parkin D, Feng Y, Bateman A, Herdman M, Devlin N (2018). New
+methods for analysing the distribution of EQ-5D observations. OHE
+Research Paper 18/03. London: Office of Health Economics.
+\url{https://www.ohe.org/publications/new-methods-analysing-distribution-eq-5d-observations/}
+
+Devlin N, Parkin D, Janssen B (2020). Methods for Analysing and Reporting
+EQ-5D Data. Cham: Springer. \doi{10.1007/978-3-030-47622-9}
 }

@@ -15,7 +15,7 @@ eq5d_profile_health_profile_grid(
 )
 }
 \arguments{
-\item{df}{A data frame containing EQ-5D columns, a grouping variable, an ID column, and a follow-up column}
+\item{df}{A data frame containing EQ-5D columns, an ID column and a follow-up column}
 
 \item{names_eq5d}{A character vector of EQ-5D dimension names}
 
@@ -25,9 +25,11 @@ eq5d_profile_health_profile_grid(
 
 \item{name_id}{A character string for the patient ID column}
 
-\item{eq5d_version}{Version of the EQ-5D instrument}
+\item{eq5d_version}{Version of the EQ-5D instrument: "3L", "5L" or "Y3L".
+It decides how many states are ranked.}
 
-\item{country}{A character string representing the name of the country.}
+\item{country}{Value set code used to rank the states; see
+\code{\link{eqvs_display}} for the codes available.}
 }
 \value{
 A list with components:
@@ -40,14 +42,39 @@ individual's change in health states (ranked from best to worst) between two tim
 points. A diagonal reference line indicates no change; points above the line reflect
 improvement, and points below indicate deterioration.
 }
+\details{
+The ranking is over \strong{every health state the instrument allows}, not
+only those the data contain: all 243 states for the EQ-5D-3L and the
+EQ-5D-Y-3L, and all 3,125 for the EQ-5D-5L. Each is valued with the value
+set named by \code{country} and \code{eq5d_version}, and ordered best to
+worst, so the best possible state is rank 1 and the worst is rank 243 or
+3,125. A rank therefore means the same thing in every dataset valued with
+the same value set, and the axes span the whole classification system
+rather than the part of it a particular sample happens to occupy.
+
+This is why the function takes a value set rather than a column of
+pre-calculated values: the states that do \emph{not} occur in the data
+still have to be valued in order to place the states that do.
+}
+\section{Pairing records}{
+
+Each respondent's records are compared in timepoint order, using only the
+timepoints in \code{levels_fu}. The function stops, naming the respondents,
+if a respondent has more than one record at the same timepoint: it cannot
+tell which to compare, and does not choose. Where the analysis is split by
+\code{name_groupvar}, it also stops if a respondent is not in the same
+group at every timepoint (a missing group at one timepoint counts as a
+change), because the change is attributed to the respondent's group.
+}
+
 \examples{
 tmp <- eq5d_profile_health_profile_grid(
-           df = example_data, 
-           names_eq5d = c("mo", "sc", "ua", "pd", "ad"), 
-           name_fu = "time", 
-           levels_fu = c("Pre-op", "Post-op"), 
-           name_id = "id", 
-           eq5d_version = "3L", 
-           country = "UK"
+           df = example_data,
+           names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
+           name_fu = "time",
+           levels_fu = c("Pre-op", "Post-op"),
+           name_id = "id",
+           eq5d_version = "3L",
+           country = "GB"
        )
 }

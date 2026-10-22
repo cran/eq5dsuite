@@ -31,8 +31,21 @@ Functions for calculating EQ-5D preference-based values:
     (van Hout et al., 2012)
   \item \code{\link{eqxwr}} — Reverse crosswalk method
     (van Hout and Shaw, 2021)
-  \item \code{\link{eqxw_UK}} — UK-specific NICE-recommended
-    mapping (Hernandez Alava et al., 2023)
+  \item \code{\link{eqxwr_UK}} — UK mapping from EQ-5D-3L
+    responses to values on the UK EQ-5D-5L value set
+    (NICE Decision Support Unit; Hernández Alava et al.,
+    2023). This is the mapping NICE's interim methods
+    statement of 27 August 2026 specifies when only
+    EQ-5D-3L data are available
+  \item \code{\link{eqxw_UK}} — UK mapping in the opposite
+    direction, from EQ-5D-5L responses to values on the UK
+    EQ-5D-3L value set (Hernández Alava et al., 2023).
+    Under NICE's interim methods statement of 27 August
+    2026, EQ-5D-5L data collected in a study should instead
+    be valued directly with \code{eq5d5l(country = "GB")};
+    \code{eqxw_UK} remains for topics started before that
+    date, for which NICE says 5L data should still be mapped
+    to 3L utility values, and for reproducing earlier analyses
 }
 }
 
@@ -96,6 +109,9 @@ analyses, and severity metrics:
     EQ-5D values plotted against LFS
   \item \code{\link{eq5d_profile_density_curve}} —
     Health State Density Curve
+  \item \code{\link{eq5d_profile_shannon}} —
+    Shannon's informativity indices H' and J', by dimension and
+    for the health state
 }
 }
 
@@ -119,22 +135,22 @@ across time points, subgroups, and population norms:
   \item \code{\link{eq5d_utility_distribution_plot}} —
     Histogram of EQ-5D value distribution
   \item \code{\link{eq5d_utility_vas_scatter_plot}} —
-    Scatter plot of EQ-5D values against EQ-VAS
+    Scatter plot of EQ-5D values against EQ VAS
 }
 }
 
-\section{EQ-VAS analysis}{
+\section{EQ VAS analysis}{
 
-Functions for analysing EQ-VAS self-rated health scores:
+Functions for analysing EQ VAS self-rated health scores:
 \itemize{
   \item \code{\link{eq5d_vas_summary}} —
     Descriptive statistics at each time point
   \item \code{\link{eq5d_vas_distribution_table}} —
     Frequency distribution in pre-defined ranges
   \item \code{\link{eq5d_vas_histogram}} —
-    Histogram of EQ-VAS scores
+    Histogram of EQ VAS scores
   \item \code{\link{eq5d_vas_grouped_distribution_plot}} —
-    Bar chart of grouped EQ-VAS frequencies
+    Bar chart of grouped EQ VAS frequencies
 }
 }
 
@@ -152,6 +168,17 @@ Utility functions for preparing EQ-5D data:
     valid EQ-5D states as a data frame
   \item \code{\link{make_dummies}} — Create dummy variables
     from EQ-5D dimension columns
+}
+}
+
+\section{Data}{
+
+\itemize{
+  \item \code{\link{example_data}} — A sample of EQ-5D-3L
+    data from the NHS Patient Reported Outcome Measures
+    (PROMs) programme, used throughout the examples and
+    vignettes. Missing values are recorded as \code{9} in the
+    five dimensions and \code{999} in the EQ VAS
 }
 }
 
@@ -189,11 +216,46 @@ Interim scoring for the EQ-5D-5L: mapping the EQ-5D-5L
 to EQ-5D-3L value sets.
 \emph{Value in Health}, 15(5), 708--715.
 \doi{10.1016/j.jval.2012.02.008}
+
+van Hout B, Shaw JW (2021).
+Mapping EQ-5D-3L to EQ-5D-5L.
+\emph{Value in Health}, 24(9), 1285--1293.
+\doi{10.1016/j.jval.2021.03.009}
+
+Hernández Alava M, Pudney S, Wailoo A (2023).
+Estimating the relationship between EQ-5D-5L and EQ-5D-3L:
+results from a UK population study.
+\emph{PharmacoEconomics}, 41(2), 199--207.
+\doi{10.1007/s40273-022-01218-7}
+
+Rowen D, Mukuria C, Bray N, et al. (2026).
+A UK value set for the EQ-5D-5L.
+\emph{Value in Health}.
+\doi{10.1016/j.jval.2026.03.008}
+
+National Institute for Health and Care Excellence (2026).
+Interim methods statement: implementing the EQ-5D-5L value set
+(PMG51). Published 27 August 2026.
+\url{https://www.nice.org.uk/process/pmg51}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/MathsInHealth/eq5dsuite-r}
+  \item \url{https://github.com/MathsInHealth/eq5dsuite}
+  \item Report bugs at \url{https://github.com/MathsInHealth/eq5dsuite-r/issues}
+}
+
 }
 \author{
-Anabel Estévez-Carrillo, Oliver Rivero-Arias,
-Iryna Schlackow, Kim Rand
+\strong{Maintainer}: Kim Rand \email{krand@mathsinhealth.com} (\href{https://orcid.org/0000-0001-7692-4099}{ORCID})
 
-Maintainer: Anabel Estévez-Carrillo
-\email{aestevez@mathsinhealth.com}
+Authors:
+\itemize{
+  \item Kim Rand \email{krand@mathsinhealth.com} (\href{https://orcid.org/0000-0001-7692-4099}{ORCID})
+  \item Oliver Rivero-Arias (\href{https://orcid.org/0000-0003-2233-6544}{ORCID})
+  \item Iryna Schlackow (\href{https://orcid.org/0000-0002-4154-1431}{ORCID})
+  \item Anabel Estévez-Carrillo (\href{https://orcid.org/0000-0001-8778-5055}{ORCID})
+}
+
 }

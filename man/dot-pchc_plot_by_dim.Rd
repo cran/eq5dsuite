@@ -13,7 +13,7 @@
 
 \item{title}{The plot title.}
 
-\item{cols}{A vector of colors to use for the bars.}
+\item{cols}{A vector of colours to use for the bars.}
 
 \item{text_rotate}{A logical indicating whether to rotate the text labels for the bars.}
 }
@@ -26,12 +26,4 @@ The input is a data frame containing the information to plot, and the plot will 
 the proportion of the total data that falls into each dimension, stacked by covariate.
 The wrapper is used in Figures 2.2-2.4.
 }
-\examples{
-df <- data.frame(
-  name = rep(c("Dim1", "Dim2"), each = 2),
-  p = c(0.6, 0.4, 0.7, 0.3),
-  groupvar = rep(c("Group A", "Group B"), 2)
-)
-colors <- c("Group A" = "#1b9e77", "Group B" = "#d95f02")
-.pchc_plot_by_dim(df, ylab = "Proportion", title = "Example Plot", cols = colors)
-}
+\keyword{internal}

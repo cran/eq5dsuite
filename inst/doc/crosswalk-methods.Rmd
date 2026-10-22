@@ -26,8 +26,17 @@ widely used approaches:
   to EQ-5D-3L values (van Hout et al., 2012)
 - **Reverse crosswalk** (`eqxwr`) — maps EQ-5D-3L responses
   to EQ-5D-5L values (van Hout and Shaw, 2021)
-- **UK-specific crosswalk** (`eqxw_UK`) — NICE-recommended
-  mapping for UK analyses (Hernandez Alava et al., 2023)
+- **NICE DSU mapping, 5L to 3L** (`eqxw_UK`) — maps
+  EQ-5D-5L responses to values on the UK EQ-5D-3L value set
+  (Hernández Alava et al., 2023)
+- **NICE DSU mapping, 3L to 5L** (`eqxwr_UK`) — maps
+  EQ-5D-3L responses to values on the UK EQ-5D-5L value set
+  (Hernández Alava et al., 2023)
+
+The two NICE DSU mappings are age- and sex-specific and
+cover the United Kingdom only. They are *not* the van Hout
+crosswalks: `eqxwr()` and `eqxwr_UK()` answer different
+questions and are not interchangeable.
 
 ## When to use crosswalk methods
 
@@ -38,8 +47,27 @@ Use crosswalk methods when:
 - You have EQ-5D-3L data but only a 5L value set exists
   → use `eqxwr()`
 - You are conducting a NICE technology appraisal and have
-  EQ-5D-5L data → use `eqxw_UK()` until a NICE-approved
-  5L value set is available
+  only EQ-5D-3L data → use `eqxwr_UK()`
+
+## The current NICE position
+
+NICE's interim methods statement of 27 August 2026 (NICE,
+2026; PMG51) takes the UK EQ-5D-5L value set (Rowen et al.,
+2026) as the reference case for topics started after that
+date -- for technology appraisals, those whose invitation to
+participate was issued after it. Topics started earlier
+continue to map EQ-5D-5L data to EQ-5D-3L utility values
+(with `eqxw_UK()`). For new topics:
+
+- **EQ-5D-5L data collected in the study** should be valued
+  directly, with `eq5d5l(x, country = "GB")`. No mapping is
+  needed.
+- **Only EQ-5D-3L data available** → map with `eqxwr_UK()`,
+  the mapping the statement specifies in that situation
+  (Hernández Alava et al., 2023).
+- `eqxw_UK()` maps in the other direction, to the older UK
+  EQ-5D-3L value set. It remains for topics started before
+  27 August 2026 and for reproducing earlier analyses.
 
 ## Original crosswalk: eqxw()
 
@@ -56,7 +84,7 @@ eq5d5l_data <- data.frame(
 # Apply crosswalk using UK 3L value set
 eq5d5l_data$value_xw <- eqxw(
   eq5d5l_data,
-  country   = "UK",
+  country   = "GB",
   dim.names = c("mo", "sc", "ua", "pd", "ad")
 )
 
@@ -85,10 +113,12 @@ eq5d3l_data$value_rxw <- eqxwr(
 eq5d3l_data
 ```
 
-## UK-specific crosswalk: eqxw_UK()
+## NICE DSU mapping, 5L to 3L: eqxw_UK()
 
-The UK-specific crosswalk requires age and sex in addition
-to the five EQ-5D dimensions:
+Both NICE DSU mappings require age and sex in addition to
+the five EQ-5D dimensions. Age is used in years and grouped
+into five bands (16--34, 35--44, 45--54, 55--64, 65 and
+over); sex is 1 for male and 0 for female.
 
 ```{r eqxw-uk-example}
 uk_data <- data.frame(
@@ -111,6 +141,50 @@ uk_data$value_uk <- eqxw_UK(
 uk_data
 ```
 
+## NICE DSU mapping, 3L to 5L: eqxwr_UK()
+
+When only EQ-5D-3L data are available, `eqxwr_UK()` maps
+them so they can be valued on the UK EQ-5D-5L value set:
+
+```{r eqxwr-uk-example}
+uk3l <- data.frame(
+  id   = 1:5,
+  mo   = c(1, 2, 1, 3, 2),
+  sc   = c(1, 1, 2, 2, 1),
+  ua   = c(1, 2, 1, 3, 2),
+  pd   = c(2, 2, 1, 3, 3),
+  ad   = c(1, 1, 2, 2, 1),
+  age  = c(45, 62, 38, 71, 55),
+  male = c(1,  0,  1,  0,  1)
+)
+
+uk3l$value_uk5l <- eqxwr_UK(uk3l, age = "age", male = "male")
+
+uk3l
+```
+
+## Mapping a mean value
+
+Both functions also accept an EQ-5D *value* instead of a
+health state, for mapping a mean reported in a published
+study. There is no unique health state behind a mean, so
+the result is a kernel-weighted average of the mapped
+values of nearby states. `bwidth = "default"` applies the
+DSU's recommended bandwidths for mean values: 0.1 for
+values above 0.6, and 0.4 for values at or below 0.6.
+
+```{r mean-value-example}
+# a mean EQ-5D-3L value of 0.54 in women aged 35
+eqxwr_UK(0.54, age = 35, male = 0, bwidth = "default")
+
+# the bandwidth matters: a narrower one weights fewer states
+eqxwr_UK(0.54, age = 35, male = 0, bwidth = 0.1)
+```
+
+This input is **not** intended for individual-level data.
+Map individual respondents from their health states, as
+above.
+
 ## Crosswalk compatibility with custom value sets
 
 All crosswalk functions are compatible with custom value
@@ -126,6 +200,15 @@ EQ-5D-5L. *Value in Health*, 15(5), 708--715.
 van Hout B, Shaw JW (2021). Mapping EQ-5D-3L to EQ-5D-5L.
 *Value in Health*, 24(9), 1285--1293.
 
-Hernandez Alava M, et al. (2023). Estimating the
-relationship between EQ-5D-5L and EQ-5D-3L.
-*PharmacoEconomics*, 41(2), 199--207.
+Hernández Alava M, Pudney S, Wailoo A (2023). Estimating
+the relationship between EQ-5D-5L and EQ-5D-3L: results
+from a UK population study. *PharmacoEconomics*, 41(2),
+199--207.
+
+Rowen D, Mukuria C, Bray N, et al. (2026). A UK value set
+for the EQ-5D-5L. *Value in Health*, 29(5), 858--869.
+
+National Institute for Health and Care Excellence (2026).
+Interim methods statement: implementing the EQ-5D-5L value
+set (PMG51). Published 27 August 2026.
+<https://www.nice.org.uk/process/pmg51>

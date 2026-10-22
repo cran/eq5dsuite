@@ -9,7 +9,7 @@
 \arguments{
 \item{df}{a data frame; only used/supplied if levels_fu needs to be defined}
 
-\item{...}{a list of parameters consisting of any/all of `names_eq5d`, `name_fu`, `levels_fu`, `eq5d_version`, and `name_vas`.}
+\item{...}{a list of parameters consisting of any/all of `names_eq5d`, `name_fu`, `levels_fu`, `eq5d_version`, `name_vas`, and `name_utility`.}
 }
 \value{
 a list of parameters with null entries replaced with default values.
@@ -17,7 +17,4 @@ a list of parameters with null entries replaced with default values.
 \description{
 This function takes in a list of parameters, which would be column names of the input data frame, and checks if they are null. Any nulls are replaced with default values, and the updated list of parameters is returned.
 }
-\examples{
-.get_names(names_eq5d = c("mo", "sc", "ua", "pd", "ad"))
-.get_names(names_eq5d = NULL, eq5d_version = NULL, name_vas = NULL)
-}
+\keyword{internal}

@@ -48,8 +48,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -402,16 +403,30 @@ all scoring and analysis functions in the package.</p>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">description =</span> <span class="st">&quot;Custom value set — permanent&quot;</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">saveOption  =</span> <span class="dv">2</span>  <span class="co"># saves to user cache</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>)</span></code></pre></div>
-<p>Load it in a new session with:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">eqvs_load</span>(<span class="at">country =</span> <span class="st">&quot;MY_VS&quot;</span>, <span class="at">version =</span> <span class="st">&quot;3L&quot;</span>)</span></code></pre></div>
+<p>A value set saved this way is read back automatically the next time
+the package is loaded, so nothing further is needed.</p>
+<p><code>saveOption = 3</code> writes to a directory you choose instead,
+and that one has to be loaded explicitly. <code>eqvs_load()</code> takes
+the directory, not a value set: everything saved there is restored at
+once.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">eqvs_add</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  custom_vs,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">version     =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">country     =</span> <span class="st">&quot;My Country&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">countryCode =</span> <span class="st">&quot;MC&quot;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">VSCode      =</span> <span class="st">&quot;MY_VS&quot;</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">saveOption  =</span> <span class="dv">3</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">savePath    =</span> <span class="st">&quot;~/my-eq5d-value-sets&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">eqvs_load</span>(<span class="at">loadPath =</span> <span class="st">&quot;~/my-eq5d-value-sets&quot;</span>)</span></code></pre></div>
 </div>
 <div id="removing-a-custom-value-set" class="section level2">
 <h2>Removing a custom value set</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">eqvs_drop</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">country    =</span> <span class="st">&quot;MY_VS&quot;</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">version    =</span> <span class="st">&quot;3L&quot;</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">saveOption =</span> <span class="dv">1</span>  <span class="co"># remove from current session only</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">eqvs_drop</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">country    =</span> <span class="st">&quot;MY_VS&quot;</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">version    =</span> <span class="st">&quot;3L&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">saveOption =</span> <span class="dv">1</span>  <span class="co"># remove from current session only</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="validation" class="section level2">
 <h2>Validation</h2>
@@ -427,19 +442,19 @@ registration:</p>
 <h2>Using custom value sets with crosswalk methods</h2>
 <p>Custom value sets are fully compatible with all crosswalk
 functions:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Use custom 3L value set with original crosswalk</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">eqxw</span>(</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  eq5d5l_data,</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;MY_VS&quot;</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">dim.names =</span> <span class="fu">c</span>(<span class="st">&quot;mo&quot;</span>, <span class="st">&quot;sc&quot;</span>, <span class="st">&quot;ua&quot;</span>, <span class="st">&quot;pd&quot;</span>, <span class="st">&quot;ad&quot;</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Use custom 3L value set with original crosswalk</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">eqxw</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  eq5d5l_data,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">country   =</span> <span class="st">&quot;MY_VS&quot;</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">dim.names =</span> <span class="fu">c</span>(<span class="st">&quot;mo&quot;</span>, <span class="st">&quot;sc&quot;</span>, <span class="st">&quot;ua&quot;</span>, <span class="st">&quot;pd&quot;</span>, <span class="st">&quot;ad&quot;</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="keeping-value-sets-up-to-date" class="section level2">
 <h2>Keeping value sets up to date</h2>
 <p>Use <code>update_value_sets()</code> to automatically check for and
 install newly published value sets from the eq5dsuite online
 repository:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">update_value_sets</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">update_value_sets</span>()</span></code></pre></div>
 <p>See <code>vignette(&quot;update-value-sets&quot;)</code> for full details.</p>
 </div>
 

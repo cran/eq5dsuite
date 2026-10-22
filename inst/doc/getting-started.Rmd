@@ -73,7 +73,7 @@ eq5d3l_data <- data.frame(
 # Calculate EQ-5D-3L values using the UK value set
 eq5d3l_data$value <- eq5d3l(
   eq5d3l_data,
-  country   = "UK",
+  country   = "GB",
   dim.names = c("mo", "sc", "ua", "pd", "ad")
 )
 

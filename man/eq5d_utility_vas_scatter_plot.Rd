@@ -4,25 +4,17 @@
 \alias{eq5d_utility_vas_scatter_plot}
 \title{eq5d_utility_vas_scatter_plot: EQ-5D values: smoothed lines and confidence intervals by groupvar}
 \usage{
-eq5d_utility_vas_scatter_plot(
-  df,
-  names_eq5d = NULL,
-  name_vas = NULL,
-  eq5d_version = NULL,
-  country
-)
+eq5d_utility_vas_scatter_plot(df, name_utility = NULL, name_vas = NULL)
 }
 \arguments{
-\item{df}{Data frame with the EQ-5D columns}
+\item{df}{Data frame with the EQ-5D value and EQ VAS columns}
 
-\item{names_eq5d}{Character vector of column names for the EQ-5D dimensions}
+\item{name_utility}{Character string naming the column of pre-calculated
+EQ-5D values. If \code{NULL} (default), the column \code{"utility"} is
+used. The values are analysed as they stand; see
+\code{\link{eq5d}} for calculating them from the dimensions.}
 
 \item{name_vas}{Character string for the VAS column}
-
-\item{eq5d_version}{Version of the EQ-5D instrument}
-
-\item{country}{A character string representing the name of the country. 
-This could be in a 2-letter format, full name or short name, as specified in the country_codes datasets.}
 }
 \value{
 Summary plot and data used for plotting
@@ -31,12 +23,12 @@ Summary plot and data used for plotting
 eq5d_utility_vas_scatter_plot: EQ-5D values: smoothed lines and confidence intervals by groupvar
 }
 \examples{
+example_data$value <- eq5d3l(example_data[, c("mo", "sc", "ua", "pd", "ad")],
+                             country = "GB")
 tmp <- eq5d_utility_vas_scatter_plot(
    example_data,
-   names_eq5d = c("mo", "sc", "ua", "pd", "ad"),
-   name_vas = "vas",
-   eq5d_version = "3L",
-   country = "UK"
+   name_utility = "value",
+   name_vas = "vas"
  )
 tmp$p
 tmp$plot_data

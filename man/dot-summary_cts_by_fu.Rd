@@ -20,8 +20,15 @@ The input `df` must contain an ordered FU variable and the continuous variable o
 The name of the continuous variable must be specified using `name_v`. 
 The wrapper is used in Table 3.1 (for VAS) or Table 4.2 (for EQ-5D utility)
 }
-\examples{
-df <- data.frame(fu = c(1,1,2,2,3,3), 
-                 vas = c(7,8,9,NA,7,6))
-.summary_cts_by_fu(df, name_v = "vas")
+\details{
+Skewness and kurtosis are the population (biased) estimators
+\eqn{m_3 / m_2^{3/2}} and \eqn{m_4 / m_2^2}, as returned by
+\code{moments::skewness()} and \code{moments::kurtosis()}.
+
+The kurtosis is **non-excess**: a normal distribution gives 3, not 0. The
+row is labelled "Kurtosis (non-excess)" so that the output says which
+convention it uses. Stata's \code{summarize, detail} reports the same
+quantity. Excel's \code{KURT()} reports *excess* kurtosis with a
+sample-bias correction, so it is roughly 3 lower for the same data.
 }
+\keyword{internal}

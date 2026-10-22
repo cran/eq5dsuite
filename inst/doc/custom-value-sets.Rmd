@@ -80,10 +80,27 @@ eqvs_add(
 )
 ```
 
-Load it in a new session with:
+A value set saved this way is read back automatically the next time the
+package is loaded, so nothing further is needed.
+
+`saveOption = 3` writes to a directory you choose instead, and that one has to
+be loaded explicitly. `eqvs_load()` takes the directory, not a value set:
+everything saved there is restored at once.
+
+```{r save-vs-path, eval = FALSE}
+eqvs_add(
+  custom_vs,
+  version     = "3L",
+  country     = "My Country",
+  countryCode = "MC",
+  VSCode      = "MY_VS",
+  saveOption  = 3,
+  savePath    = "~/my-eq5d-value-sets"
+)
+```
 
 ```{r load-vs, eval = FALSE}
-eqvs_load(country = "MY_VS", version = "3L")
+eqvs_load(loadPath = "~/my-eq5d-value-sets")
 ```
 
 ## Removing a custom value set

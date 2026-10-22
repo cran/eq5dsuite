@@ -18,8 +18,4 @@ A data frame with the summary statistics.
 This internal function creates a summary of the data frame for Table 4.3. 
 It groups the data by the variables specified in `group_by` and calculates various summary statistics.
 }
-\examples{
-df <- data.frame(group = c("A", "A", "B", "B"), 
-                 utility = c(0.5, 0.7, 0.8, 0.9))
-.summary_table_4_3(df, group_by = "group")
-}
+\keyword{internal}

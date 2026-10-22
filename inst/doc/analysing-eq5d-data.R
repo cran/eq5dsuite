@@ -25,7 +25,7 @@ hip_data$profile_code <- toEQ5Dindex(
 )
 hip_data$value <- eq5d3l(
   hip_data[, dim_names],
-  country   = "UK",
+  country   = "GB",
   dim.names = dim_names
 )
 
@@ -45,6 +45,15 @@ eq5d_profile_top_states(
   names_eq5d   = dim_names,
   eq5d_version = "3L",
   n            = 5
+)
+
+## ----wex1-shannon-------------------------------------------------------------
+eq5d_profile_shannon(
+  df           = hip_data,
+  names_eq5d   = dim_names,
+  eq5d_version = "3L",
+  name_fu      = "time",
+  levels_fu    = c("Pre-op", "Post-op")
 )
 
 ## ----wex1-pchc, fig.cap = "PCHC classification for hip replacement patients."----
@@ -73,13 +82,17 @@ eq5d_profile_better_dimensions_by_group_plot(
   ggplot2::theme_minimal()
 
 ## ----wex1-utility-------------------------------------------------------------
+hip_data$value <- eq5d3l(
+  hip_data[, dim_names],
+  country   = "GB",
+  dim.names = dim_names
+)
+
 eq5d_utility_summary(
   df           = hip_data,
+  name_utility = "value",
   name_fu      = "time",
-  levels_fu    = c("Pre-op", "Post-op"),
-  names_eq5d   = dim_names,
-  eq5d_version = "3L",
-  country      = "UK"
+  levels_fu    = c("Pre-op", "Post-op")
 )
 
 ## ----wex1-vas-----------------------------------------------------------------
@@ -104,7 +117,7 @@ comparison_data$profile_code <- toEQ5Dindex(
 )
 comparison_data$value <- eq5d3l(
   comparison_data[, dim_names],
-  country   = "UK",
+  country   = "GB",
   dim.names = dim_names
 )
 
@@ -119,19 +132,15 @@ eq5d_profile_level_summary_by_group(
 ## ----wex2-utility-summary-----------------------------------------------------
 eq5d_utility_summary_by_group(
   df            = comparison_data,
-  names_eq5d    = dim_names,
-  name_groupvar = "procedure",
-  eq5d_version  = "3L",
-  country       = "UK"
+  name_utility  = "value",
+  name_groupvar = "procedure"
 )
 
 ## ----wex2-utility-plot, fig.cap = "Mean pre-operative EQ-5D values by procedure group."----
 eq5d_utility_by_group_plot(
   df            = comparison_data,
-  names_eq5d    = dim_names,
-  name_groupvar = "procedure",
-  eq5d_version  = "3L",
-  country       = "UK"
+  name_utility  = "value",
+  name_groupvar = "procedure"
 )$p +
   ggplot2::theme_minimal()
 
@@ -142,8 +151,8 @@ hernia_data <- comparison_data[
 eq5d_profile_lss_utility_plot(
   hernia_data,
   names_eq5d   = dim_names,
-  eq5d_version = "3L",
-  country      = "UK"
+  name_utility = "value",
+  eq5d_version = "3L"
 )$p +
   ggplot2::labs(
     title = "Groin Hernia",
@@ -161,8 +170,8 @@ knee_data <- comparison_data[
 eq5d_profile_lss_utility_plot(
   knee_data,
   names_eq5d   = dim_names,
-  eq5d_version = "3L",
-  country      = "UK"
+  name_utility = "value",
+  eq5d_version = "3L"
 )$p +
   ggplot2::labs(
     title = "Knee Replacement",
